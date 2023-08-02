@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Blockchain Interaction API
+  version: 1.0.0
+  description: A production-ready API for interacting with various blockchain networks.
+  termsOfService: https://api.example.com/terms
+  contact:
+    name: Your Company Name
+    url: https://www.example.com/contact
+    email: contact@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://wallet.spicefi.xyz/v1
+    description: Production Server
+
+components:
+  securitySchemes:
+      OAuth2:
+        type: oauth2
+        flows:
+          implicit:
+            authorizationUrl: https://example.com/oauth/authorize
+            scopes:
+              read: Read access
+              write: Write access
+  responses:
+    TransactionResponse:
+      description: Response containing transaction details.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              transaction:
+                $ref: '#/components/schemas/Transaction'
+
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        gas:
+          type: integer
+        maxFeePerGas:
+          type: integer
+        maxPriorityFeePerGas:
+          type: integer
+        gasPrice:
+          type: integer
+        value:
+          type: string
+        data:
+          type: string
+        nonce:
+          type: integer
+
+    SwapRequest:
+      type: object
+      properties:
+        chainId:
+          type: string
+        sourceAmount:
+          type: string
+        sourceToken:
+          type: string
+        destinationToken:
+          type: string
+      required:
+        - chainId
+        - sourceAmount
+        - sourceToken
+        - destinationToken
+
+    BridgeRequest:
+      type: object
+      properties:
+        sourceChainId:
+          type: string
+        destinationChainId:
+          type: string
+        sourceToken:
+          type: string
+        destinationToken:
+          type: string
+        sourceAmount:
+          type: string
+      required:
+        - sourceChainId
+        - destinationChainId
+        - sourceToken
+        - destinationToken
+        - sourceAmount
+
+    TransferRequest:
+      type: object
+      properties:
+        token:
+          type: string
+        amount:
+          type: string
+        recipient:
+          type: string
+      required:
+        - token
+        - amount
+        - recipient
+
+paths:
+  /swap:
+    post:
+      summary: Perform a token swap.
+      description: Swaps tokens between two tokens on the same chain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwapRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TransactionResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /bridge:
+    post:
+      summary: Bridge tokens between different blockchain networks.
+      description: Bridges tokens between different blockchain networks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BridgeRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TransactionResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /transfer:
+    post:
+      summary: Transfer tokens to another address.
+      description: Transfers tokens from one address to another on the same chain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TransactionResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+security:
+  - OAuth2: []
+  
+

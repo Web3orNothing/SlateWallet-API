@@ -27,7 +27,8 @@ app.post('/swap', async (req, res) => {
         enableDirectWrapping: true,
         includeRoute: true,
       });
-      const response = await axios.get(`${queryURL}?${queryParams}`);
+      // const response = await axios.get(`${queryURL}?${queryParams}`);
+      const response = await axios.get('https://swap.metaswap.codefi.network/networks/1/trades?sourceAmount=1000000000000000000&sourceToken=0x0000000000000000000000000000000000000000&destinationToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&slippage=2&walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&timeout=10000&enableDirectWrapping=true&includeRoute=true');
   
       // Step 4: Parse the response and extract relevant information for the transaction
       const { data } = response;
@@ -43,13 +44,13 @@ app.post('/swap', async (req, res) => {
       const transactionDetails = {
         from: trade.from,
         to: trade.to,
-        gas: gasLimit,
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-        gasPrice,
+        gas: 355250,
+        maxFeePerGas: 355250,
+        maxPriorityFeePerGas: 355250,
+        gasPrice: 355250,
         value: trade.value,
         data: trade.data,
-        nonce,
+        nonce: 101,
       };
   
       res.status(200).json({ status: 'success', transaction: transactionDetails });
@@ -80,7 +81,8 @@ app.post('/bridge', async (req, res) => {
         aggIds: 'socket,lifi',
         insufficientBal: false,
       });
-      const response = await axios.get(`${queryURL}?${queryParams}`);
+      // const response = await axios.get(`${queryURL}?${queryParams}`);
+      const response = await axios.get('https://bridge.metaswap.codefi.network/getQuote?walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&srcChainId=1&destChainId=10&srcTokenAddress=0x0000000000000000000000000000000000000000&destTokenAddress=0x0000000000000000000000000000000000000000&srcTokenAmount=1000000000000000000&slippage=0.5&aggIds=socket,lifi&insufficientBal=false');
   
       // Step 3: Parse the response and extract relevant information for the bridge transaction
       const { data: quoteData } = response;
@@ -94,11 +96,13 @@ app.post('/bridge', async (req, res) => {
       const transactionDetails = {
         from: from,
         to: to,
-        gas: '',
-        gasPrice: 'gas_price', // Replace 'gas_price' with the actual gas price
+        gas: 355250,
+        maxFeePerGas: 355250,
+        maxPriorityFeePerGas: 355250,
+        gasPrice: 355250,
         value: value,
         data: data,
-        nonce: 'nonce', // Replace 'nonce' with the actual nonce value
+        nonce: 101,
       };
   
       res.status(200).json({ status: 'success', transaction: transactionDetails });
@@ -131,6 +135,11 @@ app.post('/transfer', async (req, res) => {
       console.error('Error:', error);
       res.status(500).json({ status: 'error', message: 'Internal server error' });
     }
+});
+
+// Status endpoint
+app.get('/status', async (req, res) => {
+  res.status(200).json({ status: 'success'});
 });
 
 // Start the server

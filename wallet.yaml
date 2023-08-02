@@ -62,7 +62,7 @@ components:
     SwapRequest:
       type: object
       properties:
-        chainId:
+        chainName:
           type: string
           description: The ID of the blockchain chain where the token swap will occur.
         sourceAmount:
@@ -75,7 +75,7 @@ components:
           type: string
           description: The token to be received in the swap.
       required:
-        - chainId
+        - chainName
         - sourceAmount
         - sourceToken
         - destinationToken
@@ -83,10 +83,10 @@ components:
     BridgeRequest:
       type: object
       properties:
-        sourceChainId:
+        sourceChainName:
           type: string
           description: The ID of the source blockchain chain.
-        destinationChainId:
+        destinationChainName:
           type: string
           description: The ID of the destination blockchain chain.
         sourceToken:
@@ -99,8 +99,8 @@ components:
           type: string
           description: The amount of tokens to be transferred.
       required:
-        - sourceChainId
-        - destinationChainId
+        - sourceChainName
+        - destinationChainName
         - sourceToken
         - destinationToken
         - sourceAmount

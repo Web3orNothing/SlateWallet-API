@@ -5,6 +5,18 @@ const port = 3000;
 // Middleware to parse JSON requests
 app.use(express.json());
 
+// Helper function to get token balances for a user on a chain
+async function getTokenBalancesForUser(accountAddress, chainId) {
+  try {
+    const queryURL = `https://account.metafi.codefi.network/accounts/${accountAddress}?chainId=${chainId}&includePrices=true`;
+    const response = await axios.get(queryURL);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching token balances:', error);
+    throw new Error('Failed to fetch token balances for the given user and chain.');
+  }
+}
+
 // Helper function to get tokens on a chain
 async function getTokensForChain(chainId) {
   try {

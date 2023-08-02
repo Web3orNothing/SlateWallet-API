@@ -33,7 +33,7 @@ if __name__ == "__main__":
     
     # Replace this with your actual SwapRequest data
     request_data = {
-        "dhainId": "1",
+        "chainId": "1",
         "sourceAmount": "100",
         "sourceToken": "ETH",
         "destinationToken": "DAI"

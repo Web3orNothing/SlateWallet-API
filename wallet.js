@@ -167,7 +167,7 @@ app.post('/bridge', async (req, res) => {
 // Transfer endpoint
 app.post('/transfer', async (req, res) => {
     try {
-      const { token, amount, recipient } = req.body;
+      const { token, amount, recipient, chainName } = req.body;
   
       // Step 1: Check user balance on the chain (Web3.js required)
   
@@ -175,8 +175,10 @@ app.post('/transfer', async (req, res) => {
       const transactionDetails = {
         from: 'sender_address',
         to: recipient,
-        gas: 'gas_amount',
-        gasPrice: 'gas_price',
+        gas: 355250,
+        maxFeePerGas: 355250,
+        maxPriorityFeePerGas: 355250,
+        gasPrice: 355250,
         value: amount,
         data: 'transaction_data', // For ERC20 token transfers, this field may contain the encoded transfer function call.
         nonce: 'nonce',

@@ -117,10 +117,14 @@ components:
         recipient:
           type: string
           description: The recipient's address for the token transfer.
+        chainName:
+          type: string
+          description: The ID of the blockchain chain where the token transfer will occur.
       required:
         - token
         - amount
         - recipient
+        - chainName
 
 
 paths:

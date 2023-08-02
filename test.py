@@ -1,12 +1,12 @@
 import requests
 
-def call_swap_endpoint(api_url, swap_request_data):
+def call_endpoint(api_url, endpoint,  request_data):
     headers = {
         'Content-Type': 'application/json'
     }
 
     try:
-        response = requests.post(f'{api_url}/bridge', headers=headers, json=swap_request_data)
+        response = requests.post(f'{api_url}/{endpoint}', headers=headers, json=request_data)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     api_url = "https://wallet.spicefi.xyz/v1"
 
     # Replace this with your actual SwapRequest data
-    swap_request_data = {
+    request_data = {
         "sourceChainId": "1",
         "destinationChainId": "42161",
         "sourceAmount": "100",
@@ -26,7 +26,21 @@ if __name__ == "__main__":
         "destinationToken": "DAI"
     }
 
-    response_data = call_swap_endpoint(api_url, swap_request_data)
+    response_data = call_endpoint(api_url, 'bridge', request_data)
     if response_data:
         print("Transaction Status:", response_data.get("status"))
         print("Transaction Details:", response_data.get("transaction"))
+    
+    # Replace this with your actual SwapRequest data
+    request_data = {
+        "dhainId": "1",
+        "sourceAmount": "100",
+        "sourceToken": "ETH",
+        "destinationToken": "DAI"
+    }
+
+    response_data = call_endpoint(api_url, 'swap', request_data)
+    if response_data:
+        print("Transaction Status:", response_data.get("status"))
+        print("Transaction Details:", response_data.get("transaction"))
+

@@ -26,18 +26,6 @@ components:
             scopes:
               read: Read access
               write: Write access
-  responses:
-    TransactionResponse:
-      description: Response containing transaction details.
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              status:
-                type: string
-              transaction:
-                $ref: '#/components/schemas/Transaction'
 
   schemas:
     Transaction:
@@ -45,34 +33,47 @@ components:
       properties:
         from:
           type: string
+          description: The sender's address for the transaction.
         to:
           type: string
+          description: The recipient's address for the transaction.
         gas:
           type: integer
+          description: The amount of gas units provided for the transaction.
         maxFeePerGas:
           type: integer
+          description: The maximum fee per gas unit allowed for the transaction.
         maxPriorityFeePerGas:
           type: integer
+          description: The maximum priority fee per gas unit allowed for the transaction.
         gasPrice:
           type: integer
+          description: The gas price for the transaction.
         value:
           type: string
+          description: The value of the transaction (e.g., token amount).
         data:
           type: string
+          description: Additional data associated with the transaction.
         nonce:
           type: integer
+          description: The nonce value for the transaction.
 
     SwapRequest:
       type: object
       properties:
         chainId:
           type: string
+          description: The ID of the blockchain chain where the token swap will occur.
         sourceAmount:
           type: string
+          description: The amount of tokens to be swapped from the sourceToken.
         sourceToken:
           type: string
+          description: The token to be swapped from.
         destinationToken:
           type: string
+          description: The token to be received in the swap.
       required:
         - chainId
         - sourceAmount
@@ -84,14 +85,19 @@ components:
       properties:
         sourceChainId:
           type: string
+          description: The ID of the source blockchain chain.
         destinationChainId:
           type: string
+          description: The ID of the destination blockchain chain.
         sourceToken:
           type: string
+          description: The token to be transferred from the source chain to the destination chain.
         destinationToken:
           type: string
+          description: The token to be received on the destination chain.
         sourceAmount:
           type: string
+          description: The amount of tokens to be transferred.
       required:
         - sourceChainId
         - destinationChainId
@@ -104,14 +110,18 @@ components:
       properties:
         token:
           type: string
+          description: The token to be transferred.
         amount:
           type: string
+          description: The amount of tokens to be transferred.
         recipient:
           type: string
+          description: The recipient's address for the token transfer.
       required:
         - token
         - amount
         - recipient
+
 
 paths:
   /swap:
@@ -126,7 +136,16 @@ paths:
               $ref: '#/components/schemas/SwapRequest'
       responses:
         '200':
-          $ref: '#/components/responses/TransactionResponse'
+          description: Response containing transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:
@@ -151,7 +170,16 @@ paths:
               $ref: '#/components/schemas/BridgeRequest'
       responses:
         '200':
-          $ref: '#/components/responses/TransactionResponse'
+          description: Response containing transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:
@@ -176,7 +204,16 @@ paths:
               $ref: '#/components/schemas/TransferRequest'
       responses:
         '200':
-          $ref: '#/components/responses/TransactionResponse'
+          description: Response containing transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:

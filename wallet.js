@@ -8,8 +8,10 @@ app.use(express.json());
 // Swap endpoint
 app.post('/swap', async (req, res) => {
     try {
-      const { chainId, sourceAmount, sourceToken, destinationToken } = req.body;
-  
+      var { chainId, sourceAmount, sourceToken, destinationToken } = req.body;
+      if (chainId === 'Ethereum' || chainId === 'ethereum') {
+        chainId = 1
+      }
       // Step 1: Check user balance on the given chain (Web3.js required)
   
       // Step 2: Check user allowance and approve if necessary (Web3.js required)
@@ -28,7 +30,8 @@ app.post('/swap', async (req, res) => {
         includeRoute: true,
       });
       // const response = await axios.get(`${queryURL}?${queryParams}`);
-      const response = await axios.get('https://swap.metaswap.codefi.network/networks/1/trades?sourceAmount=1000000000000000000&sourceToken=0x0000000000000000000000000000000000000000&destinationToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&slippage=2&walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&timeout=10000&enableDirectWrapping=true&includeRoute=true');
+      const response = await axios.get('https://swap.metaswap.codefi.network/networks/1/trades?sourceAmount=2000000000000000000&sourceToken=0x0000000000000000000000000000000000000000&destinationToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&slippage=2&walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&timeout=10000&enableDirectWrapping=true&includeRoute=true');
+      console.log(response);
 
       // Step 4: Parse the response and extract relevant information for the transaction
       if (!response) {
@@ -36,7 +39,12 @@ app.post('/swap', async (req, res) => {
       }
   
       // For this example, we will use the first trade in the response
-      const trade = response['data'][0]['trade'];
+      var i = 0;
+      var trade = null;
+      while (!trade) {
+        trade = response['data'][i]['trade'];
+        i += 1;
+      }
       
       // Step 5: Return the transaction details to the client
       const transactionDetails = {
@@ -61,8 +69,13 @@ app.post('/swap', async (req, res) => {
 // Bridge endpoint
 app.post('/bridge', async (req, res) => {
     try {
-      const { sourceChainId, destinationChainId, sourceToken, destinationToken, sourceAmount } = req.body;
-  
+      var { sourceChainId, destinationChainId, sourceToken, destinationToken, sourceAmount } = req.body;
+      if (sourceChainId === 'Ethereum' || sourceChainId === 'ethereum') {
+        sourceChainId = 1
+      }
+      if (destinationChainId === 'Ethereum' || destinationChainId === 'ethereum') {
+        destinationChainId = 1
+      }
       // Step 1: Check user balance and allowance on the source chain (Web3.js required)
   
       // Step 2: Make an HTTP request to Metamask Bridge API
@@ -80,14 +93,21 @@ app.post('/bridge', async (req, res) => {
         insufficientBal: false,
       });
       // const response = await axios.get(`${queryURL}?${queryParams}`);
-      const response = await axios.get('https://bridge.metaswap.codefi.network/getQuote?walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&srcChainId=1&destChainId=10&srcTokenAddress=0x0000000000000000000000000000000000000000&destTokenAddress=0x0000000000000000000000000000000000000000&srcTokenAmount=1000000000000000000&slippage=0.5&aggIds=socket,lifi&insufficientBal=false');
-  
+      const response = await axios.get('https://bridge.metaswap.codefi.network/getQuote?walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&srcChainId=1&destChainId=10&srcTokenAddress=0x0000000000000000000000000000000000000000&destTokenAddress=0x0000000000000000000000000000000000000000&srcTokenAmount=1500000000000000000&slippage=0.5&aggIds=socket,lifi&insufficientBal=false');
+      console.log(response);
+
       // Step 3: Parse the response and extract relevant information for the bridge transaction
       const { data: quoteData } = response;
       const { chainId, to, from, value, data } = quoteData;
 
       // For this example, we will use the first trade in the response
-      const trade = response['data'][0]['trade'];
+      var i = 0;
+      var trade = null;
+      while (!trade) {
+        trade = response['data'][i]['trade'];
+        i += 1;
+      }
+        
   
       // Step 4: Return the transaction details to the client
       const transactionDetails = {

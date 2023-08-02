@@ -1,0 +1,12 @@
+{
+  "name": "wallet",
+  "version": "1.0.0",
+  "description": "NLP Wallet Router",
+  "main": "wallet.js",
+  "repository": "https://github.com/teamspice/walletapi",
+  "author": "spniyant",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

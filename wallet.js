@@ -29,17 +29,15 @@ app.post('/swap', async (req, res) => {
       });
       // const response = await axios.get(`${queryURL}?${queryParams}`);
       const response = await axios.get('https://swap.metaswap.codefi.network/networks/1/trades?sourceAmount=1000000000000000000&sourceToken=0x0000000000000000000000000000000000000000&destinationToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&slippage=2&walletAddress=0xc5a05570da594f8edcc9beaa2385c69411c28cbe&timeout=10000&enableDirectWrapping=true&includeRoute=true');
-  
+
       // Step 4: Parse the response and extract relevant information for the transaction
-      const { data } = response;
-      const { trades } = data;
-      if (!trades || trades.length === 0) {
+      if (!response) {
         throw new Error('No trades found in the response.');
       }
   
       // For this example, we will use the first trade in the response
-      const trade = trades[0]['trade'];
-  
+      const trade = response['data'][0]['trade'];
+      
       // Step 5: Return the transaction details to the client
       const transactionDetails = {
         from: trade.from,
@@ -87,21 +85,20 @@ app.post('/bridge', async (req, res) => {
       // Step 3: Parse the response and extract relevant information for the bridge transaction
       const { data: quoteData } = response;
       const { chainId, to, from, value, data } = quoteData;
+
+      // For this example, we will use the first trade in the response
+      const trade = response['data'][0]['trade'];
   
-      // Step 4: Construct the bridge transaction (Web3.js required)
-  
-      // Step 5: Send the bridge transaction to the source chain (Web3.js required)
-  
-      // Step 6: Return the transaction details to the client
+      // Step 4: Return the transaction details to the client
       const transactionDetails = {
-        from: from,
-        to: to,
+        from: trade.from,
+        to: trade.to,
         gas: 355250,
         maxFeePerGas: 355250,
         maxPriorityFeePerGas: 355250,
         gasPrice: 355250,
-        value: value,
-        data: data,
+        value: trade.value,
+        data: trade.data,
         nonce: 101,
       };
   

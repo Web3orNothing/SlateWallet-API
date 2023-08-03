@@ -39,20 +39,16 @@
                     "type": "string",
                     "description": "The ID of the destination blockchain chain.",
                 },
-                "sourceToken": {
+                "token": {
                     "type": "string",
                     "description": "The token to be transferred from the source chain to the destination chain.",
                 },
-                "destinationToken": {
-                    "type": "string",
-                    "description": "The token to be received on the destination chain.",
-                },
-                "sourceAmount": {
+                "amount": {
                     "type": "string",
                     "description": "The amount of tokens to be transferred.",
                 },
             },
-            "required": ["sourceChainName", "destinationChainName", "sourceToken", "destinationToken", "sourceAmount"],
+            "required": ["sourceChainName", "destinationChainName", "token", "amount"],
         },
     },
     {

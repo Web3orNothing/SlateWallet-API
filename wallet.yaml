@@ -51,10 +51,10 @@ components:
           description: The gas price for the transaction.
         value:
           type: string
-          description: The value of the transaction (e.g., token amount).
+          description: The value of the transaction (e.g., native token amount).
         data:
           type: string
-          description: Additional data associated with the transaction.
+          description: Additional data associated with the transaction (useful when a smart contract is called).
         nonce:
           type: integer
           description: The nonce value for the transaction.
@@ -64,10 +64,10 @@ components:
       properties:
         chainName:
           type: string
-          description: The ID of the blockchain chain where the token swap will occur.
+          description: The ID of the blockchain where the token swap will occur.
         sourceAmount:
           type: string
-          description: The amount of tokens to be swapped from the sourceToken.
+          description: The amount of sourceToken to be swapped.
         sourceToken:
           type: string
           description: The token to be swapped from.
@@ -85,25 +85,21 @@ components:
       properties:
         sourceChainName:
           type: string
-          description: The ID of the source blockchain chain.
+          description: The ID of the source blockchain.
         destinationChainName:
           type: string
-          description: The ID of the destination blockchain chain.
-        sourceToken:
+          description: The ID of the destination blockchain.
+        token:
           type: string
           description: The token to be transferred from the source chain to the destination chain.
-        destinationToken:
-          type: string
-          description: The token to be received on the destination chain.
-        sourceAmount:
+        amount:
           type: string
           description: The amount of tokens to be transferred.
       required:
         - sourceChainName
         - destinationChainName
-        - sourceToken
-        - destinationToken
-        - sourceAmount
+        - token
+        - amount
 
     TransferRequest:
       type: object
@@ -119,7 +115,7 @@ components:
           description: The recipient's address for the token transfer.
         chainName:
           type: string
-          description: The ID of the blockchain chain where the token transfer will occur.
+          description: The ID of the blockchain where the token transfer will occur.
       required:
         - token
         - amount
@@ -131,7 +127,7 @@ paths:
   /swap:
     post:
       summary: Perform a token swap.
-      description: Swaps tokens between two tokens on the same chain.
+      description: Swaps source amount of source token for destination token on the same chain.
       requestBody:
         required: true
         content:
@@ -165,7 +161,7 @@ paths:
   /bridge:
     post:
       summary: Bridge tokens between different blockchain networks.
-      description: Bridges tokens between different blockchain networks.
+      description: Bridges tokens between different blockchain networks by transferring amount of token from source chain to destination chain.
       requestBody:
         required: true
         content:
@@ -229,6 +225,53 @@ paths:
                     type: string
                   message:
                     type: string
+  /token-balance:
+    get:
+      summary: Get the user's token balance on a specific chain.
+      description: Retrieves the user's balance of a specific token on a given chain.
+      parameters:
+        - name: accountAddress
+          in: query
+          description: The user's account address.
+          required: true
+          schema:
+            type: string
+        - name: chainName
+          in: query
+          description: The ID of the blockchain where the token is located.
+          required: true
+          schema:
+            type: string
+        - name: tokenName
+          in: query
+          description: The name of the token whose balance is requested.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Response containing the user's token balance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  balance:
+                    type: string
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
 
 security:
   - OAuth2: []

@@ -271,6 +271,48 @@ paths:
                     type: string
                   message:
                     type: string
+    post:
+      summary: Get the user's token balance on a specific chain.
+      description: Retrieves the user's balance of a specific token on a given chain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountAddress:
+                  type: string
+                  description: The user's account address.
+                chainName:
+                  type: string
+                  description: The ID of the blockchain where the token is located.
+                tokenName:
+                  type: string
+                  description: The name of the token whose balance is requested
+      responses:
+        '200':
+          description: Response containing the user's token balance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  balance:
+                    type: number
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
 
 
 security:

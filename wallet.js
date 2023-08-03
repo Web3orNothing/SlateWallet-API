@@ -224,6 +224,35 @@ app.get('/token-balance', async (req, res) => {
   // }
 });
 
+app.post('/token-balance', async (req, res) => {
+  res.status(200).json({ status: 'success', balance: 1 });
+  // try {
+    // const { accountAddress, chainName, tokenName } = req.body;
+    // const chainId = getChainIdFromName(chainName);
+// 
+    // // Step 1: Fetch the token address for the given tokenName on the specified chain
+    // const tokens = await getTokensForChain(chainId);
+    // const token = tokens.find((t) => t.symbol.toLowerCase() === tokenName.toLowerCase());
+    // if (!token) {
+      // return res.status(400).json({ status: 'error', message: 'Token not found on the specified chain.' });
+    // }
+// 
+    // // Step 2: Fetch the user's token balance using the MetaFi API
+    // const response = await getTokenBalancesForUser(accountAddress, chainId);
+    // const nativeBalances = [response.nativeBalance]
+    // const nativeBalance = nativeBalances.find((b) => b.address === token.address);
+    // const tokenBalance = response.tokenBalances.find((b) => b.address === token.address);
+// 
+    // if (!tokenBalance && !nativeBalance) {
+      // return res.status(200).json({ status: 'success', balance: '0' });
+    // }
+// 
+    // res.status(200).json({ status: 'success', balance: tokenBalance.balance });
+  // } catch (error) {
+    // console.error('Error:', error);
+    // res.status(500).json({ status: 'error', message: 'Internal server error' });
+  // }
+});
 
 // Status endpoint
 app.get('/status', async (req, res) => {

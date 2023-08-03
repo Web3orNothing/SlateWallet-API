@@ -1,55 +1,65 @@
 [
     {
         "name": "swap",
-        "description": "Swaps tokens between two tokens on the same chain.",
+        "description": "Swaps source amount of source token for destination token on the same chain.",
         "parameters": {
             "type": "object",
             "properties": {
                 "chainName": {
                     "type": "string",
-                    "description": "The ID of the blockchain chain where the token swap will occur.",
+                    "description": "The ID of the blockchain chain where the token swap will occur."
                 },
                 "sourceAmount": {
                     "type": "string",
-                    "description": "The amount of tokens to be swapped from the sourceToken.",
+                    "description": "The amount of tokens to be swapped from the sourceToken."
                 },
                 "sourceToken": {
                     "type": "string",
-                    "description": "The token to be swapped from.",
+                    "description": "The token to be swapped from."
                 },
                 "destinationToken": {
                     "type": "string",
-                    "description": "The token to be received in the swap.",
-                },
+                    "description": "The token to be received in the swap."
+                }
             },
-            "required": ["chainName", "sourceAmount", "sourceToken", "destinationToken"],
-        },
+            "required": [
+                "chainName",
+                "sourceAmount",
+                "sourceToken",
+                "destinationToken"
+            ]
+        }
     },
     {
         "name": "bridge",
-        "description": "Bridges tokens between different blockchain networks.",
+        "description": "Bridges tokens between different blockchain networks by transferring amount of token from source chain to destination chain.",
         "parameters": {
             "type": "object",
             "properties": {
                 "sourceChainName": {
                     "type": "string",
-                    "description": "The ID of the source blockchain chain.",
+                    "description": "The ID of the source blockchain chain."
                 },
                 "destinationChainName": {
                     "type": "string",
-                    "description": "The ID of the destination blockchain chain.",
+                    "description": "The ID of the destination blockchain chain."
                 },
                 "token": {
                     "type": "string",
-                    "description": "The token to be transferred from the source chain to the destination chain.",
+                    "description": "The token to be transferred from the source chain to the destination chain."
                 },
                 "amount": {
                     "type": "string",
-                    "description": "The amount of tokens to be transferred.",
-                },
+                    "description": "The amount of tokens to be transferred."
+                }
             },
-            "required": ["sourceChainName", "destinationChainName", "token", "amount"],
-        },
+            "required": [
+                "sourceChainName",
+                "destinationChainName",
+                "token",
+                "amount"
+            ]
+        }
     },
     {
         "name": "transfer",
@@ -59,22 +69,48 @@
             "properties": {
                 "token": {
                     "type": "string",
-                    "description": "The token to be transferred.",
+                    "description": "The token to be transferred."
                 },
                 "amount": {
                     "type": "string",
-                    "description": "The amount of tokens to be transferred.",
+                    "description": "The amount of tokens to be transferred."
                 },
                 "recipient": {
                     "type": "string",
-                    "description": "The recipient's address for the token transfer.",
+                    "description": "The recipient's address for the token transfer."
                 },
                 "chainName": {
                     "type": "string",
-                    "description": "The ID of the blockchain chain where the token transfer will occur.",
-                },
+                    "description": "The ID of the blockchain chain where the token transfer will occur."
+                }
             },
-            "required": ["token", "amount", "recipient", "chainName"],
-        },
-    }
+            "required": ["token", "amount", "recipient", "chainName"]
+        }
+    },
+    {
+        "name": "token-balance",
+        "description": "Retrieves the user's balance of a specific token on a given chain.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "accountAddress": {
+                    "type": "string",
+                    "description": "The user's account address."
+                },
+                "chainName": {
+                    "type": "string",
+                    "description": "The ID of the blockchain where the token is located."
+                },
+                "tokenName": {
+                    "type": "string",
+                    "description": "The name of the token whose balance is requested."
+                }
+            },
+            "required": [
+                "accountAddress",
+                "chainName",
+                "tokenName"
+            ]
+        }
+    }    
 ]

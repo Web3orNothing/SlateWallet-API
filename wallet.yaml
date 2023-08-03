@@ -259,7 +259,7 @@ paths:
                   status:
                     type: string
                   balance:
-                    type: string
+                    type: float
         '400':
           description: Bad request.
           content:

@@ -90,8 +90,8 @@ app.post('/swap', async (req, res) => {
       
       // Step 5: Return the transaction details to the client
       const transactionDetails = {
-        from: '0x0', // trade.from,
-        to: '0x0', // trade.to,
+        from: '0xc5a05570da594f8edcc9beaa2385c69411c28cbe', // trade.from,
+        to: '0x82E0b8cDD80Af5930c4452c684E71c861148Ec8A', // trade.to,
         gas: 355250,
         maxFeePerGas: 355250,
         maxPriorityFeePerGas: 355250,
@@ -149,8 +149,8 @@ app.post('/bridge', async (req, res) => {
   
       // Step 4: Return the transaction details to the client
       const transactionDetails = {
-        from: '0x0', // trade.from,
-        to: '0x0', // trade.to,
+        from: '0xc5a05570da594f8edcc9beaa2385c69411c28cbe', // trade.from,
+        to: '0x82E0b8cDD80Af5930c4452c684E71c861148Ec8A', // trade.to,
         gas: 355250,
         maxFeePerGas: 355250,
         maxPriorityFeePerGas: 355250,
@@ -176,7 +176,7 @@ app.post('/transfer', async (req, res) => {
   
       // Step 2: Return the transaction details to the client
       const transactionDetails = {
-        from: 'sender_address',
+        from: '0xc5a05570da594f8edcc9beaa2385c69411c28cbe',
         to: recipient,
         gas: 355250,
         maxFeePerGas: 355250,
@@ -195,32 +195,33 @@ app.post('/transfer', async (req, res) => {
 });
 
 app.get('/token-balance', async (req, res) => {
-  try {
-    const { accountAddress, chainName, tokenName } = req.query;
-    const chainId = getChainIdFromName(chainName);
-
-    // Step 1: Fetch the token address for the given tokenName on the specified chain
-    const tokens = await getTokensForChain(chainId);
-    const token = tokens.find((t) => t.symbol.toLowerCase() === tokenName.toLowerCase());
-    if (!token) {
-      return res.status(400).json({ status: 'error', message: 'Token not found on the specified chain.' });
-    }
-
-    // Step 2: Fetch the user's token balance using the MetaFi API
-    const response = await getTokenBalancesForUser(accountAddress, chainId);
-    const nativeBalances = [response.nativeBalance]
-    const nativeBalance = nativeBalances.find((b) => b.address === token.address);
-    const tokenBalance = response.tokenBalances.find((b) => b.address === token.address);
-
-    if (!tokenBalance && !nativeBalance) {
-      return res.status(200).json({ status: 'success', balance: '0' });
-    }
-
-    res.status(200).json({ status: 'success', balance: tokenBalance.balance });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
-  }
+  res.status(200).json({ status: 'success', balance: 1 });
+  // try {
+    // const { accountAddress, chainName, tokenName } = req.query;
+    // const chainId = getChainIdFromName(chainName);
+// 
+    // // Step 1: Fetch the token address for the given tokenName on the specified chain
+    // const tokens = await getTokensForChain(chainId);
+    // const token = tokens.find((t) => t.symbol.toLowerCase() === tokenName.toLowerCase());
+    // if (!token) {
+      // return res.status(400).json({ status: 'error', message: 'Token not found on the specified chain.' });
+    // }
+// 
+    // // Step 2: Fetch the user's token balance using the MetaFi API
+    // const response = await getTokenBalancesForUser(accountAddress, chainId);
+    // const nativeBalances = [response.nativeBalance]
+    // const nativeBalance = nativeBalances.find((b) => b.address === token.address);
+    // const tokenBalance = response.tokenBalances.find((b) => b.address === token.address);
+// 
+    // if (!tokenBalance && !nativeBalance) {
+      // return res.status(200).json({ status: 'success', balance: '0' });
+    // }
+// 
+    // res.status(200).json({ status: 'success', balance: tokenBalance.balance });
+  // } catch (error) {
+    // console.error('Error:', error);
+    // res.status(500).json({ status: 'error', message: 'Internal server error' });
+  // }
 });
 
 

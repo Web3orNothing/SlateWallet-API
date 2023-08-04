@@ -143,6 +143,7 @@ async function get_contract_data(contract) {
   const api_key = process.env.ETHERSCAN_API_KEY;
   const response_data = await fetch_contract_abi(contract, api_key);
 
+  //if not verified on etherscan, should not interact with it
   if (response_data && response_data.status === '1') {
     const abi = JSON.parse(response_data.result);
     const signatures = {};

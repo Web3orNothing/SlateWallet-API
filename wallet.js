@@ -40,11 +40,23 @@ function getChainIdFromName(chainName) {
   const chainNamesToIds = {
     ethereum: 1,
     optimism: 10,
+    cronos: 25,
     binancesmartchain: 56,
+    ethclassic: 61,
+    gnosis: 100,
     polygon: 137,
     fantom: 250,
+    filecoin: 314,
+    moonbeam: 1284,
+    moonriver: 1285,
+    kava: 2222,
+    mantle: 5000,
+    canto: 7700,
+    base: 8453,
     arbitrum: 42161,
+    celo: 42220,
     avalanche: 43114,
+    linea: 59144,
     // Add more chainName-chainId mappings here as needed
   };
 

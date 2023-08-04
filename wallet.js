@@ -115,6 +115,13 @@ function getProtocolAddressFromName(protocolName) {
     aavegotchi: '0x86935F11C86623deC8a25696E1C19a8659CbF95d',
     pooltogether: '0x0cec1a9154ff802e7934fc916ed7ca50bde6844e',
     celsius: '0xaaaebe6fe48e54f431b0c390cfaf0b017d09d42d',
+    opensea: '0x7Be8076f4EA4A4AD08075C2508e481d6C946D12b',
+    rarible: '0xFc1E690f61EFd961294b3e1Ce3313fBD8aa4f85d',
+    superRare: '0x41a322b28d0f447e5e7dbd4d942f4a8a73a2cabd',
+    decentraland: '0x0f5d2fb29fb7d3cfee444a200298f468908cc942',
+    cryptovoxels: '0x79986af15539de2db9a5086382daeda917a9cf0c',
+    artblocks: '0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270',
+    binance_nft: '0x4e7bf3694962fc482a16d60fd78f99db9c4c52b0',
     // Add more protocolName-protocolAddress mappings here as needed
   };
 

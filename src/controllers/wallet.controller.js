@@ -8,7 +8,6 @@ import {
   getRpcUrlForChain,
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokensForChain,
-  getTokenBalancesForUser,
 } from "../utils.js";
 
 import ERC20_ABI from "../abis/erc20.json" assert { type: "json" };
@@ -213,10 +212,7 @@ const transfer = async (req, res) => {
 
     // Step 1: Check user balance on the chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(chainId);
-    const provider = new ethers.providers.JsonRpcProvider(
-      rpcUrl,
-      chainId
-    );
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     let balance;
     let _token;
     if (token == NATIVE_TOKEN) {
@@ -280,23 +276,20 @@ const getTokenBalance = async (req, res) => {
       });
     }
 
-    // Step 2: Fetch the user's token balance using the MetaFi API
-    const response = await getTokenBalancesForUser(accountAddress, chainId);
-    const nativeBalances = [response.nativeBalance];
-    const nativeBalance = nativeBalances.find(
-      (b) => b.address === token.address
-    );
-    const tokenBalance = response.tokenBalances.find(
-      (b) => b.address === token.address
-    );
-    if (!tokenBalance && !nativeBalance) {
-      return res
-        .status(httpStatus.OK)
-        .json({ status: "success", balance: "0" });
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+    let balance;
+    if (token.address == NATIVE_TOKEN) {
+      balance = await provider.getBalance(accountAddress);
+    } else {
+      const _token = new ethers.Contract(token.address, ERC20_ABI, provider);
+      balance = await _token.balanceOf(accountAddress);
     }
+
     res.status(httpStatus.OK).json({
       status: "success",
-      balance: (tokenBalance || nativeBalance).balance,
+      balance: balance.toString(),
     });
   } catch (err) {
     console.error("Error:", err);

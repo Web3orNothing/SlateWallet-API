@@ -102,21 +102,3 @@ export const getTokensForChain = async (chainId) => {
     throw new Error("Failed to fetch tokens for the given chainId.");
   }
 };
-
-// Helper function to get token balances for a user on a chain
-export const getTokenBalancesForUser = async (accountAddress, chainId) => {
-  try {
-    const response = await axios.get(
-      `https://account.metafi.codefi.network/accounts/${accountAddress}?chainId=${chainId}&includePrices=true`,
-      {
-        headers: metamaskApiHeaders,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching token balances:", error);
-    throw new Error(
-      "Failed to fetch token balances for the given user and chain."
-    );
-  }
-};

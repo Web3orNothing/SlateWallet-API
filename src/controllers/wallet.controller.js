@@ -85,8 +85,8 @@ const swap = async (req, res) => {
         ]);
         const transactionDetails = {
           from: trade.from,
-          to: sourceAmount,
-          gas: 355250,
+          to: sourceToken,
+          gasLimit: 355250,
           value: 0,
           data: approveData,
           nonce,
@@ -101,7 +101,7 @@ const swap = async (req, res) => {
     const transactionDetails = {
       from: accountAddress,
       to: trade.to,
-      gas: 355250,
+      gasLimit: 355250,
       value: trade.value,
       data: trade.data,
       nonce,
@@ -120,21 +120,44 @@ const swap = async (req, res) => {
 
 const bridge = async (req, res) => {
   try {
-    const { sourceChainName, destinationChainName, token, amount } = req.body;
+    const {
+      accountAddress,
+      sourceChainName,
+      destinationChainName,
+      sourceToken,
+      destinationToken,
+      sourceAmount,
+    } = req.body;
     const sourceChainId = getChainIdFromName(sourceChainName);
     const destinationChainId = getChainIdFromName(destinationChainName);
 
-    // Step 1: Check user balance and allowance on the source chain (Web3.js required)
+    // Step 1: Check user balance on the source chain (Web3.js required)
+    const rpcUrl = getRpcUrlForChain(sourceChainId);
+    const provider = new ethers.providers.JsonRpcProvider(
+      rpcUrl,
+      sourceChainId
+    );
+    let balance;
+    let token;
+    if (sourceToken == NATIVE_TOKEN) {
+      balance = await provider.getBalance(accountAddress);
+    } else {
+      token = new ethers.Contract(sourceToken, ERC20_ABI, provider);
+      balance = await token.balanceOf(accountAddress);
+    }
+    if (balance.lt(BigNumber.from(sourceAmount))) {
+      throw new Error("Insufficient balance");
+    }
 
     // Step 2: Make an HTTP request to Metamask Bridge API
     const queryURL = "https://bridge.metaswap.codefi.network/getQuote";
     const queryParams = new URLSearchParams({
-      walletAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
+      walletAddress: accountAddress,
       srcChainId: sourceChainId,
       destChainId: destinationChainId,
-      srcTokenAddress: token, // need to get token address on source chain
-      destTokenAddress: token, // need to get token address on destination chain
-      srcTokenAmount: amount,
+      srcTokenAddress: sourceToken,
+      destTokenAddress: destinationToken,
+      srcTokenAmount: sourceAmount,
       slippage: 0.5,
       aggIds: "socket,lifi",
       insufficientBal: false,
@@ -145,31 +168,32 @@ const bridge = async (req, res) => {
 
     // Step 3: Parse the response and extract relevant information for the bridge transaction
     const { data: quoteData } = response;
-    const { chainId, to, from, value, data } = quoteData;
+    if (quoteData.length == 0) {
+      throw new Error("No quotes found in the response.");
+    }
+    const { trade, approval } = quoteData[0];
 
-    let i = 0;
-    let trade = null;
-    while (!trade) {
-      trade = response["data"][i]["trade"];
-      i += 1;
+    let transactions = [];
+
+    // Step 4: Check user allowance and approve if necessary (Web3.js required)
+    let nonce = await provider.getTransactionCount(accountAddress);
+    if (approval) {
+      transactions.push({
+        ...approval,
+        nonce,
+        ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+      });
+      nonce++;
     }
 
-    // Step 4: Return the transaction details to the client
-    const transactionDetails = {
-      from: trade.from,
-      to: trade.to,
-      gas: 355250,
-      maxFeePerGas: 355250,
-      maxPriorityFeePerGas: 355250,
-      gasPrice: 355250,
-      value: trade.value,
-      data: "0x",
-      nonce: 101,
-    };
+    // Step 5: Return the transaction details to the client
+    transactions.push({
+      ...trade,
+      nonce,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+    });
 
-    res
-      .status(httpStatus.OK)
-      .json({ status: "success", transaction: transactionDetails });
+    res.status(httpStatus.OK).json({ status: "success", transactions });
   } catch (err) {
     console.error("Error:", err);
     res
@@ -188,7 +212,7 @@ const transfer = async (req, res) => {
     const transactionDetails = {
       from: accountAddress,
       to: recipient,
-      gas: 355250,
+      gasLimit: 355250,
       maxFeePerGas: 355250,
       maxPriorityFeePerGas: 355250,
       gasPrice: 355250,

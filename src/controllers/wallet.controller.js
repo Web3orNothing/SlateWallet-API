@@ -85,7 +85,6 @@ const swap = async (req, res) => {
         const transactionDetails = {
           from: trade.from,
           to: sourceToken,
-          gasLimit: 355250,
           value: "0x0",
           data: approveData,
           nonce,
@@ -100,7 +99,6 @@ const swap = async (req, res) => {
     const transactionDetails = {
       from: accountAddress,
       to: trade.to,
-      gasLimit: 355250,
       value: trade.value,
       data: trade.data,
       nonce,
@@ -241,7 +239,6 @@ const transfer = async (req, res) => {
     const transactionDetails = {
       from: accountAddress,
       to: recipient,
-      gasLimit: 355250,
       value,
       data,
       nonce,

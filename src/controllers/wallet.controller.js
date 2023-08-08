@@ -206,19 +206,50 @@ const transfer = async (req, res) => {
   try {
     const { accountAddress, token, amount, recipient, chainName } = req.body;
 
+    const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name");
+    }
+
     // Step 1: Check user balance on the chain (Web3.js required)
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(
+      rpcUrl,
+      chainId
+    );
+    let balance;
+    let _token;
+    if (token == NATIVE_TOKEN) {
+      balance = await provider.getBalance(accountAddress);
+    } else {
+      _token = new ethers.Contract(token, ERC20_ABI, provider);
+      balance = await _token.balanceOf(accountAddress);
+    }
+    if (balance.lt(BigNumber.from(amount))) {
+      throw new Error("Insufficient balance");
+    }
 
     // Step 2: Return the transaction details to the client
+    let nonce = await provider.getTransactionCount(accountAddress);
+    let to = recipient;
+    let data = "0x";
+    let value = amount;
+    if (token != NATIVE_TOKEN) {
+      to = token;
+      data = _token.interface.encodeFunctionData("transfer", [
+        recipient,
+        BigNumber.from(amount),
+      ]);
+      value = "0x0";
+    }
     const transactionDetails = {
       from: accountAddress,
       to: recipient,
       gasLimit: 355250,
-      maxFeePerGas: 355250,
-      maxPriorityFeePerGas: 355250,
-      gasPrice: 355250,
-      value: amount,
-      data: "transaction_data", // For ERC20 token transfers, this field may contain the encoded transfer function call.
-      nonce: "nonce",
+      value,
+      data,
+      nonce,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
 
     res

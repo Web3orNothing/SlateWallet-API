@@ -1,30 +1,59 @@
 import httpStatus from "http-status";
 import axios from "axios";
+import { ethers, BigNumber } from "ethers";
 
 import {
   metamaskApiHeaders,
   getChainIdFromName,
+  getRpcUrlForChain,
+  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokensForChain,
   getTokenBalancesForUser,
-} from "../utils";
+} from "../utils.js";
+
+import ERC20_ABI from "../abis/erc20.json" assert { type: "json" };
+
+const NATIVE_TOKEN = "0x0000000000000000000000000000000000000000";
 
 const swap = async (req, res) => {
   try {
-    const { chainName, sourceAmount, sourceToken, destinationToken } = req.body;
+    const {
+      accountAddress,
+      chainName,
+      sourceAmount,
+      sourceToken,
+      destinationToken,
+    } = req.body;
     const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name");
+    }
+
+    const transactions = [];
 
     // Step 1: Check user balance on the given chain (Web3.js required)
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+    let balance;
+    let token;
+    if (sourceToken == NATIVE_TOKEN) {
+      balance = await provider.getBalance(accountAddress);
+    } else {
+      token = new ethers.Contract(sourceToken, ERC20_ABI, provider);
+      balance = await token.balanceOf(accountAddress);
+    }
+    if (balance.lt(BigNumber.from(sourceAmount))) {
+      throw new Error("Insufficient balance");
+    }
 
-    // Step 2: Check user allowance and approve if necessary (Web3.js required)
-
-    // Step 3: Make an HTTP request to Metamask Swap API
+    // Step 2: Make an HTTP request to Metamask Swap API
     const queryURL = `https://swap.metaswap.codefi.network/networks/${chainId}/trades`;
     const queryParams = new URLSearchParams({
       sourceAmount,
       sourceToken,
       destinationToken,
       slippage: 2,
-      walletAddress: "wallet_address", // Replace with the actual wallet address
+      walletAddress: accountAddress,
       timeout: 10000,
       enableDirectWrapping: true,
       includeRoute: true,
@@ -33,7 +62,7 @@ const swap = async (req, res) => {
       headers: metamaskApiHeaders,
     });
 
-    // Step 4: Parse the response and extract relevant information for the transaction
+    // Step 3: Parse the response and extract relevant information for the transaction
     if (!response) {
       throw new Error("No trades found in the response.");
     }
@@ -41,26 +70,46 @@ const swap = async (req, res) => {
     let i = 0;
     let trade = null;
     while (!trade) {
-      trade = response["data"][i]["trade"];
+      trade = response.data[i]["trade"];
       i += 1;
+    }
+
+    // Step 4: Check user allowance and approve if necessary (Web3.js required)
+    let nonce = await provider.getTransactionCount(accountAddress);
+    if (sourceToken != NATIVE_TOKEN) {
+      const allowance = await token.allowance(accountAddress, trade.to);
+      if (allowance.lt(BigNumber.from(sourceAmount))) {
+        const approveData = token.interface.encodeFunctionData("approve", [
+          trade.to,
+          BigNumber.from(sourceAmount),
+        ]);
+        const transactionDetails = {
+          from: trade.from,
+          to: sourceAmount,
+          gas: 355250,
+          value: 0,
+          data: approveData,
+          nonce,
+          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+        };
+        nonce++;
+        transactions.push(transactionDetails);
+      }
     }
 
     // Step 5: Return the transaction details to the client
     const transactionDetails = {
-      from: trade.from,
+      from: accountAddress,
       to: trade.to,
       gas: 355250,
-      maxFeePerGas: 355250,
-      maxPriorityFeePerGas: 355250,
-      gasPrice: 355250,
       value: trade.value,
       data: trade.data,
-      nonce: 101,
+      nonce,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
+    transactions.push(transactionDetails);
 
-    res
-      .status(httpStatus.OK)
-      .json({ status: "success", transaction: transactionDetails });
+    res.status(httpStatus.OK).json({ status: "success", transactions });
   } catch (err) {
     console.error("Error:", err);
     res

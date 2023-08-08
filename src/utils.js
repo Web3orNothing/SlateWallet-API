@@ -80,9 +80,9 @@ export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
       maxFeePerGas = block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas);
     }
   }
-  maxFeePerGas = maxFeePerGas.toString();
-  maxPriorityFeePerGas = maxPriorityFeePerGas.toString();
-  gasPrice = gasPrice.toString();
+  maxFeePerGas = parseInt(maxFeePerGas.toString());
+  maxPriorityFeePerGas = parseInt(maxPriorityFeePerGas.toString());
+  gasPrice = parseInt(gasPrice.toString());
 
   return { maxFeePerGas, maxPriorityFeePerGas, gasPrice };
 };

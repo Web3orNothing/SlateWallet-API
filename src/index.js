@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Add the apiRoutes stack to the server
-app.use('/api', apiRouters);
+app.use('/', apiRouters);
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}!`);

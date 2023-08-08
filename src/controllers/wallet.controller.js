@@ -86,7 +86,7 @@ const swap = async (req, res) => {
           from: trade.from,
           to: sourceToken,
           gasLimit: 355250,
-          value: 0,
+          value: "0x0",
           data: approveData,
           nonce,
           ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
@@ -112,8 +112,8 @@ const swap = async (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ status: "error", message: "Internal server error" });
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
   }
 };
 
@@ -196,8 +196,8 @@ const bridge = async (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ status: "error", message: "Internal server error" });
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
   }
 };
 
@@ -254,8 +254,8 @@ const transfer = async (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ status: "error", message: "Internal server error" });
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
   }
 };
 
@@ -294,8 +294,8 @@ const getTokenBalance = async (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     res
-      .status(httpStatus.INTERNAL_SERVER_ERROR)
-      .json({ status: "error", message: "Internal server error" });
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
   }
 };
 

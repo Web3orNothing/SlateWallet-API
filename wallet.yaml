@@ -37,7 +37,7 @@ components:
         to:
           type: string
           description: The recipient's address for the transaction.
-        gas:
+        gasLimit:
           type: integer
           description: The amount of gas units provided for the transaction.
         maxFeePerGas:
@@ -62,6 +62,9 @@ components:
     SwapRequest:
       type: object
       properties:
+        accountAddress:
+          type: string
+          description: The user's account address.
         chainName:
           type: string
           description: The ID of the blockchain where the token swap will occur.
@@ -75,6 +78,7 @@ components:
           type: string
           description: The token to be received in the swap.
       required:
+        - accountAddress
         - chainName
         - sourceAmount
         - sourceToken
@@ -83,27 +87,38 @@ components:
     BridgeRequest:
       type: object
       properties:
+        accountAddress:
+          type: string
+          description: The user's account address.
         sourceChainName:
           type: string
           description: The ID of the source blockchain.
         destinationChainName:
           type: string
           description: The ID of the destination blockchain.
-        token:
+        sourceToken:
           type: string
           description: The token to be transferred from the source chain to the destination chain.
-        amount:
+        destinationToken:
+          type: string
+          description: The token to be received on the destination chain.
+        sourceAmount:
           type: string
           description: The amount of tokens to be transferred.
       required:
+        - accountAddress
         - sourceChainName
         - destinationChainName
-        - token
-        - amount
+        - sourceToken
+        - destinationToken
+        - sourceAmount
 
     TransferRequest:
       type: object
       properties:
+        accountAddress:
+          type: string
+          description: The user's account address.
         token:
           type: string
           description: The token to be transferred.
@@ -117,6 +132,7 @@ components:
           type: string
           description: The ID of the blockchain where the token transfer will occur.
       required:
+        - accountAddress
         - token
         - amount
         - recipient

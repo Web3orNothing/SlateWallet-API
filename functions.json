@@ -5,6 +5,10 @@
         "parameters": {
             "type": "object",
             "properties": {
+                "accountAddress": {
+                    "type": "string",
+                    "description": "The user's account address."
+                },
                 "chainName": {
                     "type": "string",
                     "description": "The ID of the blockchain chain where the token swap will occur."
@@ -23,6 +27,7 @@
                 }
             },
             "required": [
+                "accountAddress",
                 "chainName",
                 "sourceAmount",
                 "sourceToken",
@@ -36,6 +41,10 @@
         "parameters": {
             "type": "object",
             "properties": {
+                "accountAddress": {
+                    "type": "string",
+                    "description": "The user's account address."
+                },
                 "sourceChainName": {
                     "type": "string",
                     "description": "The ID of the source blockchain chain."
@@ -44,20 +53,26 @@
                     "type": "string",
                     "description": "The ID of the destination blockchain chain."
                 },
-                "token": {
+                "sourceToken": {
                     "type": "string",
                     "description": "The token to be transferred from the source chain to the destination chain."
                 },
-                "amount": {
+                "destinationToken": {
+                    "type": "string",
+                    "description": "The token to be received on the destination chain."
+                },
+                "sourceAmount": {
                     "type": "string",
                     "description": "The amount of tokens to be transferred."
                 }
             },
             "required": [
+                "accountAddress",
                 "sourceChainName",
                 "destinationChainName",
-                "token",
-                "amount"
+                "sourceToken",
+                "destinationToken",
+                "sourceAmount"
             ]
         }
     },
@@ -67,6 +82,10 @@
         "parameters": {
             "type": "object",
             "properties": {
+                "accountAddress": {
+                    "type": "string",
+                    "description": "The user's account address."
+                },
                 "token": {
                     "type": "string",
                     "description": "The token to be transferred."
@@ -84,7 +103,7 @@
                     "description": "The ID of the blockchain chain where the token transfer will occur."
                 }
             },
-            "required": ["token", "amount", "recipient", "chainName"]
+            "required": ["accountAddress", "token", "amount", "recipient", "chainName"]
         }
     },
     {

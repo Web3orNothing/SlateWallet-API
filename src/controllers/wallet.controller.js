@@ -10,7 +10,7 @@ import {
   getTokensForChain,
 } from "../utils.js";
 
-import ERC20_ABI from "../abis/erc20.json" assert { type: "json" };
+import ERC20_ABI from "../abis/erc20.abi.js";
 
 const NATIVE_TOKEN = "0x0000000000000000000000000000000000000000";
 
@@ -108,7 +108,7 @@ const swap = async (req, res) => {
 
     res.status(httpStatus.OK).json({ status: "success", transactions });
   } catch (err) {
-    console.error("Error:", err);
+    console.log("Error:", err);
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Bad request" });
@@ -192,7 +192,7 @@ const bridge = async (req, res) => {
 
     res.status(httpStatus.OK).json({ status: "success", transactions });
   } catch (err) {
-    console.error("Error:", err);
+    console.log("Error:", err);
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Bad request" });
@@ -238,7 +238,7 @@ const transfer = async (req, res) => {
     }
     const transactionDetails = {
       from: accountAddress,
-      to: recipient,
+      to,
       value,
       data,
       nonce,
@@ -249,7 +249,7 @@ const transfer = async (req, res) => {
       .status(httpStatus.OK)
       .json({ status: "success", transaction: transactionDetails });
   } catch (err) {
-    console.error("Error:", err);
+    console.log("Error:", err);
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Bad request" });
@@ -289,7 +289,7 @@ const getTokenBalance = async (req, res) => {
       balance: balance.toString(),
     });
   } catch (err) {
-    console.error("Error:", err);
+    console.log("Error:", err);
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Bad request" });

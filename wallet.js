@@ -66,8 +66,11 @@ function getChainIdFromName(chainName) {
 // Helper function to convert protocolName to protocolAddress
 // Can then get the function signatures and inputs of the protocol using functions below
 function getProtocolAddressFromName(protocolName) {
+  // TODO: Make protocol addresses chain specific, either by adding an 
+  // input to this function specifying chain name or adding a separate functions for each chain
+  // ex. address of friend.tech on base is 0xCF205808Ed36593aa40a44F10c7f7C2F67d4A4d4, does not exist on mainnet
   const lowercaseName = protocolName.toLowerCase();
-  // TODO Add more protocols and confirm these addresses are correct
+  // TODO: Add more protocols and confirm these addresses are correct
   // Mapping of protocol names to their respective addresses
   const protocolNamesToAddresses = {
     uniswap: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d',
@@ -141,6 +144,7 @@ function getProtocolAddressFromName(protocolName) {
 }
 
 async function fetch_contract_abi(contract, api_key) {
+  // TODO: USE CHAIN SPECIFIC API (EX. BASESCAN.ORG FOR BASE)
   const url = "https://api.etherscan.io/api";
   const parameters = {
     module: "contract",

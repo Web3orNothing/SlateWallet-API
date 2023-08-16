@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import axios from "axios";
-import { ethers, BigNumber } from "ethers";
+import { ethers, utils } from "ethers";
 
 import {
   metamaskApiHeaders,
@@ -30,27 +30,51 @@ const swap = async (req, res) => {
 
     const transactions = [];
 
+    const tokens = await getTokensForChain(chainId);
+    const _sourceToken = tokens.find(
+      (t) => t.symbol.toLowerCase() === sourceToken.toLowerCase()
+    );
+    if (!_sourceToken) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+    const _destinationToken = tokens.find(
+      (t) => t.symbol.toLowerCase() === destinationToken.toLowerCase()
+    );
+    if (!_destinationToken) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+
     // Step 1: Check user balance on the given chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     let balance;
     let token;
-    if (sourceToken == NATIVE_TOKEN) {
+    let _sourceAmount;
+    if (_sourceToken.address == NATIVE_TOKEN) {
       balance = await provider.getBalance(accountAddress);
+      _sourceAmount = utils.parseEther(sourceAmount);
     } else {
-      token = new ethers.Contract(sourceToken, ERC20_ABI, provider);
+      token = new ethers.Contract(_sourceToken.address, ERC20_ABI, provider);
       balance = await token.balanceOf(accountAddress);
+      const decimals = await token.decimals();
+      _sourceAmount = utils.parseUnits(sourceAmount, decimals);
     }
-    if (balance.lt(BigNumber.from(sourceAmount))) {
+    if (balance.lt(_sourceAmount)) {
       throw new Error("Insufficient balance");
     }
 
     // Step 2: Make an HTTP request to Metamask Swap API
     const queryURL = `https://swap.metaswap.codefi.network/networks/${chainId}/trades`;
     const queryParams = new URLSearchParams({
-      sourceAmount,
-      sourceToken,
-      destinationToken,
+      sourceAmount: _sourceAmount.toString(),
+      sourceToken: _sourceToken.address,
+      destinationToken: _destinationToken.address,
       slippage: 2,
       walletAddress: accountAddress,
       timeout: 10000,
@@ -75,16 +99,16 @@ const swap = async (req, res) => {
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
     let nonce = await provider.getTransactionCount(accountAddress);
-    if (sourceToken != NATIVE_TOKEN) {
+    if (_sourceToken.address != NATIVE_TOKEN) {
       const allowance = await token.allowance(accountAddress, trade.to);
-      if (allowance.lt(BigNumber.from(sourceAmount))) {
+      if (allowance.lt(_sourceAmount)) {
         const approveData = token.interface.encodeFunctionData("approve", [
           trade.to,
-          BigNumber.from(sourceAmount),
+          _sourceAmount,
         ]);
         const transactionDetails = {
           from: trade.from,
-          to: sourceToken,
+          to: _sourceToken.address,
           value: "0x0",
           data: approveData,
           nonce,
@@ -128,6 +152,27 @@ const bridge = async (req, res) => {
     const sourceChainId = getChainIdFromName(sourceChainName);
     const destinationChainId = getChainIdFromName(destinationChainName);
 
+    const sourceTokens = await getTokensForChain(sourceChainId);
+    const _sourceToken = sourceTokens.find(
+      (t) => t.symbol.toLowerCase() === sourceToken.toLowerCase()
+    );
+    if (!_sourceToken) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+    const destinationTokens = await getTokensForChain(destinationChainId);
+    const _destinationToken = destinationTokens.find(
+      (t) => t.symbol.toLowerCase() === destinationToken.toLowerCase()
+    );
+    if (!_destinationToken) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+
     // Step 1: Check user balance on the source chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(sourceChainId);
     const provider = new ethers.providers.JsonRpcProvider(
@@ -136,13 +181,17 @@ const bridge = async (req, res) => {
     );
     let balance;
     let token;
-    if (sourceToken == NATIVE_TOKEN) {
+    let _sourceAmount;
+    if (_sourceToken.address == NATIVE_TOKEN) {
       balance = await provider.getBalance(accountAddress);
+      _sourceAmount = utils.parseEther(sourceAmount);
     } else {
-      token = new ethers.Contract(sourceToken, ERC20_ABI, provider);
+      token = new ethers.Contract(_sourceToken.address, ERC20_ABI, provider);
       balance = await token.balanceOf(accountAddress);
+      const decimals = await token.decimals();
+      _sourceAmount = utils.parseUnits(sourceAmount, decimals);
     }
-    if (balance.lt(BigNumber.from(sourceAmount))) {
+    if (balance.lt(_sourceAmount)) {
       throw new Error("Insufficient balance");
     }
 
@@ -152,9 +201,9 @@ const bridge = async (req, res) => {
       walletAddress: accountAddress,
       srcChainId: sourceChainId,
       destChainId: destinationChainId,
-      srcTokenAddress: sourceToken,
-      destTokenAddress: destinationToken,
-      srcTokenAmount: sourceAmount,
+      srcTokenAddress: _sourceToken.address,
+      destTokenAddress: _destinationToken.address,
+      srcTokenAmount: _sourceAmount.toString(),
       slippage: 0.5,
       aggIds: "socket,lifi",
       insufficientBal: false,
@@ -208,18 +257,33 @@ const transfer = async (req, res) => {
       throw new Error("Invalid chain name");
     }
 
+    const tokens = await getTokensForChain(chainId);
+    const tokenInfo = tokens.find(
+      (t) => t.symbol.toLowerCase() === token.toLowerCase()
+    );
+    if (!tokenInfo) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+
     // Step 1: Check user balance on the chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     let balance;
     let _token;
-    if (token == NATIVE_TOKEN) {
+    let _amount;
+    if (tokenInfo.address == NATIVE_TOKEN) {
       balance = await provider.getBalance(accountAddress);
+      _amount = utils.parseEther(amount);
     } else {
-      _token = new ethers.Contract(token, ERC20_ABI, provider);
+      _token = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
       balance = await _token.balanceOf(accountAddress);
+      const decimals = await _token.decimals();
+      _amount = utils.parseUnits(amount, decimals);
     }
-    if (balance.lt(BigNumber.from(amount))) {
+    if (balance.lt(_amount)) {
       throw new Error("Insufficient balance");
     }
 
@@ -227,19 +291,19 @@ const transfer = async (req, res) => {
     let nonce = await provider.getTransactionCount(accountAddress);
     let to = recipient;
     let data = "0x";
-    let value = amount;
-    if (token != NATIVE_TOKEN) {
-      to = token;
+    let value = _amount;
+    if (tokenInfo.address != NATIVE_TOKEN) {
+      to = tokenInfo.address;
       data = _token.interface.encodeFunctionData("transfer", [
         recipient,
-        BigNumber.from(amount),
+        _amount,
       ]);
-      value = "0x0";
+      value = 0;
     }
     const transactionDetails = {
       from: accountAddress,
       to,
-      value,
+      value: value.toString(),
       data,
       nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),

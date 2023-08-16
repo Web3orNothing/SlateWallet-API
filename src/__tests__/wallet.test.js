@@ -16,9 +16,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ether",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "10000000000000000000",
-        destinationToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        sourceToken: "WETH",
+        sourceAmount: "10",
+        destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -31,9 +31,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "10000000000000000000",
-        destinationToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        sourceToken: "WETH",
+        sourceAmount: "10",
+        destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -46,24 +46,24 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "0x000000000000000000000000000000000000dead",
-        sourceAmount: "10000000000000000000",
-        destinationToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        sourceToken: "null",
+        sourceAmount: "10",
+        destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Bad request");
+      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
     });
 
     it("should return ETH->USDC swap data", async () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "0x0000000000000000000000000000000000000000",
-        sourceAmount: "1000000000000000000",
-        destinationToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        sourceToken: "ETH",
+        sourceAmount: "1",
+        destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
@@ -78,9 +78,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "100000000000000000",
-        destinationToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        sourceToken: "WETH",
+        sourceAmount: "1",
+        destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
@@ -102,9 +102,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ether",
         destinationChainName: "arbitrum",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "100000000000000000",
-        destinationToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        sourceToken: "WETH",
+        sourceAmount: "1",
+        destinationToken: "WETH",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -116,9 +116,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbi",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "100000000000000000",
-        destinationToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        sourceToken: "WETH",
+        sourceAmount: "0.1",
+        destinationToken: "WETH",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -132,9 +132,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbitrum",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "10000000000000000000",
-        destinationToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        sourceToken: "WETH",
+        sourceAmount: "10",
+        destinationToken: "WETH",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -148,15 +148,15 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbitrum",
-        sourceToken: "0x000000000000000000000000000000000000dead",
-        sourceAmount: "100000000000000000",
+        sourceToken: "null",
+        sourceAmount: "0.1",
         destinationToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Bad request");
+      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
     });
 
     it("should return Ethereum/WETH->Arbitrum/WETH bridge data", async () => {
@@ -164,9 +164,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbitrum",
-        sourceToken: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        sourceAmount: "100000000000000000",
-        destinationToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        sourceToken: "WETH",
+        sourceAmount: "0.1",
+        destinationToken: "WETH",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
@@ -186,8 +186,8 @@ describe("Test Wallet API", () => {
     it("should fail when invalid chain is provided", async () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
-        token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        amount: "100000000000000000",
+        token: "WETH",
+        amount: "0.1",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ether",
       });
@@ -201,8 +201,8 @@ describe("Test Wallet API", () => {
     it("should fail when balance is insufficient", async () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
-        token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        amount: "10000000000000000000",
+        token: "WETH",
+        amount: "10",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ethereum",
       });
@@ -216,8 +216,8 @@ describe("Test Wallet API", () => {
     it("should fail when invalid token is provided", async () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
-        token: "0x000000000000000000000000000000000000dead",
-        amount: "100000000000000000",
+        token: "null",
+        amount: "0.1",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ethereum",
       });
@@ -225,14 +225,14 @@ describe("Test Wallet API", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Bad request");
+      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
     });
 
     it("should return WETH transfer data", async () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
-        token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        amount: "100000000000000000",
+        token: "WETH",
+        amount: "0.1",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ethereum",
       });
@@ -249,8 +249,8 @@ describe("Test Wallet API", () => {
     it("should return ETH transfer data", async () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
-        token: "0x0000000000000000000000000000000000000000",
-        amount: "1000000000000000000",
+        token: "ETH",
+        amount: "1",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ethereum",
       });

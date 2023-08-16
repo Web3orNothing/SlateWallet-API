@@ -34,7 +34,7 @@ export const getChainIdFromName = (chainName) => {
     // Add more chainName-chainId mappings here as needed
   };
 
-  return chainNamesToIds[chainName] || null;
+  return chainNamesToIds[chainName.toLowerCase()] || null;
 };
 
 export const getRpcUrlForChain = (chainId) => {

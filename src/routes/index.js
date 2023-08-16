@@ -14,6 +14,9 @@ routes.post('/bridge', walletController.bridge);
 // Transfer endpoint
 routes.post('/transfer', walletController.transfer);
 
+// Get token address
+routes.get('/token-address', walletController.getTokenAddress);
+
 // Get token balance endpoint
 routes.get('/token-balance', walletController.getTokenBalance);
 

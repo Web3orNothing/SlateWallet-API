@@ -320,6 +320,34 @@ const transfer = async (req, res) => {
   }
 };
 
+const getTokenAddress = async (req, res) => {
+  try {
+    const { chainName, tokenName } = req.query;
+    const chainId = getChainIdFromName(chainName);
+
+    const tokens = await getTokensForChain(chainId);
+    const token = tokens.find(
+      (t) => t.symbol.toLowerCase() === tokenName.toLowerCase()
+    );
+    if (!token) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+
+    res.status(httpStatus.OK).json({
+      status: "success",
+      address: token.address,
+    });
+  } catch (err) {
+    console.log("Error:", err);
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
+  }
+};
+
 const getTokenBalance = async (req, res) => {
   try {
     const { accountAddress, chainName, tokenName } = req.query;
@@ -364,5 +392,6 @@ export default {
   swap,
   bridge,
   transfer,
+  getTokenAddress,
   getTokenBalance,
 };

@@ -56,7 +56,7 @@ export const getRpcUrlForChain = (chainId) => {
     8453: "https://mainnet.base.org",
     42161: "https://endpoints.omniatech.io/v1/arbitrum/one/public",
     42220: "https://1rpc.io/celo",
-    43114: "https://endpoints.omniatech.io/v1/avax/mainnet/public	",
+    43114: "https://endpoints.omniatech.io/v1/avax/mainnet/public",
     59144: "https://rpc.linea.build",
     // Add more chainId-rpcUrl mappings here as needed
   };

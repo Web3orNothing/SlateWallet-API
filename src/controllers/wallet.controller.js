@@ -268,6 +268,21 @@ const transfer = async (req, res) => {
       });
     }
 
+    let _recipient = recipient;
+    if (!ethers.utils.isAddress(recipient)) {
+      // Retrieve the recipient address
+      const rpcUrl = getRpcUrlForChain(1);
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+      try {
+        _recipient = await provider.resolveName(recipient);
+      } catch {
+        return res.status(httpStatus.BAD_REQUEST).json({
+          status: "error",
+          message: "Invalid recipient provided.",
+        });
+      }
+    }
+
     // Step 1: Check user balance on the chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
@@ -289,13 +304,13 @@ const transfer = async (req, res) => {
 
     // Step 2: Return the transaction details to the client
     let nonce = await provider.getTransactionCount(accountAddress);
-    let to = recipient;
+    let to = _recipient;
     let data = "0x";
     let value = _amount;
     if (tokenInfo.address != NATIVE_TOKEN) {
       to = tokenInfo.address;
       data = _token.interface.encodeFunctionData("transfer", [
-        recipient,
+        _recipient,
         _amount,
       ]);
       value = 0;
@@ -311,7 +326,7 @@ const transfer = async (req, res) => {
 
     res
       .status(httpStatus.OK)
-      .json({ status: "success", transaction: transactionDetails });
+      .json({ status: "success", transactions: [transactionDetails] });
   } catch (err) {
     console.log("Error:", err);
     res

@@ -22,7 +22,7 @@ async function fetch_contract_abi(contract, api_key) {
   }
 
 async function get_contract_data(contract) {
-    const api_key = 'DGRMEW1DXPSNKE5U32EFT1RYIPNY88U6A3'; // process.env.ETHERSCAN_API_KEY;
+    const api_key = process.env.ETHERSCAN_API_KEY;
     const response_data = await fetch_contract_abi(contract, api_key);
   
     //if not verified on etherscan, should not interact with it

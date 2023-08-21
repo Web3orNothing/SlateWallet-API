@@ -108,7 +108,7 @@
     },
     {
         "name": "protocol",
-        "description": "Interact with a blockchain protocol for various actions.",
+        "description": "Performs specific actions on specific apps by depositing or withdrawing an amount of a token.",
         "parameters": {
             "type": "object",
             "properties": {

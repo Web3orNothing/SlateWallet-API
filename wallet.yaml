@@ -272,7 +272,7 @@ paths:
   /protocol:
     post:
       summary: Interact with a blockchain protocol.
-      description: Interacts with a specific blockchain protocol for various actions.
+      description: Performs specific actions on specific apps by depositing or withdrawing an amount of a token.
       requestBody:
         required: true
         content:

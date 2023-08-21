@@ -107,6 +107,57 @@
         }
     },
     {
+        "name": "protocol",
+        "description": "Interact with a blockchain protocol for various actions.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the protocol."
+                },
+                "action": {
+                    "type": "string",
+                    "description": "The action to be performed within the protocol."
+                },
+                "spender": {
+                    "type": "string",
+                    "description": "The spender's address for the protocol interaction."
+                },
+                "receiver": {
+                    "type": "string",
+                    "description": "The receiver's address for the protocol interaction."
+                },
+                "inputAmount": {
+                    "type": "string",
+                    "description": "The amount of tokens for the protocol interaction."
+                },
+                "inputToken": {
+                    "type": "string",
+                    "description": "The input token for the protocol interaction."
+                },
+                "outputAmount": {
+                    "type": "string",
+                    "description": "The output amount of tokens for the protocol interaction."
+                },
+                "outputToken": {
+                    "type": "string",
+                    "description": "The output token for the protocol interaction."
+                },
+                "chainName": {
+                    "type": "string",
+                    "description": "The ID of the blockchain chain for the protocol interaction."
+                }
+            },
+            "required": [
+                "name",
+                "action",
+                "spender",
+                "chainName"
+            ]
+        }
+    },
+    {
         "name": "token-balance",
         "description": "Retrieves the user's balance of a specific token on a given chain.",
         "parameters": {

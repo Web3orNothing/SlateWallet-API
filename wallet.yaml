@@ -138,6 +138,33 @@ components:
         - recipient
         - chainName
 
+    ProtocolRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        action:
+          type: string
+        spender:
+          type: string
+        receiver:
+          type: string
+        inputAmount:
+          type: string
+        inputToken:
+          type: string
+        outputAmount:
+          type: string
+        outputToken:
+          type: string
+        chainName:
+          type: string
+      required:
+        - name
+        - action
+        - spender
+        - chainName
+
 
 paths:
   /swap:
@@ -241,6 +268,41 @@ paths:
                     type: string
                   message:
                     type: string
+
+  /protocol:
+    post:
+      summary: Interact with a blockchain protocol.
+      description: Interacts with a specific blockchain protocol for various actions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtocolRequest'
+      responses:
+        '200':
+          description: Response containing transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                    
   /token-balance:
     get:
       summary: Get the user's token balance on a specific chain.

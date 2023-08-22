@@ -8,7 +8,8 @@ import {
   getRpcUrlForChain,
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokensForChain,
-} from "../utils.js";
+  getApproveData,
+} from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
 
@@ -100,22 +101,17 @@ const swap = async (req, res) => {
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
     let nonce = await provider.getTransactionCount(accountAddress);
     if (_sourceToken.address != NATIVE_TOKEN) {
-      const allowance = await token.allowance(accountAddress, trade.to);
-      if (allowance.lt(_sourceAmount)) {
-        const approveData = token.interface.encodeFunctionData("approve", [
-          trade.to,
-          _sourceAmount,
-        ]);
-        const transactionDetails = {
-          from: trade.from,
-          to: _sourceToken.address,
-          value: "0x0",
-          data: approveData,
-          nonce,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-        };
+      const approveData = await getApproveData(
+        provider,
+        _sourceToken.address,
+        _sourceAmount,
+        accountAddress,
+        trade.to,
+        nonce
+      );
+      if (approveData) {
         nonce++;
-        transactions.push(transactionDetails);
+        transactions.push(approveData);
       }
     }
 

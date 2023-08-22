@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BigNumber } from "ethers";
+import ERC20_ABI from "../abis/erc20.abi.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -100,5 +101,25 @@ export const getTokensForChain = async (chainId) => {
   } catch (error) {
     console.error("Error fetching tokens:", error);
     throw new Error("Failed to fetch tokens for the given chainId.");
+  }
+};
+
+export const getApproveData = async (provider, tokenAddress, amount, owner, spender, nonce) => {
+  const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+  const allowance = await token.allowance(owner, spender);
+  if (allowance.lt(amount)) {
+    const approveData = token.interface.encodeFunctionData("approve", [
+      spender,
+      amount,
+    ]);
+    const transactionDetails = {
+      from: owner,
+      to: tokenAddress,
+      value: "0x0",
+      data: approveData,
+      nonce,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+    };
+    return transactionDetails;
   }
 };

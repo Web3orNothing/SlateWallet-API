@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import ERC20_ABI from "../abis/erc20.abi.js";
 
 export const metamaskApiHeaders = {
@@ -40,7 +40,7 @@ export const getChainIdFromName = (chainName) => {
 
 export const getRpcUrlForChain = (chainId) => {
   const chainIdsToRpcUrls = {
-    1: "https://eth.llamarpc.com",
+    1: "https://rpc.mevblocker.io",
     10: "https://endpoints.omniatech.io/v1/op/mainnet/public",
     25: "https://cronos-evm.publicnode.com",
     56: "https://bsc-rpc.gateway.pokt.network",
@@ -104,7 +104,14 @@ export const getTokensForChain = async (chainId) => {
   }
 };
 
-export const getApproveData = async (provider, tokenAddress, amount, owner, spender, nonce) => {
+export const getApproveData = async (
+  provider,
+  tokenAddress,
+  amount,
+  owner,
+  spender,
+  nonce
+) => {
   const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
   const allowance = await token.allowance(owner, spender);
   if (allowance.lt(amount)) {

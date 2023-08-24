@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BigNumber, utils } from "ethers";
+import { constructSimpleSDK } from "@paraswap/sdk";
 import { config } from "dotenv";
 
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
@@ -82,7 +83,60 @@ export const getQuoteFrom1inch = async (
   } catch {}
 };
 
-const swapRoutes = [getQuoteFromOpenOcean, getQuoteFrom1inch];
+export const getQuoteFromParaSwap = async (
+  chainId,
+  account,
+  tokenIn,
+  tokenInDecimals,
+  tokenOut,
+  amount,
+  _,
+  slippage = 1
+) => {
+  const paraswapSdk = constructSimpleSDK({
+    chainId,
+    axios,
+  });
+  try {
+    const srcAmount = utils.parseUnits(amount, tokenInDecimals).toString();
+
+    const priceRoute = await paraswapSdk.swap.getRate({
+      srcToken: tokenIn === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn,
+      destToken: tokenOut,
+      amount: srcAmount,
+    });
+
+    const data = await paraswapSdk.swap.buildTx(
+      {
+        srcToken: priceRoute.srcToken,
+        destToken: priceRoute.destToken,
+        srcAmount,
+        slippage: slippage * 0.01 * 10000,
+        priceRoute: priceRoute,
+        userAddress: account,
+      },
+      { ignoreChecks: true, ignoreGasEstimate: true }
+    );
+
+    return {
+      amountOut: BigNumber.from(priceRoute.destAmount)
+        .mul(100 - slippage)
+        .div(100)
+        .toString(),
+      tx: {
+        to: data.to,
+        value: data.value,
+        data: data.data,
+      },
+    };
+  } catch {}
+};
+
+const swapRoutes = [
+  getQuoteFromOpenOcean,
+  getQuoteFrom1inch,
+  getQuoteFromParaSwap,
+];
 
 export const getBestSwapRoute = async (
   chainId,

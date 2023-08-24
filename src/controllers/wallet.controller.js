@@ -79,7 +79,7 @@ const swap = async (req, res) => {
       decimals,
       _destinationToken.address,
       sourceAmount,
-      utils.formatUnits(gasPrice, "9")
+      gasPrice
     );
 
     // Step 3: Parse the response and extract relevant information for the transaction

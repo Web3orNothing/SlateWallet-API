@@ -16,6 +16,7 @@
   "author": "spniyant",
   "license": "MIT",
   "dependencies": {
+    "@paraswap/sdk": "^6.2.2",
     "axios": "^1.4.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",

@@ -1,0 +1,3 @@
+export const NATIVE_TOKEN = "0x0000000000000000000000000000000000000000";
+
+export const NATIVE_TOKEN2 = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";

@@ -2,6 +2,8 @@ import axios from "axios";
 import { BigNumber, utils } from "ethers";
 import { config } from "dotenv";
 
+import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
+
 config();
 
 export const getQuoteFromLiFi = async (
@@ -9,7 +11,6 @@ export const getQuoteFromLiFi = async (
   destChainId,
   account,
   sourceToken,
-  sourceTokenDecimals,
   destToken,
   amount
 ) => {
@@ -30,9 +31,9 @@ export const getQuoteFromLiFi = async (
       params: {
         fromChain,
         toChain,
-        fromToken: sourceToken,
-        toToken: destToken,
-        fromAmount: utils.parseUnits(amount, sourceTokenDecimals).toString(),
+        fromToken: sourceToken.symbol,
+        toToken: destToken.symbol,
+        fromAmount: utils.parseUnits(amount, sourceToken.decimals).toString(),
         fromAddress: account,
       },
     });
@@ -47,14 +48,88 @@ export const getQuoteFromLiFi = async (
   } catch {}
 };
 
-const bridgeRoutes = [getQuoteFromLiFi];
+// export const getQuoteFromSynapse = async (
+//   sourceChainId,
+//   destChainId,
+//   account,
+//   sourceToken,
+//   destToken,
+//   amount
+// ) => {
+//   try {
+//     const queryParams = new URLSearchParams({
+//       fromChain: sourceChainId,
+//       toChain: destChainId,
+//       fromToken: "USDC",
+//       toToken: "USDC",
+//       amount: parseFloat(amount),
+//     });
+//     const { data } = await axios.get(
+//       `https://synapse-rest-api-v2.herokuapp.com/bridge?${queryParams}`
+//     );
+//     return {
+//       amountOut: estimate.toAmount,
+//       tx: {
+//         to: transactionRequest.to,
+//         value: BigNumber.from(transactionRequest.value).toString(),
+//         data: transactionRequest.data,
+//       },
+//     };
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
+
+export const getQuoteFromAxelar = async (
+  sourceChainId,
+  destChainId,
+  account,
+  sourceToken,
+  destToken,
+  amount
+) => {
+  try {
+    const queryParams = new URLSearchParams({
+      fromChain: sourceChainId,
+      fromToken:
+        sourceToken.address === NATIVE_TOKEN
+          ? NATIVE_TOKEN2
+          : sourceToken.address,
+      fromAmount: utils.parseUnits(amount, sourceToken.decimals).toString(),
+      toChain: destChainId,
+      toToken:
+        destToken.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : destToken.address,
+      toAddress: account,
+      quoteOnly: false,
+      slippage: 1.5,
+    });
+    const {
+      data: { route },
+    } = await axios.get(`https://api.0xsquid.com/v1/route?${queryParams}`);
+    return {
+      amountOut: route.estimate.toAmount,
+      tx: {
+        to: route.transactionRequest.targetAddress,
+        value: route.transactionRequest.value,
+        data: route.transactionRequest.data,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const bridgeRoutes = [
+  getQuoteFromLiFi,
+  // getQuoteFromSynapse,
+  getQuoteFromAxelar,
+];
 
 export const getBestBridgeRoute = async (
   sourceChainId,
   destChainId,
   account,
   sourceToken,
-  sourceTokenDecimals,
   destToken,
   amount
 ) => {
@@ -66,7 +141,6 @@ export const getBestBridgeRoute = async (
       destChainId,
       account,
       sourceToken,
-      sourceTokenDecimals,
       destToken,
       amount
     );

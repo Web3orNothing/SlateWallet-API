@@ -75,9 +75,15 @@ const swap = async (req, res) => {
     const data = await getBestSwapRoute(
       chainId,
       accountAddress,
-      _sourceToken.address,
-      decimals,
-      _destinationToken.address,
+      {
+        address: _sourceToken.address,
+        symbol: sourceToken,
+        decimals,
+      },
+      {
+        address: _destinationToken.address,
+        symbol: destinationToken,
+      },
       sourceAmount,
       gasPrice
     );
@@ -185,9 +191,15 @@ const bridge = async (req, res) => {
       sourceChainId,
       destinationChainId,
       accountAddress,
-      sourceToken,
-      decimals,
-      destinationToken,
+      {
+        address: _sourceToken.address,
+        symbol: sourceToken,
+        decimals,
+      },
+      {
+        address: _destinationToken.address,
+        symbol: destinationToken,
+      },
       sourceAmount
     );
 

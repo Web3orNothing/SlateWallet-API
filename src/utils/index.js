@@ -156,8 +156,11 @@ export const getApproveData = async (
 };
 
 export const getTokenAddressForChain = async (symbol, chainName) => {
+  if (typeof symbol !== "string" || symbol.trim() === "") return [];
+
   const symbolUp = symbol.toUpperCase();
-  const chainNameForCMC = getChainNameForCMC(chainName);
+  const chainNameForCMC =
+    chainName === "" ? null : getChainNameForCMC(chainName);
   const CMC_API_ENDPOINT =
     "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?symbol=";
 
@@ -165,10 +168,23 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
   const response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
 
   // Get token address for chain
-  let address = constants.AddressZero;
-  if (response.data.data[symbolUp].length > 0)
-    response.data.data[symbolUp][0].contract_address.find(
-      (x) => x.platform?.name === chainNameForCMC
-    )?.contract_address;
-  return address;
+  let data = [];
+  if (response.data.data[symbolUp].length > 0) {
+    if (chainNameForCMC) {
+      const target = response.data.data[symbolUp][0].contract_address.find(
+        (x) => x.platform?.name === chainNameForCMC
+      );
+      if (target)
+        data = [
+          { name: target.platform.name, address: target.contract_address },
+        ];
+    } else {
+      response.data.data[symbolUp][0].contract_address.forEach(
+        ({ contract_address, platform: { name } }) => {
+          data.push({ name, address: contract_address });
+        }
+      );
+    }
+  }
+  return data;
 };

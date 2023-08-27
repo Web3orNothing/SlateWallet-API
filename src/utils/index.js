@@ -1,11 +1,35 @@
 import axios from "axios";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, ethers, constants } from "ethers";
 import ERC20_ABI from "../abis/erc20.abi.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
   "User-Agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+};
+
+export const getChainNameForCMC = (chainName) => {
+  const chainNamesForCMC = {
+    ethereum: "Ethereum",
+    optimism: "Optimism",
+    cronos: 25,
+    binancesmartchain: "BNB Smart Chain (BEP20)",
+    gnosis: "Gnosis Chain",
+    polygon: "Polygon",
+    fantom: "Fantom",
+    filecoin: "Filecoin",
+    moonbeam: "Moonbeam",
+    moonriver: "Moonriver",
+    kava: "Kava",
+    canto: "Canto",
+    base: "Base",
+    arbitrum: "Arbitrum",
+    celo: "Celo",
+    avalanche: "Avalanche C-Chain",
+    // Add more chainName-platform on CMC mappings here as needed
+  };
+
+  return chainNamesForCMC[chainName.toLowerCase()] || null;
 };
 
 // Helper function to convert chainName to chainId
@@ -129,4 +153,22 @@ export const getApproveData = async (
     };
     return transactionDetails;
   }
+};
+
+export const getTokenAddressForChain = async (symbol, chainName) => {
+  const symbolUp = symbol.toUpperCase();
+  const chainNameForCMC = getChainNameForCMC(chainName);
+  const CMC_API_ENDPOINT =
+    "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?symbol=";
+
+  const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
+  const response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
+
+  // Get token address for chain
+  let address = constants.AddressZero;
+  if (response.data.data[symbolUp].length > 0)
+    response.data.data[symbolUp][0].contract_address.find(
+      (x) => x.platform?.name === chainNameForCMC
+    )?.contract_address;
+  return address;
 };

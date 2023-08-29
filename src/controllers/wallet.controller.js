@@ -15,10 +15,6 @@ import { getBestSwapRoute, getQuoteFromParaSwap } from "../utils/swap.js";
 import { getBestBridgeRoute } from "../utils/bridge.js";
 import { NATIVE_TOKEN } from "../constants.js";
 
-// Import Protocol ABIs
-import curveSwapRouterAbi from "../abis/curve/swapRouter.abi.js";
-import sushiSwapRouterAbi from "../abis/sushi/swapRouter.abi.js";
-
 const swap = async (req, res) => {
   try {
     const {

@@ -7,12 +7,17 @@ import {
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokensForChain,
   getApproveData,
+  getFunctionData,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
 import { getBestSwapRoute } from "../utils/swap.js";
 import { getBestBridgeRoute } from "../utils/bridge.js";
 import { NATIVE_TOKEN } from "../constants.js";
+
+// Import Protocol ABIs
+import curveSwapRouterAbi from "../abis/curve/swapRouter.abi.js";
+import sushiSwapRouterAbi from "../abis/sushi/swapRouter.abi.js";
 
 const swap = async (req, res) => {
   try {
@@ -94,29 +99,24 @@ const swap = async (req, res) => {
     }
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
-    let nonce = await provider.getTransactionCount(accountAddress);
     if (_sourceToken.address != NATIVE_TOKEN) {
       const approveData = await getApproveData(
         provider,
         _sourceToken.address,
         _sourceAmount,
         accountAddress,
-        data.to,
-        nonce
+        data.to
       );
       if (approveData) {
-        nonce++;
         transactions.push(approveData);
       }
     }
 
     // Step 5: Return the transaction details to the client
     transactions.push({
-      from: accountAddress,
       to: data.to,
       value: data.value,
       data: data.data,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
@@ -211,33 +211,199 @@ const bridge = async (req, res) => {
     let transactions = [];
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
-    let nonce = await provider.getTransactionCount(accountAddress);
     if (_sourceToken.address != NATIVE_TOKEN) {
       const approveData = await getApproveData(
         provider,
         _sourceToken.address,
         _sourceAmount,
         accountAddress,
-        data.to,
-        nonce
+        data.to
       );
       if (approveData) {
-        nonce++;
         transactions.push(approveData);
       }
     }
 
     // Step 5: Return the transaction details to the client
     transactions.push({
-      from: accountAddress,
       to: data.to,
       value: data.value,
       data: data.data,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
     res.status(httpStatus.OK).json({ status: "success", transactions });
+  } catch (err) {
+    console.log("Error:", err);
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
+  }
+};
+
+const protocol = async (req, res) => {
+  try {
+    const {
+      accountAddress,
+      chainName,
+      protocolName,
+      action,
+      token0,
+      token1,
+      amount,
+    } = req.body;
+
+    const chainId = getChainIdFromName(chainName);
+    const tokens = await getTokensForChain(chainId);
+    const _token0 = tokens.find(
+      (t) => t.symbol.toLowerCase() === token0.toLowerCase()
+    );
+    if (!_token0) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+    const _token1 = tokens.find(
+      (t) => t.symbol.toLowerCase() === token1.toLowerCase()
+    );
+    if (!_token1) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+    switch (protocolName) {
+      case "sushiswap": {
+        switch (action) {
+          case "swap": {
+            const sushiSwapRouters = {
+              1: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
+              42161: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+              43114: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+              8453: "0x6BDED42c6DA8FBf0d2bA55B2fa120C5e0c8D7891",
+              56: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+              250: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+              1284: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+              1285: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+              137: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+            };
+            const swapRouterAddress = sushiSwapRouters[chainId];
+            if (!swapRouterAddress) {
+              return res.status(httpStatus.BAD_REQUEST).json({
+                status: "error",
+                message: "Sushiswap not supported on specified chain.",
+              });
+            }
+            const swapRouter = new ethers.Contract(
+              swapRouterAddress,
+              sushiSwapRouterAbi,
+              provider
+            );
+            const WETH = await swapRouter.WETH();
+
+            let swapTx;
+            let funcName;
+            let _amount;
+            let value = "0x0";
+            let path;
+            let params;
+            let checkApprove;
+            const deadline = Math.floor(new Date().getTime() / 1000) + 1200; // 20 mins
+
+            if (_token0.address === NATIVE_TOKEN) {
+              funcName = "swapExactETHForTokens";
+              _amount = utils.parseEther(amount);
+              value = _amount.toHexString();
+              path = [WETH, _token1.address];
+              checkApprove = false;
+            } else if (_token1.address === NATIVE_TOKEN) {
+              funcName = "swapExactTokensForETH";
+              const fromToken = new ethers.Contract(
+                _token0.address,
+                ERC20_ABI,
+                provider
+              );
+              const decimals = await fromToken.decimals();
+              _amount = utils.parseUnits(amount, decimals);
+              path = [_token0.address, WETH];
+              checkApprove = true;
+            } else {
+              funcName = "swapExactTokensForTokens";
+              const fromToken = new ethers.Contract(
+                _token0.address,
+                ERC20_ABI,
+                provider
+              );
+              const decimals = await fromToken.decimals();
+              _amount = utils.parseUnits(amount, decimals);
+              path =
+                _token0.address.toLowerCase() === WETH.toLowerCase() ||
+                _token1.address.toLowerCase() === WETH.toLowerCase()
+                  ? [_token0.address, _token1.address]
+                  : [_token0.address, WETH, _token1.address];
+              checkApprove = true;
+            }
+
+            const amountOut = await swapRouter.getAmountsOut(_amount, path);
+            const amountOutMin = amountOut.mul(99).div(100); // 1% slippage
+
+            if (_token0.address === NATIVE_TOKEN) {
+              params = [amountOutMin, path, accountAddress, deadline];
+            } else {
+              params = [_amount, amountOutMin, path, accountAddress, deadline];
+            }
+            swapTx = await getFunctionData(
+              swapRouterAddress,
+              sushiSwapRouterAbi,
+              provider,
+              funcName,
+              params,
+              value
+            );
+            const transactions = [];
+            if (checkApprove) {
+              const approveData = await getApproveData(
+                provider,
+                _token0.address,
+                _amount,
+                accountAddress,
+                swapTx.to
+              );
+              if (approveData) {
+                transactions.push(approveData);
+              }
+            }
+            transactions.push(swapTx);
+            return res
+              .status(httpStatus.OK)
+              .json({ status: "success", transactions });
+          }
+          default: {
+            return res.status(httpStatus.BAD_REQUEST).json({
+              status: "error",
+              message: "Protocol action not supported",
+            });
+          }
+        }
+        break;
+      }
+      case "uniswap": {
+        break;
+      }
+      case "curve": {
+        break;
+      }
+      default: {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json({ status: "error", message: "Protocol not supported" });
+      }
+    }
   } catch (err) {
     console.log("Error:", err);
     res
@@ -301,7 +467,6 @@ const transfer = async (req, res) => {
     }
 
     // Step 2: Return the transaction details to the client
-    let nonce = await provider.getTransactionCount(accountAddress);
     let to = _recipient;
     let data = "0x";
     let value = _amount;
@@ -314,11 +479,9 @@ const transfer = async (req, res) => {
       value = 0;
     }
     const transactionDetails = {
-      from: accountAddress,
       to,
       value: value.toString(),
       data,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
 
@@ -404,6 +567,7 @@ const getTokenBalance = async (req, res) => {
 export default {
   swap,
   bridge,
+  protocol,
   transfer,
   getTokenAddress,
   getTokenBalance,

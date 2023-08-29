@@ -7,6 +7,9 @@ import {
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokensForChain,
   getApproveData,
+  getProtocolAddressForChain,
+  getFunctionData,
+  getABIForProtocol,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
@@ -245,6 +248,108 @@ const bridge = async (req, res) => {
       .json({ status: "error", message: "Bad request" });
   }
 };
+const protocol = async (req, res) => {
+  try {
+    const {
+      accountAddress,
+      chainName,
+      protocolName,
+      action,
+      token0,
+      token1,
+      amount,
+    } = req.body;
+
+    const chainId = getChainIdFromName(chainName);
+    const tokens = await getTokensForChain(chainId);
+    const _token0 = tokens.find(
+      (t) => t.symbol.toLowerCase() === token0.toLowerCase()
+    );
+    if (!_token0) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token0 not found on the specified chain.",
+      });
+    }
+    const _token1 = tokens.find(
+      (t) => t.symbol.toLowerCase() === token1.toLowerCase()
+    );
+    if (!_token1) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token1 not found on the specified chain.",
+      });
+    }
+
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+    let address = null;
+    let abi = [];
+    const params = [];
+
+    switch (protocolName) {
+      case "aave": {
+        /**
+         * pool
+         * withdraw, borrow, repay, swap, liquidate, flashLoan
+         */
+        address = getProtocolAddressForChain(protocolName, chainId);
+        abi = getABIForProtocol(protocol);
+        params.push(token0);
+        params.push(token1);
+        params.push(amount);
+        break;
+      }
+      case "compound": {
+        /**
+         * comet
+         * withdraw, buyCollateral, adsorb
+         * rewards
+         * claim, withdrawToken
+         */
+        abi = getABIForProtocol(protocol, "rewards");
+        break;
+      }
+      case "hop": {
+        /**
+         * bridge
+         * send, sendToL2, stake, unstake, withdraw
+         */
+        abi = getABIForProtocol(protocol);
+        break;
+      }
+      case "maker": {
+        break;
+      }
+      default: {
+        return res
+          .status(httpStatus.BAD_REQUEST)
+          .json({ status: "error", message: "Protocol not supported" });
+      }
+    }
+
+    if (!address) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Protocol address not found on the specified chain.",
+      });
+    }
+    if (!abi || abi.length === 0) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Protocol ABI not found for the specified action.",
+      });
+    }
+    const data = getFunctionData(address, abi, provider, action, params, "0x0");
+    return res.status(httpStatus.OK).json({ status: "success", data });
+  } catch (err) {
+    console.log("Error:", err);
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
+  }
+};
 
 const transfer = async (req, res) => {
   try {
@@ -404,6 +509,7 @@ const getTokenBalance = async (req, res) => {
 export default {
   swap,
   bridge,
+  protocol,
   transfer,
   getTokenAddress,
   getTokenBalance,

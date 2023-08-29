@@ -1,0 +1,59 @@
+{
+  "aave": {
+    "1": {
+      "default": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
+    },
+    "10": {
+      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+    },
+    "42161": {
+      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+    },
+    "137": {
+      "default": "0x794a61358d6845594f94dc1db02a252b5b4814ad"
+    },
+    "250": {
+      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+    },
+    "43114": {
+      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+    },
+    "8453": {
+      "default": "0x90df02551bB792286e8D4f13E0e357b4Bf1D6a57"
+    }
+  },
+  "compound": {
+    "1": {
+      "rewards": "0x1B0e765F6224C21223AeA2af16c1C46E38885a40",
+      "usdc": "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+      "weth": "0xA17581A9E3356d9A858b789D68B4d866e593aE94"
+    },
+    "42161": {
+      "rewards": "0x88730d254A2f7e6AC8388c3198aFd694bA9f7fae",
+      "usdc": "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA"
+    },
+    "137": {
+      "rewards": "0x45939657d1CA34A8FA39A924B71D28Fe8431e581",
+      "usdc": "0xF25212E676D1F7F89Cd72fFEe66158f541246445"
+    },
+    "8453": {
+      "rewards": "0x123964802e6ABabBE1Bc9547D72Ef1B69B00A6b1",
+      "usdc": "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
+      "weth": "0x46e6b214b524310239732D51387075E0e70970bf"
+    }
+  },
+  "hop": {
+    "1": {
+      "eth": "0xb8901acb165ed027e32754e0ffe830802919727f",
+      "gnosis": "0x25FB92E505F752F730cAD0Bd4fa17ecE4A384266",
+      "dai": "0x3d4Cc8A61c7528Fd86C55cfe061a78dCBA48EDd1",
+      "hop": "0x914f986a44AcB623A277d6Bd17368171FCbe4273",
+      "matic": "0x22B1Cbb8D98a01a3B71D034BB899775A76Eb1cc2",
+      "snx": "0x893246FACF345c99e4235E5A7bbEE7404c988b96",
+      "usdc": "0x3666f603Cc164936C1b87e207F36BEBa4AC5f18a"
+    }
+  },
+  "maker": {
+    "1": {}
+  }
+}

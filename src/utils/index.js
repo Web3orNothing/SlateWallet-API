@@ -1,6 +1,20 @@
 import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 import ERC20_ABI from "../abis/erc20.abi.js";
+import * as ProtocolAddresses from "./address.json";
+import * as aaveAbi from "../abis/aave.json";
+import * as compoundRewardsAbi from "../abis/compound-rewards.json";
+import * as compoundUSDCAbi from "../abis/compound-usdc.json";
+import * as compoundWETHAbi from "../abis/compound-weth.json";
+import * as hopAbi from "../abis/hop.json";
+
+const abis = {
+  aave: aaveAbi,
+  "compound-rewards": compoundRewardsAbi,
+  "compound-usdc": compoundUSDCAbi,
+  "compound-weth": compoundWETHAbi,
+  hop: hopAbi,
+};
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -64,6 +78,15 @@ export const getRpcUrlForChain = (chainId) => {
 
   return chainIdsToRpcUrls[chainId] || null;
 };
+
+export const getProtocolAddressForChain = (
+  protocol,
+  chainId,
+  key = "default"
+) => ProtocolAddresses[protocol][chainId][key] || null;
+
+export const getABIForProtocol = (protocol, key) =>
+  abis[`${protocol}${!key ? "" : `-${key}`}`];
 
 export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
   let maxFeePerGas = null;
@@ -129,4 +152,23 @@ export const getApproveData = async (
     };
     return transactionDetails;
   }
+};
+
+export const getFunctionData = async (
+  address,
+  abi,
+  provider,
+  funcName,
+  params,
+  value
+) => {
+  const contract = new ethers.Contract(address, abi, provider);
+  const data = contract.interface.encodeFunctionData(funcName, params);
+  const transactionDetails = {
+    to: address,
+    value,
+    data,
+    ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+  };
+  return transactionDetails;
 };

@@ -252,6 +252,7 @@ const protocol = async (req, res) => {
       token1,
       amount,
     } = req.body;
+    const _protocolName = protocolName.toLowerCase();
 
     const chainId = getChainIdFromName(chainName);
     const tokens = await getTokensForChain(chainId);
@@ -278,18 +279,18 @@ const protocol = async (req, res) => {
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     const gasPrice = await provider.getGasPrice();
 
-    switch (protocolName) {
+    switch (_protocolName) {
       case "sushiswap":
       case "uniswap":
       case "curve": {
         switch (action) {
           case "swap": {
             let dexList;
-            if (protocolName === "sushiswap") {
+            if (_protocolName === "sushiswap") {
               dexList = ["SushiSwap"];
-            } else if (protocolName === "uniswap") {
+            } else if (_protocolName === "uniswap") {
               dexList = ["UniswapV2", "UniswapV3"];
-            } else if (protocolName === "curve") {
+            } else if (_protocolName === "curve") {
               dexList = ["Curve"];
             }
             let decimals = 18;

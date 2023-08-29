@@ -120,7 +120,7 @@ export const getApproveData = async (
     ]);
     const transactionDetails = {
       to: tokenAddress,
-      value: "0x0",
+      value: "0",
       data: approveData,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };

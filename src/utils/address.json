@@ -1,25 +1,8 @@
 {
   "aave": {
     "1": {
-      "default": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
-    },
-    "10": {
-      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
-    },
-    "42161": {
-      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
-    },
-    "137": {
-      "default": "0x794a61358d6845594f94dc1db02a252b5b4814ad"
-    },
-    "250": {
-      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
-    },
-    "43114": {
-      "default": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
-    },
-    "8453": {
-      "default": "0x90df02551bB792286e8D4f13E0e357b4Bf1D6a57"
+      "stkAAVE": "0xaa9faa887bce5182c39f68ac46c43f36723c395b",
+      "stkABPT": "0xa1116930326d21fb917d5a27f1e9943a9595fb47"
     }
   },
   "compound": {
@@ -52,8 +35,5 @@
       "snx": "0x893246FACF345c99e4235E5A7bbEE7404c988b96",
       "usdc": "0x3666f603Cc164936C1b87e207F36BEBa4AC5f18a"
     }
-  },
-  "maker": {
-    "1": {}
   }
 }

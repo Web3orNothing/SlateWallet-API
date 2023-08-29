@@ -1,12 +1,12 @@
 import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 import ERC20_ABI from "../abis/erc20.abi.js";
-import * as ProtocolAddresses from "./address.json";
-import * as aaveAbi from "../abis/aave.json";
-import * as compoundRewardsAbi from "../abis/compound-rewards.json";
-import * as compoundUSDCAbi from "../abis/compound-usdc.json";
-import * as compoundWETHAbi from "../abis/compound-weth.json";
-import * as hopAbi from "../abis/hop.json";
+import * as ProtocolAddresses from "./address.json" assert { type: "json" };
+import * as aaveAbi from "../abis/aave.json" assert { type: "json" };
+import * as compoundRewardsAbi from "../abis/compound-rewards.json" assert { type: "json" };
+import * as compoundUSDCAbi from "../abis/compound-usdc.json" assert { type: "json" };
+import * as compoundWETHAbi from "../abis/compound-weth.json" assert { type: "json" };
+import * as hopAbi from "../abis/hop.json" assert { type: "json" };
 
 const abis = {
   aave: aaveAbi,
@@ -87,6 +87,20 @@ export const getProtocolAddressForChain = (
 
 export const getABIForProtocol = (protocol, key) =>
   abis[`${protocol}${!key ? "" : `-${key}`}`];
+
+export const getFunctionName = (protocol, action) => {
+  switch (protocol) {
+    case "aave":
+      if (action === "deposit") return "stake";
+      if (action === "withdraw") return "redeem";
+      return "claimRewards";
+    case "compound":
+      if (action === "deposit") return "supply";
+      return action;
+    default:
+      return action;
+  }
+};
 
 export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
   let maxFeePerGas = null;

@@ -10,6 +10,7 @@ import {
   getProtocolAddressForChain,
   getFunctionData,
   getABIForProtocol,
+  getFunctionName,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
@@ -265,7 +266,7 @@ const protocol = async (req, res) => {
     const _token0 = tokens.find(
       (t) => t.symbol.toLowerCase() === token0.toLowerCase()
     );
-    if (!_token0) {
+    if (!["aave", "compound"].includes(protocolName) && !_token0) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token0 not found on the specified chain.",
@@ -274,7 +275,7 @@ const protocol = async (req, res) => {
     const _token1 = tokens.find(
       (t) => t.symbol.toLowerCase() === token1.toLowerCase()
     );
-    if (!_token1) {
+    if (!["aave", "compound"].includes(protocolName) && !_token1) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token1 not found on the specified chain.",
@@ -290,25 +291,25 @@ const protocol = async (req, res) => {
 
     switch (protocolName) {
       case "aave": {
-        /**
-         * pool
-         * withdraw, borrow, repay, swap, liquidate, flashLoan
-         */
-        address = getProtocolAddressForChain(protocolName, chainId);
-        abi = getABIForProtocol(protocol);
+        address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE");
+        abi = getABIForProtocol(protocolName);
         params.push(token0);
-        params.push(token1);
         params.push(amount);
         break;
       }
       case "compound": {
-        /**
-         * comet
-         * withdraw, buyCollateral, adsorb
-         * rewards
-         * claim, withdrawToken
-         */
-        abi = getABIForProtocol(protocol, "rewards");
+        const funcName = getFunctionName(protocolName, action);
+        address = getProtocolAddressForChain(
+          protocolName,
+          funcName === "claim" ? "rewards" : "usdc"
+        );
+        abi = getABIForProtocol(
+          protocolName,
+          funcName === "claim" ? "rewards" : "usdc"
+        );
+        params.push(token0);
+        params.push(token1);
+        params.push(true);
         break;
       }
       case "hop": {
@@ -316,10 +317,7 @@ const protocol = async (req, res) => {
          * bridge
          * send, sendToL2, stake, unstake, withdraw
          */
-        abi = getABIForProtocol(protocol);
-        break;
-      }
-      case "maker": {
+        abi = getABIForProtocol(protocolName);
         break;
       }
       default: {
@@ -341,7 +339,15 @@ const protocol = async (req, res) => {
         message: "Protocol ABI not found for the specified action.",
       });
     }
-    const data = getFunctionData(address, abi, provider, action, params, "0x0");
+
+    const data = getFunctionData(
+      address,
+      abi,
+      provider,
+      getFunctionName(protocolName, action),
+      params,
+      "0x0"
+    );
     return res.status(httpStatus.OK).json({ status: "success", data });
   } catch (err) {
     console.log("Error:", err);

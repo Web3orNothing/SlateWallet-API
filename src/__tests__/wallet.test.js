@@ -54,7 +54,9 @@ describe("Test Wallet API", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
+      expect(res.body["message"]).toEqual(
+        "Token not found on the specified chain."
+      );
     });
 
     it("should return ETH->USDC swap data", async () => {
@@ -156,7 +158,9 @@ describe("Test Wallet API", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
+      expect(res.body["message"]).toEqual(
+        "Token not found on the specified chain."
+      );
     });
 
     it("should return Ethereum/WETH->Arbitrum/WETH bridge data", async () => {
@@ -225,7 +229,9 @@ describe("Test Wallet API", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
+      expect(res.body["message"]).toEqual(
+        "Token not found on the specified chain."
+      );
     });
 
     it("should return WETH transfer data", async () => {
@@ -239,8 +245,9 @@ describe("Test Wallet API", () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("success");
-      expect(res.body).toHaveProperty("transaction");
-      const transaction = res.body["transaction"];
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body["transactions"].length).toEqual(1);
+      const transaction = res.body["transactions"][0];
       expect(transaction.to.toLowerCase()).toEqual(
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       );
@@ -257,8 +264,9 @@ describe("Test Wallet API", () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("success");
-      expect(res.body).toHaveProperty("transaction");
-      const transaction = res.body["transaction"];
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body["transactions"].length).toEqual(1);
+      const transaction = res.body["transactions"][0];
       expect(transaction.to.toLowerCase()).toEqual(
         "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e".toLowerCase()
       );
@@ -289,7 +297,9 @@ describe("Test Wallet API", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("error");
       expect(res.body).toHaveProperty("message");
-      expect(res.body["message"]).toEqual("Token not found on the specified chain.");
+      expect(res.body["message"]).toEqual(
+        "Token not found on the specified chain."
+      );
     });
 
     it("should return WETH balance", async () => {

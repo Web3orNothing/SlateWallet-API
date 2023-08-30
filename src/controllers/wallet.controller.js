@@ -275,7 +275,7 @@ const protocol = async (req, res) => {
     const _token1 = tokens.find(
       (t) => t.symbol.toLowerCase() === token1.toLowerCase()
     );
-    if (!["aave", "compound"].includes(protocolName) && !_token1) {
+    if (!["aave", "compound", "hop"].includes(protocolName) && !_token1) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token1 not found on the specified chain.",
@@ -291,9 +291,9 @@ const protocol = async (req, res) => {
 
     switch (protocolName) {
       case "aave": {
-        address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE");
+        address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE"); // TODO: change key based request
         abi = getABIForProtocol(protocolName);
-        params.push(token0);
+        params.push(token0); // eoa in this case
         params.push(amount);
         break;
       }
@@ -301,23 +301,26 @@ const protocol = async (req, res) => {
         const funcName = getFunctionName(protocolName, action);
         address = getProtocolAddressForChain(
           protocolName,
-          funcName === "claim" ? "rewards" : "usdc"
+          funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
         );
         abi = getABIForProtocol(
           protocolName,
-          funcName === "claim" ? "rewards" : "usdc"
+          funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
         );
-        params.push(token0);
-        params.push(token1);
+        params.push(token0); // eoa in this case
+        params.push(token1); // eoa in this case
         params.push(true);
         break;
       }
       case "hop": {
-        /**
-         * bridge
-         * send, sendToL2, stake, unstake, withdraw
-         */
+        address = getProtocolAddressForChain(
+          protocolName,
+          `${token0.toLowerCase()}${
+            token1.toLowerCase() === "hop" ? "" : `-${token1.toLowerCase()}`
+          }`
+        );
         abi = getABIForProtocol(protocolName);
+        if (action !== "claim") params.push(amount);
         break;
       }
       default: {

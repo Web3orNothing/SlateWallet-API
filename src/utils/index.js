@@ -1,12 +1,12 @@
 import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 import ERC20_ABI from "../abis/erc20.abi.js";
-import * as ProtocolAddresses from "./address.json" assert { type: "json" };
-import * as aaveAbi from "../abis/aave.json" assert { type: "json" };
-import * as compoundRewardsAbi from "../abis/compound-rewards.json" assert { type: "json" };
-import * as compoundUSDCAbi from "../abis/compound-usdc.json" assert { type: "json" };
-import * as compoundWETHAbi from "../abis/compound-weth.json" assert { type: "json" };
-import * as hopAbi from "../abis/hop.json" assert { type: "json" };
+import * as ProtocolAddresses from "./address.json";
+import * as aaveAbi from "../abis/aave.json";
+import * as compoundRewardsAbi from "../abis/compound-rewards.json";
+import * as compoundUSDCAbi from "../abis/compound-usdc.json";
+import * as compoundWETHAbi from "../abis/compound-weth.json";
+import * as hopAbi from "../abis/hop.json";
 
 const abis = {
   aave: aaveAbi,
@@ -96,6 +96,10 @@ export const getFunctionName = (protocol, action) => {
       return "claimRewards";
     case "compound":
       if (action === "deposit") return "supply";
+      return action;
+    case "hop":
+      if (action === "deposit") return "stake";
+      if (action === "claim") return "getReward";
       return action;
     default:
       return action;

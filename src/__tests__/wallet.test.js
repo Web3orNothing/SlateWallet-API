@@ -62,7 +62,7 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
         sourceToken: "ETH",
-        sourceAmount: "1",
+        sourceAmount: "0.3",
         destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(200);
@@ -239,8 +239,8 @@ describe("Test Wallet API", () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("success");
-      expect(res.body).toHaveProperty("transaction");
-      const transaction = res.body["transaction"];
+      expect(res.body).toHaveProperty("transactions");
+      const transaction = res.body["transactions"][0];
       expect(transaction.to.toLowerCase()).toEqual(
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       );
@@ -250,15 +250,15 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         token: "ETH",
-        amount: "1",
+        amount: "0.3",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ethereum",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
       expect(res.body["status"]).toEqual("success");
-      expect(res.body).toHaveProperty("transaction");
-      const transaction = res.body["transaction"];
+      expect(res.body).toHaveProperty("transactions");
+      const transaction = res.body["transactions"][0];
       expect(transaction.to.toLowerCase()).toEqual(
         "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e".toLowerCase()
       );

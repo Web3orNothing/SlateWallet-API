@@ -5,7 +5,7 @@ import {
   getChainIdFromName,
   getRpcUrlForChain,
   getFeeDataWithDynamicMaxPriorityFeePerGas,
-  getTokensForChain,
+  getTokenAddressForChain,
   getApproveData,
 } from "../utils/index.js";
 
@@ -30,18 +30,16 @@ const swap = async (req, res) => {
 
     const transactions = [];
 
-    const tokens = await getTokensForChain(chainId);
-    const _sourceToken = tokens.find(
-      (t) => t.symbol.toLowerCase() === sourceToken.toLowerCase()
-    );
+    const _sourceToken = await getTokenAddressForChain(sourceToken, chainName);
     if (!_sourceToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token not found on the specified chain.",
       });
     }
-    const _destinationToken = tokens.find(
-      (t) => t.symbol.toLowerCase() === destinationToken.toLowerCase()
+    const _destinationToken = await getTokenAddressForChain(
+      destinationToken,
+      chainName
     );
     if (!_destinationToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
@@ -142,9 +140,9 @@ const bridge = async (req, res) => {
     const sourceChainId = getChainIdFromName(sourceChainName);
     const destinationChainId = getChainIdFromName(destinationChainName);
 
-    const sourceTokens = await getTokensForChain(sourceChainId);
-    const _sourceToken = sourceTokens.find(
-      (t) => t.symbol.toLowerCase() === sourceToken.toLowerCase()
+    const _sourceToken = await getTokenAddressForChain(
+      sourceToken,
+      sourceChainName
     );
     if (!_sourceToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
@@ -152,9 +150,9 @@ const bridge = async (req, res) => {
         message: "Token not found on the specified chain.",
       });
     }
-    const destinationTokens = await getTokensForChain(destinationChainId);
-    const _destinationToken = destinationTokens.find(
-      (t) => t.symbol.toLowerCase() === destinationToken.toLowerCase()
+    const _destinationToken = await getTokenAddressForChain(
+      destinationToken,
+      destinationChainName
     );
     if (!_destinationToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
@@ -255,10 +253,7 @@ const transfer = async (req, res) => {
       throw new Error("Invalid chain name");
     }
 
-    const tokens = await getTokensForChain(chainId);
-    const tokenInfo = tokens.find(
-      (t) => t.symbol.toLowerCase() === token.toLowerCase()
-    );
+    const tokenInfo = await getTokenAddressForChain(token, chainName);
     if (!tokenInfo) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
@@ -336,12 +331,8 @@ const transfer = async (req, res) => {
 const getTokenAddress = async (req, res) => {
   try {
     const { chainName, tokenName } = req.query;
-    const chainId = getChainIdFromName(chainName);
 
-    const tokens = await getTokensForChain(chainId);
-    const token = tokens.find(
-      (t) => t.symbol.toLowerCase() === tokenName.toLowerCase()
-    );
+    const token = await getTokenAddressForChain(tokenName, chainName);
     if (!token) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
@@ -367,10 +358,7 @@ const getTokenBalance = async (req, res) => {
     const chainId = getChainIdFromName(chainName);
 
     // Step 1: Fetch the token address for the given tokenName on the specified chain
-    const tokens = await getTokensForChain(chainId);
-    const token = tokens.find(
-      (t) => t.symbol.toLowerCase() === tokenName.toLowerCase()
-    );
+    const token = await getTokenAddressForChain(tokenName, chainName);
     if (!token) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",

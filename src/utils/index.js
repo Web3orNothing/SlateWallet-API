@@ -109,8 +109,7 @@ export const getApproveData = async (
   tokenAddress,
   amount,
   owner,
-  spender,
-  nonce
+  spender
 ) => {
   const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
   const allowance = await token.allowance(owner, spender);
@@ -120,13 +119,30 @@ export const getApproveData = async (
       amount,
     ]);
     const transactionDetails = {
-      from: owner,
       to: tokenAddress,
-      value: "0x0",
+      value: "0",
       data: approveData,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
     return transactionDetails;
   }
+};
+
+export const getFunctionData = async (
+  address,
+  abi,
+  provider,
+  funcName,
+  params,
+  value
+) => {
+  const contract = new ethers.Contract(address, abi, provider);
+  const data = contract.interface.encodeFunctionData(funcName, params);
+  const transactionDetails = {
+    to: address,
+    value,
+    data,
+    ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+  };
+  return transactionDetails;
 };

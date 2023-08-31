@@ -89,7 +89,8 @@ export const getQuoteFromParaSwap = async (
   tokenOut,
   amount,
   _,
-  slippage = 1
+  slippage = 1,
+  includeDEXS = undefined
 ) => {
   const paraswapSdk = constructSimpleSDK({
     chainId,
@@ -104,6 +105,9 @@ export const getQuoteFromParaSwap = async (
       destToken:
         tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
       amount: srcAmount,
+      options: {
+        includeDEXS,
+      },
     });
 
     const data = await paraswapSdk.swap.buildTx(

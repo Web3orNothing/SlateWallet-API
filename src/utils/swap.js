@@ -169,9 +169,7 @@ export const getQuoteFrom0x = async (
       gasPrice: gasPrice.toString(),
     });
     const { data } = await axios.get(`${baseURL}swap/v1/quote?${queryParams}`, {
-      headers: {
-        "0x-api-key": process.env.APY_KEY_0X,
-      },
+      headers: { "0x-api-key": process.env.API_KEY_0X },
     });
     return {
       amountOut: data.grossBuyAmount,
@@ -208,9 +206,7 @@ export const getQuoteFrom0x = async (
 //     });
 //     const { data } = await axios.get(
 //       `https://router.firebird.finance/aggregator/v2/quote?${queryParams}`,
-//       {
-//         headers: { "Content-Type": "application/json" },
-//       }
+//       { headers: { "Content-Type": "application/json" } }
 //     );
 //     return {
 //       amountOut: data.grossBuyAmount,
@@ -265,11 +261,7 @@ export const getQuoteFromKyber = async (
       data: { data },
     } = await axios.get(
       `https://aggregator-api.kyberswap.com/${chain}/api/v1/routes?${queryParams}`,
-      {
-        headers: {
-          "x-client-id": "spice-finance",
-        },
-      }
+      { headers: { "x-client-id": "spice-finance" } }
     );
     const {
       data: { data: _data },
@@ -283,11 +275,7 @@ export const getQuoteFromKyber = async (
         recipient: account,
         source: "spice-finance",
       },
-      {
-        headers: {
-          "x-client-id": "spice-finance",
-        },
-      }
+      { headers: { "x-client-id": "spice-finance" } }
     );
     return {
       amountOut: _data.amountOut,

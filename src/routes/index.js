@@ -1,24 +1,27 @@
 import { Router } from "express";
 import httpStatus from "http-status";
 
-import walletController from '../controllers/wallet.controller.js';
+import walletController from "../controllers/wallet.controller.js";
 
 const routes = new Router();
 
 // Swap endpoint
-routes.post('/swap', walletController.swap);
+routes.post("/swap", walletController.swap);
 
 // Bridge endpoint
-routes.post('/bridge', walletController.bridge);
+routes.post("/bridge", walletController.bridge);
+
+// Protocol endpoint
+routes.post("/protocol", walletController.protocol);
 
 // Transfer endpoint
-routes.post('/transfer', walletController.transfer);
+routes.post("/transfer", walletController.transfer);
 
 // Get token address
-routes.get('/token-address', walletController.getTokenAddress);
+routes.get("/token-address", walletController.getTokenAddress);
 
 // Get token balance endpoint
-routes.get('/token-balance', walletController.getTokenBalance);
+routes.get("/token-balance", walletController.getTokenBalance);
 
 // status check route
 routes.get("/status", (_req, res) => {

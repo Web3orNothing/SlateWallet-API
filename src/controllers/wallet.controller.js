@@ -5,7 +5,7 @@ import {
   getChainIdFromName,
   getRpcUrlForChain,
   getFeeDataWithDynamicMaxPriorityFeePerGas,
-  getTokensForChain,
+  getTokenAddressForChain,
   getApproveData,
   getProtocolAddressForChain,
   getFunctionData,
@@ -14,7 +14,7 @@ import {
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
-import { getBestSwapRoute } from "../utils/swap.js";
+import { getBestSwapRoute, getQuoteFromParaSwap } from "../utils/swap.js";
 import { getBestBridgeRoute } from "../utils/bridge.js";
 import { NATIVE_TOKEN } from "../constants.js";
 
@@ -34,18 +34,16 @@ const swap = async (req, res) => {
 
     const transactions = [];
 
-    const tokens = await getTokensForChain(chainId);
-    const _sourceToken = tokens.find(
-      (t) => t.symbol.toLowerCase() === sourceToken.toLowerCase()
-    );
+    const _sourceToken = await getTokenAddressForChain(sourceToken, chainName);
     if (!_sourceToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token not found on the specified chain.",
       });
     }
-    const _destinationToken = tokens.find(
-      (t) => t.symbol.toLowerCase() === destinationToken.toLowerCase()
+    const _destinationToken = await getTokenAddressForChain(
+      destinationToken,
+      chainName
     );
     if (!_destinationToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
@@ -98,29 +96,24 @@ const swap = async (req, res) => {
     }
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
-    let nonce = await provider.getTransactionCount(accountAddress);
     if (_sourceToken.address != NATIVE_TOKEN) {
       const approveData = await getApproveData(
         provider,
         _sourceToken.address,
         _sourceAmount,
         accountAddress,
-        data.to,
-        nonce
+        data.to
       );
       if (approveData) {
-        nonce++;
         transactions.push(approveData);
       }
     }
 
     // Step 5: Return the transaction details to the client
     transactions.push({
-      from: accountAddress,
       to: data.to,
       value: data.value,
       data: data.data,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
@@ -146,9 +139,9 @@ const bridge = async (req, res) => {
     const sourceChainId = getChainIdFromName(sourceChainName);
     const destinationChainId = getChainIdFromName(destinationChainName);
 
-    const sourceTokens = await getTokensForChain(sourceChainId);
-    const _sourceToken = sourceTokens.find(
-      (t) => t.symbol.toLowerCase() === sourceToken.toLowerCase()
+    const _sourceToken = await getTokenAddressForChain(
+      sourceToken,
+      sourceChainName
     );
     if (!_sourceToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
@@ -156,9 +149,9 @@ const bridge = async (req, res) => {
         message: "Token not found on the specified chain.",
       });
     }
-    const destinationTokens = await getTokensForChain(destinationChainId);
-    const _destinationToken = destinationTokens.find(
-      (t) => t.symbol.toLowerCase() === destinationToken.toLowerCase()
+    const _destinationToken = await getTokenAddressForChain(
+      destinationToken,
+      destinationChainName
     );
     if (!_destinationToken) {
       return res.status(httpStatus.BAD_REQUEST).json({
@@ -215,29 +208,24 @@ const bridge = async (req, res) => {
     let transactions = [];
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
-    let nonce = await provider.getTransactionCount(accountAddress);
     if (_sourceToken.address != NATIVE_TOKEN) {
       const approveData = await getApproveData(
         provider,
         _sourceToken.address,
         _sourceAmount,
         accountAddress,
-        data.to,
-        nonce
+        data.to
       );
       if (approveData) {
-        nonce++;
         transactions.push(approveData);
       }
     }
 
     // Step 5: Return the transaction details to the client
     transactions.push({
-      from: accountAddress,
       to: data.to,
       value: data.value,
       data: data.data,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
@@ -249,6 +237,7 @@ const bridge = async (req, res) => {
       .json({ status: "error", message: "Bad request" });
   }
 };
+
 const protocol = async (req, res) => {
   try {
     const {
@@ -260,6 +249,7 @@ const protocol = async (req, res) => {
       token1,
       amount,
     } = req.body;
+    const _protocolName = protocolName.toLowerCase();
 
     const chainId = getChainIdFromName(chainName);
     const tokens = await getTokensForChain(chainId);
@@ -269,7 +259,7 @@ const protocol = async (req, res) => {
     if (!["aave", "compound"].includes(protocolName) && !_token0) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
-        message: "Token0 not found on the specified chain.",
+        message: "Token not found on the specified chain.",
       });
     }
     const _token1 = tokens.find(
@@ -278,18 +268,100 @@ const protocol = async (req, res) => {
     if (!["aave", "compound", "hop"].includes(protocolName) && !_token1) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
-        message: "Token1 not found on the specified chain.",
+        message: "Token not found on the specified chain.",
       });
     }
 
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+    const gasPrice = await provider.getGasPrice();
 
     let address = null;
     let abi = [];
     const params = [];
-
-    switch (protocolName) {
+    switch (_protocolName) {
+      case "sushiswap":
+      case "uniswap":
+      case "curve": {
+        switch (action) {
+          case "swap": {
+            let dexList;
+            if (_protocolName === "sushiswap") {
+              dexList = ["SushiSwap"];
+            } else if (_protocolName === "uniswap") {
+              dexList = ["UniswapV2", "UniswapV3"];
+            } else if (_protocolName === "curve") {
+              dexList = ["Curve"];
+            }
+            let decimals = 18;
+            let _amount;
+            if (_token0.address === NATIVE_TOKEN) {
+              _amount = utils.parseEther(amount);
+            } else {
+              let token = new ethers.Contract(
+                _token0.address,
+                ERC20_ABI,
+                provider
+              );
+              decimals = await token.decimals();
+              _amount = utils.parseUnits(amount, decimals);
+            }
+            const data = await getQuoteFromParaSwap(
+              chainId,
+              accountAddress,
+              {
+                address: _token0.address,
+                symbol: token0,
+                decimals,
+              },
+              {
+                address: _token1.address,
+                symbol: token1,
+              },
+              amount,
+              gasPrice,
+              1,
+              dexList
+            );
+            if (data) {
+              const { tx } = data;
+              const transactions = [];
+              if (_token0.address !== NATIVE_TOKEN) {
+                const approveData = await getApproveData(
+                  provider,
+                  _token0.address,
+                  _amount,
+                  accountAddress,
+                  tx.to
+                );
+                if (approveData) {
+                  transactions.push(approveData);
+                }
+              }
+              transactions.push({
+                to: tx.to,
+                value: tx.value,
+                data: tx.data,
+                ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+              });
+              return res
+                .status(httpStatus.OK)
+                .json({ status: "success", transactions });
+            } else {
+              return res.status(httpStatus.BAD_REQUEST).json({
+                status: "error",
+                message: "No swap route found",
+              });
+            }
+          }
+          default: {
+            return res.status(httpStatus.BAD_REQUEST).json({
+              status: "error",
+              message: "Protocol action not supported",
+            });
+          }
+        }
+      }
       case "aave": {
         address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE"); // TODO: change key based request
         abi = getABIForProtocol(protocolName);
@@ -369,10 +441,7 @@ const transfer = async (req, res) => {
       throw new Error("Invalid chain name");
     }
 
-    const tokens = await getTokensForChain(chainId);
-    const tokenInfo = tokens.find(
-      (t) => t.symbol.toLowerCase() === token.toLowerCase()
-    );
+    const tokenInfo = await getTokenAddressForChain(token, chainName);
     if (!tokenInfo) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
@@ -415,7 +484,6 @@ const transfer = async (req, res) => {
     }
 
     // Step 2: Return the transaction details to the client
-    let nonce = await provider.getTransactionCount(accountAddress);
     let to = _recipient;
     let data = "0x";
     let value = _amount;
@@ -428,11 +496,9 @@ const transfer = async (req, res) => {
       value = 0;
     }
     const transactionDetails = {
-      from: accountAddress,
       to,
       value: value.toString(),
       data,
-      nonce,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
 
@@ -450,12 +516,8 @@ const transfer = async (req, res) => {
 const getTokenAddress = async (req, res) => {
   try {
     const { chainName, tokenName } = req.query;
-    const chainId = getChainIdFromName(chainName);
 
-    const tokens = await getTokensForChain(chainId);
-    const token = tokens.find(
-      (t) => t.symbol.toLowerCase() === tokenName.toLowerCase()
-    );
+    const token = await getTokenAddressForChain(tokenName, chainName);
     if (!token) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
@@ -481,10 +543,7 @@ const getTokenBalance = async (req, res) => {
     const chainId = getChainIdFromName(chainName);
 
     // Step 1: Fetch the token address for the given tokenName on the specified chain
-    const tokens = await getTokensForChain(chainId);
-    const token = tokens.find(
-      (t) => t.symbol.toLowerCase() === tokenName.toLowerCase()
-    );
+    const token = await getTokenAddressForChain(tokenName, chainName);
     if (!token) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",

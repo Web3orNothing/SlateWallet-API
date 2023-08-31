@@ -64,7 +64,7 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
         sourceToken: "ETH",
-        sourceAmount: "1",
+        sourceAmount: "0.3",
         destinationToken: "USDC",
       });
       expect(res.statusCode).toEqual(200);
@@ -257,7 +257,7 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/transfer").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         token: "ETH",
-        amount: "1",
+        amount: "0.3",
         recipient: "0xB23a734F49Ed11dc3B0dD3Ff322b5Df95220574e",
         chainName: "ethereum",
       });

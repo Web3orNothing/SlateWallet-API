@@ -228,72 +228,76 @@ export const getApproveData = async (
 };
 
 export const getTokenAddressForChain = async (symbol, chainName) => {
-  if (typeof symbol !== "string" || symbol.trim() === "") return undefined;
-  if (typeof chainName !== "string" || chainName.trim() === "")
-    return undefined;
+  if (typeof symbol !== "string" || symbol.trim() === "") {
+    console.error("Invalid token symbol");
+    throw new Error("Invalid token symbol");
+  }
+  if (typeof chainName !== "string" || chainName.trim() === "") {
+    console.error("Invalid chain name");
+    throw new Error("Invalid chain name");
+  }
 
   const symbolUp = symbol.toUpperCase();
+
+  let data;
 
   // find most similar token address via cmc
   const chainNameForCMC =
     chainName === "" ? null : getChainNameForCMC(chainName);
-  const CMC_API_ENDPOINT =
-    "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?symbol=";
-  const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
-  let response;
-  try {
-    response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
-  } catch (_) {}
+  if (chainNameForCMC) {
+    const CMC_API_ENDPOINT =
+      "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?symbol=";
+    const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
+    let response;
+    try {
+      response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
+    } catch (_) {}
 
-  let data;
-  if (response && response.data.data[symbolUp].length > 0) {
-    if (chainNameForCMC) {
+    if (response && response.data.data[symbolUp].length > 0) {
       const target = response.data.data[symbolUp][0].contract_address.find(
         (x) => x.platform?.name === chainNameForCMC
       );
       if (target)
-        data = { name: target.platform.name, address: target.contract_address };
-    } else {
-      const addresses = response.data.data[symbolUp][0].contract_address || [];
-      for (let i = 0; i < Math.min(address.length, 1); i++)
         data = {
-          name: addresses[0].platform.name,
-          address: addresses[0].contract_address,
+          name: target.platform.name,
+          address: target.contract_address,
         };
     }
+    if (data && data.address.toLowerCase() === NATIVE_TOKEN2.toLowerCase())
+      data.address = NATIVE_TOKEN;
   }
-  if (data && data.address.toLowerCase() === NATIVE_TOKEN2.toLowerCase())
-    data.address = NATIVE_TOKEN;
 
   // find most similar token address via cgc
-
-  const CGC_API_ENDPOINT = "https://api.coingecko.com/api/v3/coins/";
-  try {
-    response = await axios.get(CGC_API_ENDPOINT + "list");
-  } catch (_) {
-    response = undefined;
-  }
-  const tokens = (response?.data || []).filter(
-    (x) => x.symbol.toLowerCase() === symbol.toLowerCase()
-  );
-  const token = tokens.find(
-    (x) => x.id.replace("-", " ").toLowerCase() === x.name.toLowerCase()
-  );
-  if (token) {
+  const chainNameForCGC =
+    chainName === "" ? null : getChainNameForCGC(chainName);
+  if (chainNameForCGC) {
+    let response;
+    const CGC_API_ENDPOINT = "https://api.coingecko.com/api/v3/coins/";
     try {
-      response = await axios.get(CGC_API_ENDPOINT + token.id);
-    } catch (_) {
-      response = undefined;
-    }
-    if (response && response.data.asset_platform_id) {
-      const address = response.data.platforms[getChainNameForCGC(chainName)];
-      if (
-        address &&
-        data &&
-        data.address.toLowerCase() === address.toLowerCase()
-      ) {
-        // matches cmc with cgc
-      } else data = undefined;
+      response = await axios.get(CGC_API_ENDPOINT + "list");
+    } catch (_) {}
+    const tokens = (response?.data || []).filter(
+      (x) => x.symbol.toLowerCase() === symbol.toLowerCase()
+    );
+    const token = tokens.find(
+      (x) => x.id.replace("-", " ").toLowerCase() === x.name.toLowerCase()
+    );
+    if (token) {
+      try {
+        response = await axios.get(CGC_API_ENDPOINT + token.id);
+      } catch (_) {
+        response = undefined;
+      }
+      if (response && response.data.asset_platform_id) {
+        const address = response.data.platforms[chainNameForCGC];
+        if (
+          address &&
+          data &&
+          data.address.toLowerCase() === address.toLowerCase()
+        ) {
+          // matches cmc with cgc
+        } else data = undefined;
+      }
     }
   }
   return data;

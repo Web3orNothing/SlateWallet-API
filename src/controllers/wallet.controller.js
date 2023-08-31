@@ -137,7 +137,13 @@ const bridge = async (req, res) => {
       sourceAmount,
     } = req.body;
     const sourceChainId = getChainIdFromName(sourceChainName);
+    if (!sourceChainId) {
+      throw new Error("Invalid chain name");
+    }
     const destinationChainId = getChainIdFromName(destinationChainName);
+    if (!destinationChainId) {
+      throw new Error("Invalid chain name");
+    }
 
     const _sourceToken = await getTokenAddressForChain(
       sourceToken,
@@ -252,19 +258,18 @@ const protocol = async (req, res) => {
     const _protocolName = protocolName.toLowerCase();
 
     const chainId = getChainIdFromName(chainName);
-    const tokens = await getTokensForChain(chainId);
-    const _token0 = tokens.find(
-      (t) => t.symbol.toLowerCase() === token0.toLowerCase()
-    );
+    if (!chainId) {
+      throw new Error("Invalid chain name");
+    }
+
+    const _token0 = await getTokenAddressForChain(token0, chainId);
     if (!["aave", "compound"].includes(protocolName) && !_token0) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token not found on the specified chain.",
       });
     }
-    const _token1 = tokens.find(
-      (t) => t.symbol.toLowerCase() === token1.toLowerCase()
-    );
+    const _token1 = await getTokenAddressForChain(token1, chainId);
     if (!["aave", "compound", "hop"].includes(protocolName) && !_token1) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
@@ -365,7 +370,7 @@ const protocol = async (req, res) => {
       case "aave": {
         address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE"); // TODO: change key based request
         abi = getABIForProtocol(protocolName);
-        params.push(token0); // eoa in this case
+        params.push(accountAddress);
         params.push(amount);
         break;
       }
@@ -379,9 +384,15 @@ const protocol = async (req, res) => {
           protocolName,
           funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
         );
-        params.push(token0); // eoa in this case
-        params.push(token1); // eoa in this case
-        params.push(true);
+        if (funcName === "claim") {
+          const comet = getProtocolAddressForChain(protocolName, "usdc");
+          params.push(comet);
+          params.push(accountAddress);
+          params.push(true);
+        } else {
+          params.push(token0);
+          params.push(amount);
+        }
         break;
       }
       case "hop": {
@@ -423,7 +434,9 @@ const protocol = async (req, res) => {
       params,
       "0x0"
     );
-    return res.status(httpStatus.OK).json({ status: "success", data });
+    return res
+      .status(httpStatus.OK)
+      .json({ status: "success", transactions: [data] });
   } catch (err) {
     console.log("Error:", err);
     res
@@ -541,6 +554,9 @@ const getTokenBalance = async (req, res) => {
   try {
     const { accountAddress, chainName, tokenName } = req.query;
     const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name");
+    }
 
     // Step 1: Fetch the token address for the given tokenName on the specified chain
     const token = await getTokenAddressForChain(tokenName, chainName);

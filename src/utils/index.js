@@ -2,6 +2,20 @@ import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
+import * as ProtocolAddresses from "./address.json";
+import * as aaveAbi from "../abis/aave.json";
+import * as compoundRewardsAbi from "../abis/compound-rewards.json";
+import * as compoundUSDCAbi from "../abis/compound-usdc.json";
+import * as compoundWETHAbi from "../abis/compound-weth.json";
+import * as hopAbi from "../abis/hop.json";
+
+const abis = {
+  aave: aaveAbi,
+  "compound-rewards": compoundRewardsAbi,
+  "compound-usdc": compoundUSDCAbi,
+  "compound-weth": compoundWETHAbi,
+  hop: hopAbi,
+};
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -121,6 +135,33 @@ export const getRpcUrlForChain = (chainId) => {
   };
 
   return chainIdsToRpcUrls[chainId] || null;
+};
+
+export const getProtocolAddressForChain = (
+  protocol,
+  chainId,
+  key = "default"
+) => ProtocolAddresses[protocol][chainId][key] || null;
+
+export const getABIForProtocol = (protocol, key) =>
+  abis[`${protocol}${!key ? "" : `-${key}`}`];
+
+export const getFunctionName = (protocol, action) => {
+  switch (protocol) {
+    case "aave":
+      if (action === "deposit") return "stake";
+      if (action === "withdraw") return "redeem";
+      return "claimRewards";
+    case "compound":
+      if (action === "deposit") return "supply";
+      return action;
+    case "hop":
+      if (action === "deposit") return "stake";
+      if (action === "claim") return "getReward";
+      return action;
+    default:
+      return action;
+  }
 };
 
 export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
@@ -256,6 +297,8 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
     }
   }
   return data;
+};
+
 export const getFunctionData = async (
   address,
   abi,

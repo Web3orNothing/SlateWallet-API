@@ -7,7 +7,10 @@ import {
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
+  getProtocolAddressForChain,
   getFunctionData,
+  getABIForProtocol,
+  getFunctionName,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
@@ -253,7 +256,7 @@ const protocol = async (req, res) => {
     const _token0 = tokens.find(
       (t) => t.symbol.toLowerCase() === token0.toLowerCase()
     );
-    if (!_token0) {
+    if (!["aave", "compound"].includes(protocolName) && !_token0) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token not found on the specified chain.",
@@ -262,7 +265,7 @@ const protocol = async (req, res) => {
     const _token1 = tokens.find(
       (t) => t.symbol.toLowerCase() === token1.toLowerCase()
     );
-    if (!_token1) {
+    if (!["aave", "compound", "hop"].includes(protocolName) && !_token1) {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token not found on the specified chain.",
@@ -273,6 +276,9 @@ const protocol = async (req, res) => {
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     const gasPrice = await provider.getGasPrice();
 
+    let address = null;
+    let abi = [];
+    const params = [];
     switch (_protocolName) {
       case "sushiswap":
       case "uniswap":
@@ -356,12 +362,68 @@ const protocol = async (req, res) => {
           }
         }
       }
+      case "aave": {
+        address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE"); // TODO: change key based request
+        abi = getABIForProtocol(protocolName);
+        params.push(token0); // eoa in this case
+        params.push(amount);
+        break;
+      }
+      case "compound": {
+        const funcName = getFunctionName(protocolName, action);
+        address = getProtocolAddressForChain(
+          protocolName,
+          funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
+        );
+        abi = getABIForProtocol(
+          protocolName,
+          funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
+        );
+        params.push(token0); // eoa in this case
+        params.push(token1); // eoa in this case
+        params.push(true);
+        break;
+      }
+      case "hop": {
+        address = getProtocolAddressForChain(
+          protocolName,
+          `${token0.toLowerCase()}${
+            token1.toLowerCase() === "hop" ? "" : `-${token1.toLowerCase()}`
+          }`
+        );
+        abi = getABIForProtocol(protocolName);
+        if (action !== "claim") params.push(amount);
+        break;
+      }
       default: {
         return res
           .status(httpStatus.BAD_REQUEST)
           .json({ status: "error", message: "Protocol not supported" });
       }
     }
+
+    if (!address) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Protocol address not found on the specified chain.",
+      });
+    }
+    if (!abi || abi.length === 0) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Protocol ABI not found for the specified action.",
+      });
+    }
+
+    const data = getFunctionData(
+      address,
+      abi,
+      provider,
+      getFunctionName(protocolName, action),
+      params,
+      "0x0"
+    );
+    return res.status(httpStatus.OK).json({ status: "success", data });
   } catch (err) {
     console.log("Error:", err);
     res

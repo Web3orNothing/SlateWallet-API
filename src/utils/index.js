@@ -2,12 +2,12 @@ import axios from "axios";
 import { BigNumber, ethers } from "ethers";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
-import * as ProtocolAddresses from "./address.json";
-import * as aaveAbi from "../abis/aave.json";
-import * as compoundRewardsAbi from "../abis/compound-rewards.json";
-import * as compoundUSDCAbi from "../abis/compound-usdc.json";
-import * as compoundWETHAbi from "../abis/compound-weth.json";
-import * as hopAbi from "../abis/hop.json";
+import ProtocolAddresses from "./address.js";
+import aaveAbi from "../abis/aave.abi.js";
+import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
+import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
+import compoundWETHAbi from "../abis/compound-weth.abi.js";
+import hopAbi from "../abis/hop.abi.js";
 
 const abis = {
   aave: aaveAbi,

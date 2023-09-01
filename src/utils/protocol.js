@@ -61,6 +61,17 @@ export const getProtocolData = async (
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
   const gasPrice = await provider.getGasPrice();
 
+  let _amount;
+  let decimals = 18;
+  if (_token0.address === NATIVE_TOKEN) {
+    _amount = utils.parseEther(amount);
+  } else {
+    let token = new ethers.Contract(_token0.address, ERC20_ABI, provider);
+    decimals = await token.decimals();
+    _amount = utils.parseUnits(amount, decimals);
+  }
+
+  let approveTx = null;
   let address = null;
   let abi = [];
   const params = [];
@@ -77,19 +88,6 @@ export const getProtocolData = async (
             dexList = ["UniswapV2", "UniswapV3"];
           } else if (_protocolName === "curve") {
             dexList = ["Curve"];
-          }
-          let decimals = 18;
-          let _amount;
-          if (_token0.address === NATIVE_TOKEN) {
-            _amount = utils.parseEther(amount);
-          } else {
-            let token = new ethers.Contract(
-              _token0.address,
-              ERC20_ABI,
-              provider
-            );
-            decimals = await token.decimals();
-            _amount = utils.parseUnits(amount, decimals);
           }
           const data = await getQuoteFromParaSwap(
             chainId,
@@ -147,7 +145,17 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE"); // TODO: change key based request
       abi = getABIForProtocol(_protocolName);
       params.push(accountAddress);
-      params.push(amount);
+      params.push(_amount);
+
+      if (_token0.address !== NATIVE_TOKEN && action != "claim") {
+        approveTx = await getApproveData(
+          provider,
+          _token0.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
       break;
     }
     case "compound": {
@@ -162,13 +170,27 @@ export const getProtocolData = async (
         funcName === "claim" ? "rewards" : token0.toLowerCase() // TODO: change key based on request
       );
       if (funcName === "claim") {
-        const comet = getProtocolAddressForChain(_protocolName, chainId, token0.toLowerCase());
+        const comet = getProtocolAddressForChain(
+          _protocolName,
+          chainId,
+          token0.toLowerCase()
+        );
         params.push(comet);
         params.push(accountAddress);
         params.push(true);
       } else {
         params.push(_token0.address);
-        params.push(amount);
+        params.push(_amount);
+
+        if (_token0.address !== NATIVE_TOKEN) {
+          approveTx = await getApproveData(
+            provider,
+            _token0.address,
+            _amount,
+            accountAddress,
+            address
+          );
+        }
       }
       break;
     }
@@ -181,7 +203,19 @@ export const getProtocolData = async (
         }`
       );
       abi = getABIForProtocol(_protocolName);
-      if (action !== "claim") params.push(amount);
+      if (action !== "claim") {
+        params.push(_amount);
+
+        if (_token0.address !== NATIVE_TOKEN) {
+          approveTx = await getApproveData(
+            provider,
+            _token0.address,
+            _amount,
+            accountAddress,
+            address
+          );
+        }
+      }
       break;
     }
     default: {
@@ -208,5 +242,5 @@ export const getProtocolData = async (
     params,
     "0"
   );
-  return { transactions: [data] };
+  return { transactions: approveTx ? [approveTx, data] : [data] };
 };

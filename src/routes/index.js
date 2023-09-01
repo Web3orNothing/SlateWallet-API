@@ -14,6 +14,9 @@ routes.post("/bridge", walletController.bridge);
 // Protocol endpoint
 routes.post("/protocol", walletController.protocol);
 
+// Yield endpoint
+routes.post("/yield", walletController.yieldHandler);
+
 // Transfer endpoint
 routes.post("/transfer", walletController.transfer);
 

@@ -1,3 +1,4 @@
+import axios from "axios";
 import httpStatus from "http-status";
 import { ethers, utils } from "ethers";
 
@@ -7,16 +8,13 @@ import {
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
-  getProtocolAddressForChain,
-  getFunctionData,
-  getABIForProtocol,
-  getFunctionName,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
-import { getBestSwapRoute, getQuoteFromParaSwap } from "../utils/swap.js";
+import { getBestSwapRoute } from "../utils/swap.js";
 import { getBestBridgeRoute } from "../utils/bridge.js";
 import { NATIVE_TOKEN } from "../constants.js";
+import { getProtocolData } from "../utils/protocol.js";
 
 const swap = async (req, res) => {
   try {
@@ -255,188 +253,79 @@ const protocol = async (req, res) => {
       token1,
       amount,
     } = req.body;
-    const _protocolName = protocolName.toLowerCase();
-
-    const chainId = getChainIdFromName(chainName);
-    if (!chainId) {
-      throw new Error("Invalid chain name");
-    }
-
-    const _token0 = await getTokenAddressForChain(token0, chainId);
-    if (!["aave", "compound"].includes(protocolName) && !_token0) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Token not found on the specified chain.",
-      });
-    }
-    const _token1 = await getTokenAddressForChain(token1, chainId);
-    if (!["aave", "compound", "hop"].includes(protocolName) && !_token1) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Token not found on the specified chain.",
-      });
-    }
-
-    const rpcUrl = getRpcUrlForChain(chainId);
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-    const gasPrice = await provider.getGasPrice();
-
-    let address = null;
-    let abi = [];
-    const params = [];
-    switch (_protocolName) {
-      case "sushiswap":
-      case "uniswap":
-      case "curve": {
-        switch (action) {
-          case "swap": {
-            let dexList;
-            if (_protocolName === "sushiswap") {
-              dexList = ["SushiSwap"];
-            } else if (_protocolName === "uniswap") {
-              dexList = ["UniswapV2", "UniswapV3"];
-            } else if (_protocolName === "curve") {
-              dexList = ["Curve"];
-            }
-            let decimals = 18;
-            let _amount;
-            if (_token0.address === NATIVE_TOKEN) {
-              _amount = utils.parseEther(amount);
-            } else {
-              let token = new ethers.Contract(
-                _token0.address,
-                ERC20_ABI,
-                provider
-              );
-              decimals = await token.decimals();
-              _amount = utils.parseUnits(amount, decimals);
-            }
-            const data = await getQuoteFromParaSwap(
-              chainId,
-              accountAddress,
-              {
-                address: _token0.address,
-                symbol: token0,
-                decimals,
-              },
-              {
-                address: _token1.address,
-                symbol: token1,
-              },
-              amount,
-              gasPrice,
-              1,
-              dexList
-            );
-            if (data) {
-              const { tx } = data;
-              const transactions = [];
-              if (_token0.address !== NATIVE_TOKEN) {
-                const approveData = await getApproveData(
-                  provider,
-                  _token0.address,
-                  _amount,
-                  accountAddress,
-                  tx.to
-                );
-                if (approveData) {
-                  transactions.push(approveData);
-                }
-              }
-              transactions.push({
-                to: tx.to,
-                value: tx.value,
-                data: tx.data,
-                ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-              });
-              return res
-                .status(httpStatus.OK)
-                .json({ status: "success", transactions });
-            } else {
-              return res.status(httpStatus.BAD_REQUEST).json({
-                status: "error",
-                message: "No swap route found",
-              });
-            }
-          }
-          default: {
-            return res.status(httpStatus.BAD_REQUEST).json({
-              status: "error",
-              message: "Protocol action not supported",
-            });
-          }
-        }
-      }
-      case "aave": {
-        address = getProtocolAddressForChain(protocolName, chainId, "stkAAVE"); // TODO: change key based request
-        abi = getABIForProtocol(protocolName);
-        params.push(accountAddress);
-        params.push(amount);
-        break;
-      }
-      case "compound": {
-        const funcName = getFunctionName(protocolName, action);
-        address = getProtocolAddressForChain(
-          protocolName,
-          funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
-        );
-        abi = getABIForProtocol(
-          protocolName,
-          funcName === "claim" ? "rewards" : "usdc" // TODO: change key based on request
-        );
-        if (funcName === "claim") {
-          const comet = getProtocolAddressForChain(protocolName, "usdc");
-          params.push(comet);
-          params.push(accountAddress);
-          params.push(true);
-        } else {
-          params.push(token0);
-          params.push(amount);
-        }
-        break;
-      }
-      case "hop": {
-        address = getProtocolAddressForChain(
-          protocolName,
-          `${token0.toLowerCase()}${
-            token1.toLowerCase() === "hop" ? "" : `-${token1.toLowerCase()}`
-          }`
-        );
-        abi = getABIForProtocol(protocolName);
-        if (action !== "claim") params.push(amount);
-        break;
-      }
-      default: {
-        return res
-          .status(httpStatus.BAD_REQUEST)
-          .json({ status: "error", message: "Protocol not supported" });
-      }
-    }
-
-    if (!address) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Protocol address not found on the specified chain.",
-      });
-    }
-    if (!abi || abi.length === 0) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Protocol ABI not found for the specified action.",
-      });
-    }
-
-    const data = getFunctionData(
-      address,
-      abi,
-      provider,
-      getFunctionName(protocolName, action),
-      params,
-      "0x0"
+    const { transactions, error } = await getProtocolData(
+      accountAddress,
+      chainName,
+      protocolName,
+      action,
+      token0,
+      token1,
+      amount
     );
-    return res
-      .status(httpStatus.OK)
-      .json({ status: "success", transactions: [data] });
+    if (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json({ status: "error", message: error });
+    } else {
+      return res
+        .status(httpStatus.OK)
+        .json({ status: "success", transactions });
+    }
+  } catch (err) {
+    console.log("Error:", err);
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
+  }
+};
+
+const yieldHandler = async (req, res) => {
+  try {
+    const { accountAddress, chainName, token, amount } = req.body;
+    const _token = await getTokenAddressForChain(token, chainName);
+    if (!_token) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+    const whitelistedProtocols = ["aave", "compound"]; // TODO: update supported protocols list in the future
+    const {
+      data: { data },
+    } = await axios.get(`https://yields.llama.fi/pools`);
+    let pools = data.filter(
+      (pool) =>
+        pool.chain.toLowerCase() === chainName.toLowerCase() &&
+        whitelistedProtocols.includes(pool.project) &&
+        (!pool.underlyingTokens ||
+          pool.underlyingTokens.includes(_token.address.toLowerCase()))
+    );
+    if (pools.length === 0) {
+      res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Protocol not found for given chain and token.",
+      });
+    }
+    pools = pools.sort((a, b) => b.apy - a.apy);
+    const bestPool = pools[0];
+    const { transactions, error } = await getProtocolData(
+      accountAddress,
+      chainName,
+      bestPool.project,
+      "deposit",
+      token,
+      null,
+      amount
+    );
+    if (error) {
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .json({ status: "error", message: error });
+    } else {
+      return res
+        .status(httpStatus.OK)
+        .json({ status: "success", transactions });
+    }
   } catch (err) {
     console.log("Error:", err);
     res
@@ -594,6 +483,7 @@ export default {
   swap,
   bridge,
   protocol,
+  yieldHandler,
   transfer,
   getTokenAddress,
   getTokenBalance,

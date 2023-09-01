@@ -31,9 +31,6 @@ components:
     Transaction:
       type: object
       properties:
-        from:
-          type: string
-          description: The sender's address for the transaction.
         to:
           type: string
           description: The recipient's address for the transaction.
@@ -55,9 +52,6 @@ components:
         data:
           type: string
           description: Additional data associated with the transaction (useful when a smart contract is called).
-        nonce:
-          type: integer
-          description: The nonce value for the transaction.
 
     SwapRequest:
       type: object
@@ -112,6 +106,59 @@ components:
         - sourceToken
         - destinationToken
         - sourceAmount
+
+    ProtocolRequest:
+      type: object
+      properties:
+        accountAddress:
+          type: string
+          description: The user's account address.
+        chainName:
+          type: string
+          description: The ID of the blockchain.
+        protocolName:
+          type: string
+          description: The ID of the protocol to interact with.
+        action:
+          type: string
+          description: The protocol action to perform.
+        token0:
+          type: string
+          description: The token to be used for the protocol interaction.
+        token1:
+          type: string
+          description: The token to be used for the protocol interaction.
+        amount:
+          type: string
+          description: The amount of token to be used.
+      required:
+        - accountAddress
+        - chainName
+        - protocolName
+        - action
+        - token0
+        - amount
+
+    YieldRequest:
+      type: object
+      properties:
+        accountAddress:
+          type: string
+          description: The user's account address.
+        chainName:
+          type: string
+          description: The ID of the blockchain.
+        token:
+          type: string
+          description: The token to be staked.
+        amount:
+          type: string
+          description: The amount of token to be staked.
+      required:
+        - accountAddress
+        - chainName
+        - token
+        - amount
 
     TransferRequest:
       type: object
@@ -187,8 +234,10 @@ paths:
                 properties:
                   status:
                     type: string
-                  transaction:
-                    $ref: '#/components/schemas/Transaction'
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:
@@ -221,8 +270,82 @@ paths:
                 properties:
                   status:
                     type: string
-                  transaction:
-                    $ref: '#/components/schemas/Transaction'
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /protocol:
+    post:
+      summary: Interact with specific protocols.
+      description: Interact with protocols. It can be stake/unstake, swap, etc.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtocolRequest'
+      responses:
+        '200':
+          description: Response containing transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+
+  /yield:
+    post:
+      summary: Stake in the best yield protocol.
+      description: Find highest yield pool and deposit token to the protocol.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YieldRequest'
+      responses:
+        '200':
+          description: Response containing transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:
@@ -255,8 +378,10 @@ paths:
                 properties:
                   status:
                     type: string
-                  transaction:
-                    $ref: '#/components/schemas/Transaction'
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:
@@ -289,8 +414,10 @@ paths:
                 properties:
                   status:
                     type: string
-                  transaction:
-                    $ref: '#/components/schemas/Transaction'
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
         '400':
           description: Bad request.
           content:

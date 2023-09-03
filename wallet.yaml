@@ -185,7 +185,7 @@ paths:
   /swap:
     post:
       summary: Perform a token swap.
-      description: Swaps source amount of source token for destination token on the same chain.
+      description: Swaps (buys, sells) source amount of source token for destination token on the same chain.
       requestBody:
         required: true
         content:

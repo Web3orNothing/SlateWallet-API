@@ -1,7 +1,7 @@
 [
     {
         "name": "swap",
-        "description": "Swaps source amount of source token for destination token on the same chain.",
+        "description": "Swaps (buys, sells) source amount of source token for destination token on the same chain.",
         "parameters": {
             "type": "object",
             "properties": {

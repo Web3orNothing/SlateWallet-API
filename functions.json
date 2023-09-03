@@ -77,37 +77,6 @@
         }
     },
     {
-        "name": "yield",
-        "description": "Deposit amount of tokens into the highest apr pool",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "accountAddress": {
-                    "type": "string",
-                    "description": "The user's account address."
-                },
-                "chainName": {
-                    "type": "string",
-                    "description": "The ID of the blockchain."
-                },
-                "token": {
-                    "type": "string",
-                    "description": "The token to be staked."
-                },
-                "amount": {
-                    "type": "string",
-                    "description": "The amount of token to be staked."
-                }
-            },
-            "required": [
-                "accountAddress",
-                "chainName",
-                "token",
-                "amount"
-            ]
-        }
-    },
-    {
         "name": "transfer",
         "description": "Transfers tokens to another address on the same chain.",
         "parameters": {
@@ -143,42 +112,48 @@
         "parameters": {
             "type": "object",
             "properties": {
-                "accountAddress": {
-                    "type": "string",
-                    "description": "The user's account address."
-                },
-                "chainName": {
-                    "type": "string",
-                    "description": "The ID of the blockchain."
-                },
                 "protocolName": {
                     "type": "string",
-                    "description": "The ID of the protocol to interact with."
+                    "description": "The name of the protocol."
                 },
                 "action": {
                     "type": "string",
-                    "description": "The protocol action to perform."
+                    "description": "The action to be performed within the protocol."
                 },
-                "token0": {
+                "spender": {
                     "type": "string",
-                    "description": "The token to be used for the protocol interaction."
+                    "description": "The spender's address for the protocol interaction."
                 },
-                "token1": {
+                "receiver": {
                     "type": "string",
-                    "description": "The token to be used for the protocol interaction."
+                    "description": "The receiver's address for the protocol interaction."
                 },
-                "amount": {
+                "inputAmount": {
                     "type": "string",
-                    "description": "The amount of token to be used."
+                    "description": "The amount of tokens for the protocol interaction."
+                },
+                "inputToken": {
+                    "type": "string",
+                    "description": "The input token for the protocol interaction."
+                },
+                "outputAmount": {
+                    "type": "string",
+                    "description": "The output amount of tokens for the protocol interaction."
+                },
+                "outputToken": {
+                    "type": "string",
+                    "description": "The output token for the protocol interaction."
+                },
+                "chainName": {
+                    "type": "string",
+                    "description": "The ID of the blockchain chain for the protocol interaction."
                 }
             },
             "required": [
-                "accountAddress",
-                "chainName",
                 "protocolName",
                 "action",
-                "token0",
-                "amount"
+                "spender",
+                "chainName"
             ]
         }
     },
@@ -207,5 +182,36 @@
                 "tokenName"
             ]
         }
-    }    
+    },
+    {
+        "name": "yield",
+        "description": "Finds best yield for user and deposits amount of specified token.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "accountAddress": {
+                    "type": "string",
+                    "description": "The user's account address."
+                },
+                "chainName": {
+                    "type": "string",
+                    "description": "The ID of the blockchain."
+                },
+                "token": {
+                    "type": "string",
+                    "description": "The token to be staked."
+                },
+                "amount": {
+                    "type": "string",
+                    "description": "The amount of token to be staked."
+                }
+            },
+            "required": [
+                "accountAddress",
+                "chainName",
+                "token",
+                "amount"
+            ]
+        }
+    }
 ]

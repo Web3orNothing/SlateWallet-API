@@ -107,38 +107,6 @@ components:
         - destinationToken
         - sourceAmount
 
-    ProtocolRequest:
-      type: object
-      properties:
-        accountAddress:
-          type: string
-          description: The user's account address.
-        chainName:
-          type: string
-          description: The ID of the blockchain.
-        protocolName:
-          type: string
-          description: The ID of the protocol to interact with.
-        action:
-          type: string
-          description: The protocol action to perform.
-        token0:
-          type: string
-          description: The token to be used for the protocol interaction.
-        token1:
-          type: string
-          description: The token to be used for the protocol interaction.
-        amount:
-          type: string
-          description: The amount of token to be used.
-      required:
-        - accountAddress
-        - chainName
-        - protocolName
-        - action
-        - token0
-        - amount
-
     YieldRequest:
       type: object
       properties:
@@ -188,7 +156,7 @@ components:
     ProtocolRequest:
       type: object
       properties:
-        name:
+        protocolName:
           type: string
         action:
           type: string
@@ -207,7 +175,7 @@ components:
         chainName:
           type: string
       required:
-        - name
+        - protocolName
         - action
         - spender
         - chainName
@@ -260,42 +228,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BridgeRequest'
-      responses:
-        '200':
-          description: Response containing transaction details.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  transactions:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Transaction'
-        '400':
-          description: Bad request.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  message:
-                    type: string
-
-  /protocol:
-    post:
-      summary: Interact with specific protocols.
-      description: Interact with protocols. It can be stake/unstake, swap, etc.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProtocolRequest'
       responses:
         '200':
           description: Response containing transaction details.

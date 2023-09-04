@@ -57,10 +57,6 @@
                     "type": "string",
                     "description": "The token to be transferred from the source chain to the destination chain."
                 },
-                "destinationToken": {
-                    "type": "string",
-                    "description": "The token to be received on the destination chain."
-                },
                 "sourceAmount": {
                     "type": "string",
                     "description": "The amount of tokens to be transferred."
@@ -71,7 +67,6 @@
                 "sourceChainName",
                 "destinationChainName",
                 "sourceToken",
-                "destinationToken",
                 "sourceAmount"
             ]
         }

@@ -1,7 +1,7 @@
 [
     {
         "name": "swap",
-        "description": "Swaps (buys, sells) source amount of source token for destination token on the same chain.",
+        "description": "Swaps (buys, sells) source amount of source token for destination token on one specific blockchain network.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -103,7 +103,7 @@
     },
     {
         "name": "protocol",
-        "description": "Performs specific actions on specific apps by depositing or withdrawing an amount of a token.",
+        "description": "Performs specific actions on specific apps, exchanges, or protocols with an amount of a token.",
         "parameters": {
             "type": "object",
             "properties": {

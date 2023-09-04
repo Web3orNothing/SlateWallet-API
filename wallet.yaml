@@ -156,6 +156,11 @@ components:
           type: string
         action:
           type: string
+          enum:
+            - swap
+            - deposit
+            - withdraw
+            - claim
         spender:
           type: string
         receiver:

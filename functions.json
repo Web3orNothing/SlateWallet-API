@@ -113,7 +113,8 @@
                 },
                 "action": {
                     "type": "string",
-                    "description": "The action to be performed within the protocol."
+                    "description": "The action to be performed within the protocol.",
+                    "enum": ["swap", "deposit", "withdraw", "claim"]
                 },
                 "spender": {
                     "type": "string",

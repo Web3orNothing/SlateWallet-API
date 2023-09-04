@@ -131,7 +131,6 @@ const bridge = async (req, res) => {
       sourceChainName,
       destinationChainName,
       sourceToken,
-      destinationToken,
       sourceAmount,
     } = req.body;
     const sourceChainId = getChainIdFromName(sourceChainName);
@@ -154,7 +153,7 @@ const bridge = async (req, res) => {
       });
     }
     const _destinationToken = await getTokenAddressForChain(
-      destinationToken,
+      sourceToken,
       destinationChainName
     );
     if (!_destinationToken) {
@@ -199,7 +198,7 @@ const bridge = async (req, res) => {
       },
       {
         address: _destinationToken.address,
-        symbol: destinationToken,
+        symbol: sourceToken,
       },
       sourceAmount
     );
@@ -245,22 +244,22 @@ const bridge = async (req, res) => {
 const protocol = async (req, res) => {
   try {
     const {
-      accountAddress,
+      spender,
       chainName,
       protocolName,
       action,
-      token0,
-      token1,
-      amount,
+      inputToken,
+      outputToken,
+      inputAmount,
     } = req.body;
     const { transactions, error } = await getProtocolData(
-      accountAddress,
+      spender,
       chainName,
       protocolName,
       action,
-      token0,
-      token1,
-      amount
+      inputToken,
+      outputToken,
+      inputAmount
     );
     if (error) {
       return res

@@ -292,7 +292,7 @@ const swapRoutes = [
   getQuoteFromOpenOcean,
   getQuoteFrom1inch,
   getQuoteFromParaSwap,
-  getQuoteFrom0x,
+  // getQuoteFrom0x,
   // getQuoteFromFirebird,
   getQuoteFromKyber,
 ];
@@ -308,16 +308,22 @@ export const getBestSwapRoute = async (
 ) => {
   let amountOut;
   let tx;
-  for (let i = 0; i < swapRoutes.length; i++) {
-    const data = await swapRoutes[i](
-      chainId,
-      account,
-      tokenIn,
-      tokenOut,
-      amount,
-      gasPrice,
-      slippage
-    );
+  const datas = await Promise.all(
+    swapRoutes.map(
+      async (swapRoute) =>
+        await swapRoute(
+          chainId,
+          account,
+          tokenIn,
+          tokenOut,
+          amount,
+          gasPrice,
+          slippage
+        )
+    )
+  );
+  for (let i = 0; i < datas.length; i++) {
+    const data = datas[i];
     if (data) {
       const newAmountOut = BigNumber.from(data.amountOut);
       if (!amountOut || amountOut.lt(newAmountOut)) {

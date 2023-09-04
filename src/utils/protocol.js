@@ -16,24 +16,14 @@ import { getQuoteFromParaSwap } from "../utils/swap.js";
 import { NATIVE_TOKEN } from "../constants.js";
 
 export const getProtocolData = async (
-  accountAddress,
+  spender,
   chainName,
   protocolName,
   action,
-  token0,
-  token1,
-  amount
+  inputToken,
+  outputToken,
+  inputAmount
 ) => {
-  console.log(
-    "===>",
-    accountAddress,
-    chainName,
-    protocolName,
-    action,
-    token0,
-    token1,
-    amount
-  );
   const _protocolName = protocolName.toLowerCase();
 
   const chainId = getChainIdFromName(chainName);
@@ -41,16 +31,16 @@ export const getProtocolData = async (
     throw new Error("Invalid chain name");
   }
 
-  const _token0 = await getTokenAddressForChain(token0, chainName);
-  if (!["aave", "compound"].includes(protocolName) && !_token0) {
+  const _inputToken = await getTokenAddressForChain(inputToken, chainName);
+  if (!["aave", "compound"].includes(protocolName) && !_inputToken) {
     return {
       error: "Token not found on the specified chain.",
     };
   }
-  let _token1;
+  let _outputToken;
   if (!["aave", "compound", "hop"].includes(protocolName)) {
-    _token1 = await getTokenAddressForChain(token1, chainName);
-    if (!_token1) {
+    _outputToken = await getTokenAddressForChain(outputToken, chainName);
+    if (!_outputToken) {
       return {
         error: "Token not found on the specified chain.",
       };
@@ -61,14 +51,14 @@ export const getProtocolData = async (
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
   const gasPrice = await provider.getGasPrice();
 
-  let _amount;
+  let _inputAmount;
   let decimals = 18;
-  if (_token0.address === NATIVE_TOKEN) {
-    _amount = utils.parseEther(amount);
+  if (_inputToken.address === NATIVE_TOKEN) {
+    _inputAmount = utils.parseEther(inputAmount);
   } else {
-    let token = new ethers.Contract(_token0.address, ERC20_ABI, provider);
+    let token = new ethers.Contract(_inputToken.address, ERC20_ABI, provider);
     decimals = await token.decimals();
-    _amount = utils.parseUnits(amount, decimals);
+    _inputAmount = utils.parseUnits(inputAmount, decimals);
   }
 
   let approveTx = null;
@@ -91,17 +81,17 @@ export const getProtocolData = async (
           }
           const data = await getQuoteFromParaSwap(
             chainId,
-            accountAddress,
+            spender,
             {
-              address: _token0.address,
-              symbol: token0,
+              address: _inputToken.address,
+              symbol: inputToken,
               decimals,
             },
             {
-              address: _token1.address,
-              symbol: token1,
+              address: _outputToken.address,
+              symbol: outputToken,
             },
-            amount,
+            inputAmount,
             gasPrice,
             1,
             dexList
@@ -109,12 +99,12 @@ export const getProtocolData = async (
           if (data) {
             const { tx } = data;
             const transactions = [];
-            if (_token0.address !== NATIVE_TOKEN) {
+            if (_inputToken.address !== NATIVE_TOKEN) {
               const approveData = await getApproveData(
                 provider,
-                _token0.address,
-                _amount,
-                accountAddress,
+                _inputToken.address,
+                _inputAmount,
+                spender,
                 tx.to
               );
               if (approveData) {
@@ -144,15 +134,15 @@ export const getProtocolData = async (
     case "aave": {
       address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE"); // TODO: change key based request
       abi = getABIForProtocol(_protocolName);
-      params.push(accountAddress);
-      params.push(_amount);
+      params.push(spender);
+      params.push(_inputAmount);
 
-      if (_token0.address !== NATIVE_TOKEN && action != "claim") {
+      if (_inputToken.address !== NATIVE_TOKEN && action != "claim") {
         approveTx = await getApproveData(
           provider,
-          _token0.address,
-          _amount,
-          accountAddress,
+          _inputToken.address,
+          _inputAmount,
+          spender,
           address
         );
       }
@@ -163,31 +153,31 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        funcName === "claim" ? "rewards" : token0.toLowerCase() // TODO: change key based on request
+        funcName === "claim" ? "rewards" : inputToken.toLowerCase() // TODO: change key based on request
       );
       abi = getABIForProtocol(
         _protocolName,
-        funcName === "claim" ? "rewards" : token0.toLowerCase() // TODO: change key based on request
+        funcName === "claim" ? "rewards" : inputToken.toLowerCase() // TODO: change key based on request
       );
       if (funcName === "claim") {
         const comet = getProtocolAddressForChain(
           _protocolName,
           chainId,
-          token0.toLowerCase()
+          inputToken.toLowerCase()
         );
         params.push(comet);
-        params.push(accountAddress);
+        params.push(spender);
         params.push(true);
       } else {
-        params.push(_token0.address);
-        params.push(_amount);
+        params.push(_inputToken.address);
+        params.push(_inputAmount);
 
-        if (_token0.address !== NATIVE_TOKEN) {
+        if (_inputToken.address !== NATIVE_TOKEN) {
           approveTx = await getApproveData(
             provider,
-            _token0.address,
-            _amount,
-            accountAddress,
+            _inputToken.address,
+            _inputAmount,
+            spender,
             address
           );
         }
@@ -198,20 +188,20 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        `${token0.toLowerCase()}${
-          token1.toLowerCase() === "hop" ? "" : `-${token1.toLowerCase()}`
+        `${inputToken.toLowerCase()}${
+          outputToken.toLowerCase() === "hop" ? "" : `-${outputToken.toLowerCase()}`
         }`
       );
       abi = getABIForProtocol(_protocolName);
       if (action !== "claim") {
-        params.push(_amount);
+        params.push(_inputAmount);
 
-        if (_token0.address !== NATIVE_TOKEN) {
+        if (_inputToken.address !== NATIVE_TOKEN) {
           approveTx = await getApproveData(
             provider,
-            _token0.address,
-            _amount,
-            accountAddress,
+            _inputToken.address,
+            _inputAmount,
+            spender,
             address
           );
         }

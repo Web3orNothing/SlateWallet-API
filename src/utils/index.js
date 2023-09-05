@@ -184,7 +184,7 @@ export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
   maxPriorityFeePerGas = parseInt(maxPriorityFeePerGas.toString());
   gasPrice = parseInt(gasPrice.toString());
 
-  return { maxFeePerGas, maxPriorityFeePerGas, gasPrice };
+  return { maxFeePerGas, maxPriorityFeePerGas, gasPrice: Math.floor(gasPrice * 1.05) };
 };
 
 // Helper function to get tokens on a chain

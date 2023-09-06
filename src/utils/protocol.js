@@ -9,6 +9,7 @@ import {
   getFunctionData,
   getABIForProtocol,
   getFunctionName,
+  getTokenAmount,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
@@ -51,15 +52,12 @@ export const getProtocolData = async (
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
   const gasPrice = await provider.getGasPrice();
 
-  let _inputAmount;
-  let decimals = 18;
-  if (_inputToken.address === NATIVE_TOKEN) {
-    _inputAmount = utils.parseEther(inputAmount);
-  } else {
-    let token = new ethers.Contract(_inputToken.address, ERC20_ABI, provider);
-    decimals = await token.decimals();
-    _inputAmount = utils.parseUnits(inputAmount, decimals);
-  }
+  const { amount: _inputAmount, decimals } = await getTokenAmount(
+    _inputToken.address,
+    provider,
+    spender,
+    inputAmount
+  );
 
   let approveTx = null;
   let address = null;

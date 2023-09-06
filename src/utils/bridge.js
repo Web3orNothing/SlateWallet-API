@@ -33,7 +33,7 @@ export const getQuoteFromLiFi = async (
         toChain,
         fromToken: sourceToken.symbol,
         toToken: destToken.symbol,
-        fromAmount: utils.parseUnits(amount, sourceToken.decimals).toString(),
+        fromAmount: amount.toString(),
         fromAddress: account,
       },
     });
@@ -95,7 +95,7 @@ export const getQuoteFromAxelar = async (
         sourceToken.address === NATIVE_TOKEN
           ? NATIVE_TOKEN2
           : sourceToken.address,
-      fromAmount: utils.parseUnits(amount, sourceToken.decimals).toString(),
+      fromAmount: amount.toString(),
       toChain: destChainId,
       toToken:
         destToken.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : destToken.address,

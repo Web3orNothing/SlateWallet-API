@@ -83,7 +83,7 @@ const swap = async (req, res) => {
         address: _destinationToken.address,
         symbol: destinationToken,
       },
-      sourceAmount,
+      _sourceAmount,
       gasPrice
     );
 
@@ -197,7 +197,7 @@ const bridge = async (req, res) => {
         address: _destinationToken.address,
         symbol: sourceToken,
       },
-      sourceAmount
+      _sourceAmount
     );
 
     // Step 3: Parse the response and extract relevant information for the bridge transaction
@@ -294,7 +294,9 @@ const yieldHandler = async (req, res) => {
         pool.chain.toLowerCase() === chainName.toLowerCase() &&
         whitelistedProtocols.includes(pool.project) &&
         (!pool.underlyingTokens ||
-          pool.underlyingTokens.includes(_token.address.toLowerCase()))
+          pool.underlyingTokens
+            .map((x) => x.toLowerCase())
+            .includes(_token.address.toLowerCase()))
     );
     if (pools.length === 0) {
       return res.status(httpStatus.BAD_REQUEST).json({

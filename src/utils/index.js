@@ -40,6 +40,7 @@ export const getChainNameForCMC = (chainName) => {
     arbitrum: "Arbitrum",
     celo: "Celo",
     avalanche: "Avalanche C-Chain",
+    zksync: "zkSync Era",
     // Add more chainName-platform on CMC mappings here as needed
   };
 
@@ -74,6 +75,7 @@ export const getChainNameForCGC = (chainName) => {
     velas: "velas",
     hydra: "hydra",
     near: "near-protocol",
+    zksync: "zksync",
     // Add more chainName-platform on CGC mappings here as needed
   };
 
@@ -343,9 +345,15 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   if (address !== NATIVE_TOKEN)
     token = new ethers.Contract(address, ERC20_ABI, provider);
 
-  if (!amount || parseFloat(amount) === 0 || isNaN(parseFloat(amount))) {
-    if (address === NATIVE_TOKEN) _amount = await provider.getBalance(user);
-    else _amount = await token.balanceOf(user);
+  if (
+    amount === undefined ||
+    parseFloat(amount) === 0 ||
+    isNaN(parseFloat(amount))
+  ) {
+    if (address === NATIVE_TOKEN) {
+      _amount = await provider.getBalance(user);
+      if (amount !== undefined) _amount = _amount.sub(utils.parseEther("0.02"));
+    } else _amount = await token.balanceOf(user);
   } else {
     if (address == NATIVE_TOKEN) _amount = utils.parseEther(amount);
     else {

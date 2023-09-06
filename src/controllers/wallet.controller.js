@@ -1,6 +1,6 @@
 import axios from "axios";
 import httpStatus from "http-status";
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 
 import {
   getChainIdFromName,
@@ -8,6 +8,7 @@ import {
   getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
+  getTokenAmount,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
@@ -53,19 +54,17 @@ const swap = async (req, res) => {
     // Step 1: Check user balance on the given chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-    let balance;
-    let token;
-    let decimals = 18;
-    let _sourceAmount;
-    if (_sourceToken.address == NATIVE_TOKEN) {
-      balance = await provider.getBalance(accountAddress);
-      _sourceAmount = utils.parseEther(sourceAmount);
-    } else {
-      token = new ethers.Contract(_sourceToken.address, ERC20_ABI, provider);
-      balance = await token.balanceOf(accountAddress);
-      decimals = await token.decimals();
-      _sourceAmount = utils.parseUnits(sourceAmount, decimals);
-    }
+    const { amount: balance, decimals } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress
+    );
+    const { amount: _sourceAmount } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress,
+      sourceAmount
+    );
     if (balance.lt(_sourceAmount)) {
       throw new Error("Insufficient balance");
     }
@@ -169,19 +168,17 @@ const bridge = async (req, res) => {
       rpcUrl,
       sourceChainId
     );
-    let balance;
-    let token;
-    let decimals = 18;
-    let _sourceAmount;
-    if (_sourceToken.address == NATIVE_TOKEN) {
-      balance = await provider.getBalance(accountAddress);
-      _sourceAmount = utils.parseEther(sourceAmount);
-    } else {
-      token = new ethers.Contract(_sourceToken.address, ERC20_ABI, provider);
-      balance = await token.balanceOf(accountAddress);
-      decimals = await token.decimals();
-      _sourceAmount = utils.parseUnits(sourceAmount, decimals);
-    }
+    const { amount: balance, decimals } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress
+    );
+    const { amount: _sourceAmount } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress,
+      sourceAmount
+    );
     if (balance.lt(_sourceAmount)) {
       throw new Error("Insufficient balance");
     }
@@ -368,18 +365,17 @@ const transfer = async (req, res) => {
     // Step 1: Check user balance on the chain (Web3.js required)
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-    let balance;
-    let _token;
-    let _amount;
-    if (tokenInfo.address == NATIVE_TOKEN) {
-      balance = await provider.getBalance(accountAddress);
-      _amount = utils.parseEther(amount);
-    } else {
-      _token = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
-      balance = await _token.balanceOf(accountAddress);
-      const decimals = await _token.decimals();
-      _amount = utils.parseUnits(amount, decimals);
-    }
+    const { amount: balance } = await getTokenAmount(
+      tokenInfo.address,
+      provider,
+      accountAddress
+    );
+    const { amount: _amount } = await getTokenAmount(
+      tokenInfo.address,
+      provider,
+      accountAddress,
+      amount
+    );
     if (balance.lt(_amount)) {
       throw new Error("Insufficient balance");
     }
@@ -389,6 +385,11 @@ const transfer = async (req, res) => {
     let data = "0x";
     let value = _amount;
     if (tokenInfo.address != NATIVE_TOKEN) {
+      const _token = new ethers.Contract(
+        tokenInfo.address,
+        ERC20_ABI,
+        provider
+      );
       to = tokenInfo.address;
       data = _token.interface.encodeFunctionData("transfer", [
         _recipient,
@@ -458,13 +459,11 @@ const getTokenBalance = async (req, res) => {
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
-    let balance;
-    if (token.address == NATIVE_TOKEN) {
-      balance = await provider.getBalance(accountAddress);
-    } else {
-      const _token = new ethers.Contract(token.address, ERC20_ABI, provider);
-      balance = await _token.balanceOf(accountAddress);
-    }
+    const { amount: balance } = await getTokenAmount(
+      token.address,
+      provider,
+      accountAddress
+    );
 
     res.status(httpStatus.OK).json({
       status: "success",

@@ -38,7 +38,7 @@ export const getProtocolData = async (
     };
   }
   let _outputToken;
-  if (!["aave", "compound", "hop"].includes(protocolName)) {
+  if (["sushiswap", "uniswap", "curve"].includes(protocolName)) {
     _outputToken = await getTokenAddressForChain(outputToken, chainName);
     if (!_outputToken) {
       return {

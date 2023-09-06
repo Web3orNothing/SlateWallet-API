@@ -300,7 +300,7 @@ const yieldHandler = async (req, res) => {
           pool.underlyingTokens.includes(_token.address.toLowerCase()))
     );
     if (pools.length === 0) {
-      res.status(httpStatus.BAD_REQUEST).json({
+      return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Protocol not found for given chain and token.",
       });

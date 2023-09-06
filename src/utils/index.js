@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, ethers, utils } from "ethers";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
@@ -184,7 +184,11 @@ export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
   maxPriorityFeePerGas = parseInt(maxPriorityFeePerGas.toString());
   gasPrice = parseInt(gasPrice.toString());
 
-  return { maxFeePerGas, maxPriorityFeePerGas, gasPrice: Math.floor(gasPrice * 1.05) };
+  return {
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasPrice: Math.floor(gasPrice * 1.05),
+  };
 };
 
 // Helper function to get tokens on a chain
@@ -320,4 +324,34 @@ export const getFunctionData = async (
     ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
   };
   return transactionDetails;
+};
+
+/**
+ *
+ * @param address token address
+ * @param user account address
+ * @param amount token amount string
+ *        - if undefined, return token balance of account address
+ *        - if non-zero value, return token amount string in type of bignumber
+ *        - in else cases (e.g. 0 or '' or 'all', etc.) return token balance of account address
+ * @returns
+ */
+export const getTokenAmount = async (address, provider, user, amount) => {
+  let token;
+  let decimals = 18;
+  let _amount;
+  if (address !== NATIVE_TOKEN)
+    token = new ethers.Contract(address, ERC20_ABI, provider);
+
+  if (!amount || parseFloat(amount) === 0 || isNaN(parseFloat(amount))) {
+    if (address === NATIVE_TOKEN) _amount = await provider.getBalance(user);
+    else _amount = await token.balanceOf(user);
+  } else {
+    if (address == NATIVE_TOKEN) _amount = utils.parseEther(amount);
+    else {
+      decimals = await token.decimals();
+      _amount = utils.parseUnits(amount, decimals);
+    }
+  }
+  return { amount: _amount, decimals };
 };

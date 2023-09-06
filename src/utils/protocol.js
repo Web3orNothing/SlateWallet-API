@@ -132,12 +132,12 @@ export const getProtocolData = async (
       }
     }
     case "aave": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE"); // TODO: change key based request
+      address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
       abi = getABIForProtocol(_protocolName);
       params.push(spender);
       params.push(_inputAmount);
 
-      if (_inputToken.address !== NATIVE_TOKEN && action != "claim") {
+      if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
         approveTx = await getApproveData(
           provider,
           _inputToken.address,
@@ -153,11 +153,11 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        funcName === "claim" ? "rewards" : inputToken.toLowerCase() // TODO: change key based on request
+        funcName === "claim" ? "rewards" : inputToken.toLowerCase()
       );
       abi = getABIForProtocol(
         _protocolName,
-        funcName === "claim" ? "rewards" : inputToken.toLowerCase() // TODO: change key based on request
+        funcName === "claim" ? "rewards" : inputToken.toLowerCase()
       );
       if (funcName === "claim") {
         const comet = getProtocolAddressForChain(
@@ -172,7 +172,7 @@ export const getProtocolData = async (
         params.push(_inputToken.address);
         params.push(_inputAmount);
 
-        if (_inputToken.address !== NATIVE_TOKEN) {
+        if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
           approveTx = await getApproveData(
             provider,
             _inputToken.address,
@@ -189,14 +189,16 @@ export const getProtocolData = async (
         _protocolName,
         chainId,
         `${inputToken.toLowerCase()}${
-          outputToken.toLowerCase() === "hop" ? "" : `-${outputToken.toLowerCase()}`
+          outputToken.toLowerCase() === "hop"
+            ? ""
+            : `-${outputToken.toLowerCase()}`
         }`
       );
       abi = getABIForProtocol(_protocolName);
       if (action !== "claim") {
         params.push(_inputAmount);
 
-        if (_inputToken.address !== NATIVE_TOKEN) {
+        if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
           approveTx = await getApproveData(
             provider,
             _inputToken.address,

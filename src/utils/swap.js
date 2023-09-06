@@ -22,7 +22,7 @@ export const getQuoteFromOpenOcean = async (
     const queryParams = new URLSearchParams({
       inTokenAddress: tokenIn.address,
       outTokenAddress: tokenOut.address,
-      amount,
+      amount: amount.toString(),
       gasPrice: utils.formatUnits(gasPrice, "9"),
       slippage,
       account,
@@ -60,7 +60,7 @@ export const getQuoteFrom1inch = async (
   const swapParams = {
     src: tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
     dst: tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
-    amount: utils.parseUnits(amount, tokenIn.decimals).toString(),
+    amount: amount.toString(),
     from: account,
     slippage,
     disableEstimate: false,
@@ -97,14 +97,12 @@ export const getQuoteFromParaSwap = async (
     axios,
   });
   try {
-    const srcAmount = utils.parseUnits(amount, tokenIn.decimals).toString();
-
     const priceRoute = await paraswapSdk.swap.getRate({
       srcToken:
         tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
       destToken:
         tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
-      amount: srcAmount,
+      amount: amount.toString(),
       options: {
         includeDEXS,
       },
@@ -114,7 +112,7 @@ export const getQuoteFromParaSwap = async (
       {
         srcToken: priceRoute.srcToken,
         destToken: priceRoute.destToken,
-        srcAmount,
+        srcAmount: amount.toString(),
         slippage: slippage * 0.01 * 10000,
         priceRoute: priceRoute,
         userAddress: account,
@@ -160,11 +158,10 @@ export const getQuoteFrom0x = async (
   if (!baseURL) return;
 
   try {
-    const sellAmount = utils.parseUnits(amount, tokenIn.decimals).toString();
     const queryParams = new URLSearchParams({
       sellToken: tokenIn.address,
       buyToken: tokenOut.address,
-      sellAmount,
+      sellAmount: amount.toString(),
       slippagePercentage: slippage,
       gasPrice: gasPrice.toString(),
     });
@@ -245,14 +242,13 @@ export const getQuoteFromKyber = async (
   if (!chain) return;
 
   try {
-    const amountIn = utils.parseUnits(amount, tokenIn.decimals).toString();
     const queryParams = new URLSearchParams({
       chain,
       tokenIn:
         tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
       tokenOut:
         tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
-      amountIn,
+      amountIn: amount.toString(),
       saveGas: false,
       gasPrice: gasPrice.toString(),
       source: "spice-finance",

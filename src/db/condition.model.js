@@ -1,4 +1,4 @@
-const conditionModel = (sequelize, Sequelize) => {
+const conditionModel = async (sequelize, Sequelize) => {
   const ConditionSchema = sequelize.define("conditions", {
     useraddress: {
       type: Sequelize.STRING,
@@ -26,8 +26,7 @@ const conditionModel = (sequelize, Sequelize) => {
     },
   });
 
-  ConditionSchema.removeAttribute("createdAt");
-  ConditionSchema.removeAttribute("updatedAt");
+  await ConditionSchema.sync();
 
   return ConditionSchema;
 };

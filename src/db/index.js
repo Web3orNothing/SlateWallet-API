@@ -16,4 +16,4 @@ const sequelize = new Sequelize(
   }
 );
 
-export const Conditions = conditionModel(sequelize, Sequelize);
+export const Conditions = await conditionModel(sequelize, Sequelize);

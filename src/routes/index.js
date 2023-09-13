@@ -5,6 +5,12 @@ import walletController from "../controllers/wallet.controller.js";
 
 const routes = new Router();
 
+// Condition endpoint
+routes.post("/condition", walletController.condition);
+
+// Time endpoint
+routes.post("/time", walletController.time);
+
 // Swap endpoint
 routes.post("/swap", walletController.swap);
 

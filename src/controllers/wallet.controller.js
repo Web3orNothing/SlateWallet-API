@@ -16,6 +16,65 @@ import { getBestSwapRoute } from "../utils/swap.js";
 import { getBestBridgeRoute } from "../utils/bridge.js";
 import { NATIVE_TOKEN } from "../constants.js";
 import { getProtocolData } from "../utils/protocol.js";
+import { Conditions } from "../db/index.js";
+
+const condition = async (req, res) => {
+  const { accountAddress, calls, type, subject, comparator, value } = req.body;
+  if (!type || !subject || !comparator || !value) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Invalid Request Body",
+    });
+  }
+
+  try {
+    const condition = new Conditions({
+      useraddress: accountAddress,
+      type,
+      subject,
+      comparator,
+      value,
+      repeatvalue: undefined,
+      transactionset: calls,
+      completed: false,
+    });
+    await condition.save();
+    return res.status(httpStatus.CREATED).json({ status: "success" });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to store condition" });
+  }
+};
+
+const time = async (req, res) => {
+  const { accountAddress, calls, value, repeat_value } = req.body;
+  if (!value) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Invalid Request Body",
+    });
+  }
+
+  try {
+    const condition = new Conditions({
+      useraddress: accountAddress,
+      type: "time",
+      subject: "time",
+      comparator: "eq",
+      value,
+      repeatvalue: repeat_value,
+      transactionset: calls,
+      completed: false,
+    });
+    await condition.save();
+    return res.status(httpStatus.CREATED).json({ status: "success" });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to store condition" });
+  }
+};
 
 const swap = async (req, res) => {
   try {
@@ -480,6 +539,8 @@ const getTokenBalance = async (req, res) => {
 };
 
 export default {
+  condition,
+  time,
   swap,
   bridge,
   protocol,

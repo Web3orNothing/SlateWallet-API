@@ -36,7 +36,7 @@ const condition = async (req, res) => {
       value,
       repeatvalue: undefined,
       transactionset: calls,
-      completed: false,
+      completed: "ready",
     });
     await condition.save();
     return res.status(httpStatus.CREATED).json({ status: "success" });
@@ -65,7 +65,7 @@ const time = async (req, res) => {
       value,
       repeatvalue: repeat_value,
       transactionset: calls,
-      completed: false,
+      completed: "ready",
     });
     await condition.save();
     return res.status(httpStatus.CREATED).json({ status: "success" });

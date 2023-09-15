@@ -22,7 +22,8 @@ const conditionModel = async (sequelize, Sequelize) => {
       type: Sequelize.JSONB,
     },
     completed: {
-      type: Sequelize.BOOLEAN,
+      type: Sequelize.ENUM,
+      values: ['pending', 'ready', 'completed']
     },
   });
 

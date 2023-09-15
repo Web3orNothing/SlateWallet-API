@@ -139,6 +139,19 @@ export const getRpcUrlForChain = (chainId) => {
   return chainIdsToRpcUrls[chainId] || null;
 };
 
+export const getTokenProxy = (chainId) => {
+  const chainIdsToParaswapTokenProxy = {
+    1: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    137: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    56: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    43114: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    42161: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    10: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    1101: "0xc8a21fcd5a100c3ecc037c97e2f9c53a8d3a02a1",
+  };
+
+  return chainIdsToParaswapTokenProxy[chainId] || null;
+};
 export const getProtocolAddressForChain = (
   protocol,
   chainId,
@@ -218,19 +231,30 @@ export const getApproveData = async (
 ) => {
   const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
   const allowance = await token.allowance(owner, spender);
+  const txs = [];
   if (allowance.lt(amount)) {
-    const approveData = token.interface.encodeFunctionData("approve", [
+    const symbol = await token.symbol();
+    if (symbol === "USDT") {
+      const data = token.interface.encodeFunctionData("approve", [spender, 0]);
+      txs.push({
+        to: tokenAddress,
+        value: "0",
+        data,
+        ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+      });
+    }
+    const data = token.interface.encodeFunctionData("approve", [
       spender,
       amount,
     ]);
-    const transactionDetails = {
+    txs.push({
       to: tokenAddress,
       value: "0",
-      data: approveData,
+      data,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-    };
-    return transactionDetails;
+    });
   }
+  return txs;
 };
 
 export const getTokenAddressForChain = async (symbol, chainName) => {

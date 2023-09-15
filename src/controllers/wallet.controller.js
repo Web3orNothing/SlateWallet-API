@@ -9,6 +9,7 @@ import {
   getTokenAddressForChain,
   getApproveData,
   getTokenAmount,
+  getTokenProxy,
 } from "../utils/index.js";
 
 import ERC20_ABI from "../abis/erc20.abi.js";
@@ -130,7 +131,7 @@ const swap = async (req, res) => {
 
     // Step 2: Get best swap route
     const gasPrice = await provider.getGasPrice();
-    const data = await getBestSwapRoute(
+    const { tx, source } = await getBestSwapRoute(
       chainId,
       accountAddress,
       {
@@ -147,29 +148,30 @@ const swap = async (req, res) => {
     );
 
     // Step 3: Parse the response and extract relevant information for the transaction
-    if (!data) {
+    if (!tx) {
       throw new Error("No swap route found");
     }
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
     if (_sourceToken.address != NATIVE_TOKEN) {
-      const approveData = await getApproveData(
+      const tokenProxy = getTokenProxy(chainId);
+      if (source === "paraswap" && !tokenProxy)
+        throw new Error("No token proxy for the specified chain.");
+      const approveTxs = await getApproveData(
         provider,
         _sourceToken.address,
         _sourceAmount,
         accountAddress,
-        data.to
+        source !== "paraswap" ? tx.to : tokenProxy
       );
-      if (approveData) {
-        transactions.push(approveData);
-      }
+      transactions.push(...approveTxs);
     }
 
     // Step 5: Return the transaction details to the client
     transactions.push({
-      to: data.to,
-      value: data.value,
-      data: data.data,
+      to: tx.to,
+      value: tx.value,
+      data: tx.data,
       ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
@@ -210,15 +212,13 @@ const bridge = async (req, res) => {
         message: "Token not found on the specified chain.",
       });
     }
-    const _destinationToken = await getTokenAddressForChain(
+    let _destinationToken = await getTokenAddressForChain(
       sourceToken,
       destinationChainName
     );
     if (!_destinationToken) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Token not found on the specified chain.",
-      });
+      _destinationToken = _sourceToken;
+      _destinationToken.name = destinationChainName;
     }
 
     // Step 1: Check user balance on the source chain (Web3.js required)
@@ -268,16 +268,14 @@ const bridge = async (req, res) => {
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
     if (_sourceToken.address != NATIVE_TOKEN) {
-      const approveData = await getApproveData(
+      const approveTxs = await getApproveData(
         provider,
         _sourceToken.address,
         _sourceAmount,
         accountAddress,
         data.to
       );
-      if (approveData) {
-        transactions.push(approveData);
-      }
+      transactions.push(...approveTxs);
     }
 
     // Step 5: Return the transaction details to the client

@@ -37,6 +37,7 @@ export const getQuoteFromOpenOcean = async (
         value: data.value,
         data: data.data,
       },
+      source: "ocean",
     };
   } catch {}
 };
@@ -78,6 +79,7 @@ export const getQuoteFrom1inch = async (
         value: data.tx.value,
         data: data.tx.data,
       },
+      source: "1inch",
     };
   } catch {}
 };
@@ -130,6 +132,7 @@ export const getQuoteFromParaSwap = async (
         value: data.value,
         data: data.data,
       },
+      source: "paraswap",
     };
   } catch {}
 };
@@ -175,6 +178,7 @@ export const getQuoteFrom0x = async (
         value: data.value,
         data: data.data,
       },
+      source: "0x",
     };
   } catch (err) {
     console.log(err);
@@ -273,6 +277,7 @@ export const getQuoteFromKyber = async (
       },
       { headers: { "x-client-id": "spice-finance" } }
     );
+    _data.data.desc.minReturnAmount = _data.data.desc.minReturnAmount / 2;
     return {
       amountOut: _data.amountOut,
       tx: {
@@ -280,6 +285,7 @@ export const getQuoteFromKyber = async (
         value: tokenIn.address === NATIVE_TOKEN ? amountIn : "0",
         data: _data.data,
       },
+      source: "kyber",
     };
   } catch {}
 };
@@ -304,6 +310,7 @@ export const getBestSwapRoute = async (
 ) => {
   let amountOut;
   let tx;
+  let source;
   const datas = await Promise.all(
     swapRoutes.map(
       async (swapRoute) =>
@@ -325,9 +332,10 @@ export const getBestSwapRoute = async (
       if (!amountOut || amountOut.lt(newAmountOut)) {
         amountOut = newAmountOut;
         tx = data.tx;
+        source = data.source;
       }
     }
   }
 
-  return tx;
+  return { tx, source };
 };

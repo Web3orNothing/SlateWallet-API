@@ -59,7 +59,7 @@ export const getProtocolData = async (
     inputAmount
   );
 
-  let approveTx = null;
+  let approveTxs = [];
   let address = null;
   let abi = [];
   const params = [];
@@ -98,16 +98,14 @@ export const getProtocolData = async (
             const { tx } = data;
             const transactions = [];
             if (_inputToken.address !== NATIVE_TOKEN) {
-              const approveData = await getApproveData(
+              const approveTxs = await getApproveData(
                 provider,
                 _inputToken.address,
                 _inputAmount,
                 spender,
                 tx.to
               );
-              if (approveData) {
-                transactions.push(approveData);
-              }
+              transactions.push(...approveTxs);
             }
             transactions.push({
               to: tx.to,
@@ -136,7 +134,7 @@ export const getProtocolData = async (
       params.push(_inputAmount);
 
       if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
-        approveTx = await getApproveData(
+        approveTxs = await getApproveData(
           provider,
           _inputToken.address,
           _inputAmount,
@@ -171,7 +169,7 @@ export const getProtocolData = async (
         params.push(_inputAmount);
 
         if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTx = await getApproveData(
+          approveTxs = await getApproveData(
             provider,
             _inputToken.address,
             _inputAmount,
@@ -197,7 +195,7 @@ export const getProtocolData = async (
         params.push(_inputAmount);
 
         if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTx = await getApproveData(
+          approveTxs = await getApproveData(
             provider,
             _inputToken.address,
             _inputAmount,
@@ -232,5 +230,5 @@ export const getProtocolData = async (
     params,
     "0"
   );
-  return { transactions: approveTx ? [approveTx, data] : [data] };
+  return { transactions: [...approveTxs, ...data] };
 };

@@ -10,7 +10,8 @@ const conditionModel = async (sequelize, Sequelize) => {
       type: Sequelize.STRING,
     },
     comparator: {
-      type: Sequelize.STRING,
+      type: Sequelize.ENUM,
+      values: ["lt", "lte", "gt", "gte", "eq"],
     },
     value: {
       type: Sequelize.STRING,
@@ -23,7 +24,7 @@ const conditionModel = async (sequelize, Sequelize) => {
     },
     completed: {
       type: Sequelize.ENUM,
-      values: ['pending', 'ready', 'completed']
+      values: ["pending", "ready", "completed"],
     },
   });
 

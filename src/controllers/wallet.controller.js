@@ -19,6 +19,14 @@ import { NATIVE_TOKEN } from "../constants.js";
 import { getProtocolData } from "../utils/protocol.js";
 import { Conditions } from "../db/index.js";
 
+const comparatorMap = {
+  "less than": "lt",
+  "less than or equal": "lte",
+  "greater than": "gt",
+  "greater than or equal": "lte",
+  equal: "eq",
+};
+
 const condition = async (req, res) => {
   const { accountAddress, calls, type, subject, comparator, value } = req.body;
   if (!type || !subject || !comparator || !value) {
@@ -33,7 +41,7 @@ const condition = async (req, res) => {
       useraddress: accountAddress,
       type,
       subject,
-      comparator,
+      comparator: comparatorMap[comparator],
       value,
       repeatvalue: undefined,
       transactionset: calls,

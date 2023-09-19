@@ -74,7 +74,7 @@ const time = async (req, res) => {
       value,
       repeatvalue: repeat_value,
       transactionset: calls,
-      completed: "ready",
+      completed: "pending",
     });
     await condition.save();
     return res.status(httpStatus.CREATED).json({ status: "success" });
@@ -82,6 +82,42 @@ const time = async (req, res) => {
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to store condition" });
+  }
+};
+
+const cancel = async (req, res) => {
+  const { accountAddress, conditionId } = req.body;
+  if (!accountAddress || !conditionId) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Invalid Request Body",
+    });
+  }
+
+  try {
+    const condition = Conditions.findOne({
+      where: {
+        id: parseInt(conditionId),
+        useraddress: accountAddress,
+        completed: "ready",
+      },
+    });
+
+    if (!condition) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ status: "error", message: "Condition does not exist" });
+    }
+
+    await condition.destroy({
+      force: true,
+    });
+
+    return res.status(httpStatus.OK).json({ status: "success" });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to cancel condition" });
   }
 };
 
@@ -547,6 +583,7 @@ const getTokenBalance = async (req, res) => {
 export default {
   condition,
   time,
+  cancel,
   swap,
   bridge,
   protocol,

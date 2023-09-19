@@ -38,7 +38,7 @@ const condition = async (req, res) => {
 
   try {
     const condition = new Conditions({
-      useraddress: accountAddress,
+      useraddress: accountAddress.toLowerCase(),
       type,
       subject,
       comparator: comparatorMap[comparator],
@@ -67,7 +67,7 @@ const time = async (req, res) => {
 
   try {
     const condition = new Conditions({
-      useraddress: accountAddress,
+      useraddress: accountAddress.toLowerCase(),
       type: "time",
       subject: "time",
       comparator: "eq",
@@ -98,7 +98,7 @@ const cancel = async (req, res) => {
     const condition = Conditions.findOne({
       where: {
         id: parseInt(conditionId),
-        useraddress: accountAddress,
+        useraddress: accountAddress.toLowerCase(),
         completed: "ready",
       },
     });

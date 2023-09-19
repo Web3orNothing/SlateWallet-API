@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import cron from "node-cron";
 
 import cors from "cors";
 import dotEnv from "dotenv";
@@ -7,6 +8,7 @@ import webpush from "web-push";
 import httpStatus from "http-status";
 
 import apiRouters from "./routes/index.js";
+import { addSubscription, checkTx } from "./handler.js";
 
 dotEnv.config();
 
@@ -33,11 +35,12 @@ app.listen(port, () => {
 });
 
 app.post("/subscribe", (req, res) => {
-  const subscription = req.body;
+  const { address, subscription } = req.body;
   res.status(httpStatus.OK).json({ status: "success" });
 
-  //TODO: store subscription for further notification processing
-  webpush.sendNotification(subscription, "Test notification");
+  addSubscription(address.toLowerCase(), subscription);
 });
+
+cron.schedule("*/60 * * * * *", checkTx);
 
 export default app;

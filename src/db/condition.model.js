@@ -24,7 +24,7 @@ const conditionModel = async (sequelize, Sequelize) => {
     },
     completed: {
       type: Sequelize.ENUM,
-      values: ["pending", "ready", "completed"],
+      values: ["pending", "ready", "completed", "canceled"],
     },
   });
 

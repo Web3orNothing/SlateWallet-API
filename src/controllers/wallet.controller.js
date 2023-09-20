@@ -1,6 +1,7 @@
+import Sequelize from "sequelize";
 import axios from "axios";
 import httpStatus from "http-status";
-import { ethers } from "ethers";
+import { ethers, utils } from "ethers";
 
 import {
   getChainIdFromName,
@@ -38,7 +39,7 @@ const condition = async (req, res) => {
 
   try {
     const condition = new Conditions({
-      useraddress: accountAddress,
+      useraddress: accountAddress.toLowerCase(),
       type,
       subject,
       comparator: comparatorMap[comparator],
@@ -67,7 +68,7 @@ const time = async (req, res) => {
 
   try {
     const condition = new Conditions({
-      useraddress: accountAddress,
+      useraddress: accountAddress.toLowerCase(),
       type: "time",
       subject: "time",
       comparator: "eq",
@@ -86,8 +87,8 @@ const time = async (req, res) => {
 };
 
 const cancel = async (req, res) => {
-  const { accountAddress, conditionId } = req.body;
-  if (!accountAddress || !conditionId) {
+  const { accountAddress, conditionId, signature } = req.body;
+  if (!accountAddress || !conditionId || !signature) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
@@ -95,11 +96,29 @@ const cancel = async (req, res) => {
   }
 
   try {
-    const condition = Conditions.findOne({
+    const message = `I authorize cancellation #${conditionId}`;
+    const recovered = utils.verifyMessage(message, signature);
+    if (accountAddress.toLowerCase() !== recovered.toLowerCase()) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Unauthorized",
+      });
+    }
+  } catch {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Unauthorized",
+    });
+  }
+
+  try {
+    const condition = await Conditions.findOne({
       where: {
         id: parseInt(conditionId),
-        useraddress: accountAddress,
-        completed: "ready",
+        useraddress: accountAddress.toLowerCase(),
+        completed: {
+          [Sequelize.Op.in]: ["ready", "pending"],
+        },
       },
     });
 
@@ -109,15 +128,38 @@ const cancel = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    await condition.destroy({
-      force: true,
-    });
+    await condition.set("completed", "canceled");
+    await condition.save();
 
     return res.status(httpStatus.OK).json({ status: "success" });
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to cancel condition" });
+  }
+};
+
+const getConditions = async (req, res) => {
+  const { accountAddress, isActive } = req.body;
+
+  try {
+    const conditions = await Conditions.findAll({
+      where: {
+        useraddress: accountAddress.toLowerCase(),
+        completed: {
+          [Sequelize.Op.in]: isActive ? ["ready", "pending"] : ["completed"],
+        },
+      },
+      raw: true,
+    });
+
+    return res
+      .status(httpStatus.OK)
+      .json({ status: "success", calls: conditions });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to get conditions" });
   }
 };
 
@@ -584,6 +626,7 @@ export default {
   condition,
   time,
   cancel,
+  getConditions,
   swap,
   bridge,
   protocol,

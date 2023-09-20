@@ -14,6 +14,9 @@ routes.post("/time", walletController.time);
 // Cancel endpoint
 routes.post("/cancel", walletController.cancel);
 
+// Get condition txs endpoint
+routes.get("/condition", walletController.getConditions);
+
 // Swap endpoint
 routes.post("/swap", walletController.swap);
 

@@ -33,7 +33,7 @@ export const checkTx = async () => {
 const syncConditionTx = async () => {
   const filter = {
     completed: {
-      [Sequelize.Op.notIn]: ["ready", "canceled"],
+      [Sequelize.Op.notIn]: ["ready", "completed", "canceled"],
     },
   };
   const conditions = await Conditions.findAll({

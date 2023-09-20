@@ -109,9 +109,7 @@ const cancel = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    await condition.destroy({
-      force: true,
-    });
+    await condition.update("completed", "canceled");
 
     return res.status(httpStatus.OK).json({ status: "success" });
   } catch {

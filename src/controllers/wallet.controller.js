@@ -1,7 +1,7 @@
 import Sequelize from "sequelize";
 import axios from "axios";
 import httpStatus from "http-status";
-import { ethers } from "ethers";
+import { ethers, utils } from "ethers";
 
 import {
   getChainIdFromName,
@@ -87,11 +87,27 @@ const time = async (req, res) => {
 };
 
 const cancel = async (req, res) => {
-  const { accountAddress, conditionId } = req.body;
-  if (!accountAddress || !conditionId) {
+  const { accountAddress, conditionId, signature } = req.body;
+  if (!accountAddress || !conditionId || !signature) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
+    });
+  }
+
+  try {
+    const message = `I authorize cancellation #${conditionId}`;
+    const recovered = utils.verifyMessage(message, signature);
+    if (accountAddress.toLowerCase() !== recovered.toLowerCase()) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Unauthorized",
+      });
+    }
+  } catch {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Unauthorized",
     });
   }
 

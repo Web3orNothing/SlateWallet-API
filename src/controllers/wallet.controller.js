@@ -123,6 +123,30 @@ const cancel = async (req, res) => {
   }
 };
 
+const getConditions = async (req, res) => {
+  const { accountAddress, isActive } = req.body;
+
+  try {
+    const conditions = await Conditions.findAll({
+      where: {
+        useraddress: accountAddress.toLowerCase(),
+        completed: {
+          [Sequelize.Op.in]: isActive ? ["ready", "pending"] : ["completed"],
+        },
+      },
+      raw: true,
+    });
+
+    return res
+      .status(httpStatus.OK)
+      .json({ status: "success", calls: conditions });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to get conditions" });
+  }
+};
+
 const swap = async (req, res) => {
   try {
     const {
@@ -586,6 +610,7 @@ export default {
   condition,
   time,
   cancel,
+  getConditions,
   swap,
   bridge,
   protocol,

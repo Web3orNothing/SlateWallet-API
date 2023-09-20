@@ -1,3 +1,4 @@
+import Sequelize from "sequelize";
 import axios from "axios";
 import httpStatus from "http-status";
 import { ethers } from "ethers";
@@ -99,7 +100,9 @@ const cancel = async (req, res) => {
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),
-        completed: "ready",
+        completed: {
+          [Sequelize.Op.in]: ["ready", "pending"],
+        },
       },
     });
 
@@ -109,7 +112,8 @@ const cancel = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    await condition.update("completed", "canceled");
+    await condition.set("completed", "canceled");
+    await condition.save();
 
     return res.status(httpStatus.OK).json({ status: "success" });
   } catch {

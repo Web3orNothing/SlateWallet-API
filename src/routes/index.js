@@ -11,6 +11,9 @@ routes.post("/condition", walletController.condition);
 // Time endpoint
 routes.post("/time", walletController.time);
 
+// Update endpoint
+routes.post("/update-status", walletController.updateStatus);
+
 // Cancel endpoint
 routes.post("/cancel", walletController.cancel);
 

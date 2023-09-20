@@ -86,6 +86,37 @@ const time = async (req, res) => {
   }
 };
 
+const updateStatus = async (req, res) => {
+  const { accountAddress, conditionId, status } = req.body;
+
+  try {
+    const condition = await Conditions.findOne({
+      where: {
+        id: parseInt(conditionId),
+        useraddress: accountAddress.toLowerCase(),
+        completed: {
+          [Sequelize.Op.notIn]: ["completed", "canceled"],
+        },
+      },
+    });
+
+    if (!condition) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .json({ status: "error", message: "Condition does not exist" });
+    }
+
+    await condition.set("completed", status);
+    await condition.save();
+
+    return res.status(httpStatus.OK).json({ status: "success" });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to update condition status" });
+  }
+};
+
 const cancel = async (req, res) => {
   const { accountAddress, conditionId, signature } = req.body;
   if (!accountAddress || !conditionId || !signature) {
@@ -625,6 +656,7 @@ const getTokenBalance = async (req, res) => {
 export default {
   condition,
   time,
+  updateStatus,
   cancel,
   getConditions,
   swap,

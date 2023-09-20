@@ -95,7 +95,7 @@ const cancel = async (req, res) => {
   }
 
   try {
-    const condition = Conditions.findOne({
+    const condition = await Conditions.findOne({
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),

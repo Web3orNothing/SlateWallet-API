@@ -174,9 +174,9 @@ const getConditions = async (req, res) => {
   try {
     const statuses =
       isActive === undefined
-        ? ["ready", "pending", "completed"]
+        ? ["ready", "pending", "executing", "completed"]
         : !isActive
-        ? ["ready", "pending"]
+        ? ["ready", "pending", "executing"]
         : ["completed"];
     const conditions = await Conditions.findAll({
       where: {

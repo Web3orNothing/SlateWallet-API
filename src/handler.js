@@ -1,3 +1,4 @@
+import Sequelize from "sequelize";
 import { ethers } from "ethers";
 import webpush from "web-push";
 
@@ -32,13 +33,26 @@ export const checkTx = async () => {
 
 const syncConditionTx = async () => {
   const conditions = await Conditions.findAll({
-    where: { completed: "pending" },
+    where: {
+      [Sequelize.Op.or]: [
+        {
+          completed: "pending",
+        },
+        {
+          completed: "completed",
+          type: "time",
+          repeatvalue: {
+            [Sequelize.Op.ne]: null,
+          },
+        },
+      ],
+    },
   });
   const gasPrice = await getGasPrice();
   const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
-    const { type, comparator, value } = condition.dataValues;
+    const { type, comparator, value, repeatvalue } = condition.dataValues;
     let isReady;
     if (type === "gas") {
       if (comparator === "lt") {
@@ -54,7 +68,13 @@ const syncConditionTx = async () => {
       }
     } else if (type === "time") {
       const now = Math.floor(Date.now() / 1000);
-      isReady = Math.abs(parseInt(value) - now) < 60;
+      const _value = parseInt(value);
+      isReady = now >= _value && now < _value + 60;
+
+      if (!isReady && repeatvalue) {
+        const _repeatvalue = parseInt(repeatvalue);
+        isReady = (now - _value) % _repeatvalue < 60;
+      }
     } else if (type === "price") {
       if (comparator === "lt") {
         isReady = ethPrice < parseFloat(value);

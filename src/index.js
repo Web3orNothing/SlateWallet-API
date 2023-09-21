@@ -36,11 +36,19 @@ app.listen(port, () => {
 
 app.post("/subscribe", (req, res) => {
   const { address, subscription } = req.body;
+  if (!address || !subscription) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Invalid address or subscription data",
+    });
+    return;
+  }
+
   res.status(httpStatus.OK).json({ status: "success" });
 
   addSubscription(address.toLowerCase(), subscription);
 });
 
-cron.schedule("*/60 * * * * *", checkTx);
+cron.schedule("0 * * * * *", checkTx);
 
 export default app;

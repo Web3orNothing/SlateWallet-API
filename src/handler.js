@@ -1,5 +1,5 @@
-import Sequelize from "sequelize";
 import { ethers } from "ethers";
+import webpush from "web-push";
 
 import { Conditions } from "./db/index.js";
 import ORACLE_ABI from "./abi/oracle.js";
@@ -9,43 +9,38 @@ const subscriptions = {};
 
 // Add subscription
 export const addSubscription = (userAddress, subscription) => {
-  subscriptions[userAddress] = subscription;
+  subscriptions[userAddress.toLowerCase()] = subscription;
 };
 
 export const checkTx = async () => {
   await syncConditionTx();
   const calls = await findConditionTx();
   const userToCallList = {};
-  calls.map(({ transactionset, useraddress }) => {
+  calls.map(({ id, transactionset, useraddress }) => {
     const address = useraddress.toLowerCase();
     if (!userToCallList[address]) {
-      userToCallList[address] = [transactionset];
+      userToCallList[address] = [{ ...transactionset, id }];
     } else {
-      userToCallList[address].push(transactionset);
+      userToCallList[address].push({ ...transactionset, id });
     }
   });
   const users = Object.keys(userToCallList);
-  users.map((user) => {
+  users.forEach((user) => {
     sendConditionTxToUser(user, userToCallList[user]);
   });
 };
 
 const syncConditionTx = async () => {
-  const filter = {
-    completed: {
-      [Sequelize.Op.notIn]: ["ready", "completed", "canceled"],
-    },
-  };
   const conditions = await Conditions.findAll({
-    where: filter,
+    where: { completed: "pending" },
   });
+  const gasPrice = await getGasPrice();
+  const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
-    const { type, subject, comparator, value, repeatvalue } =
-      condition.dataValues;
+    const { type, comparator, value } = condition.dataValues;
     let isReady;
     if (type === "gas") {
-      const gasPrice = await getGasPrice();
       if (comparator === "lt") {
         isReady = gasPrice < parseFloat(value);
       } else if (comparator === "lte") {
@@ -61,7 +56,6 @@ const syncConditionTx = async () => {
       const now = Math.floor(Date.now() / 1000);
       isReady = Math.abs(parseInt(value) - now) < 60;
     } else if (type === "price") {
-      const ethPrice = await getEthPrice();
       if (comparator === "lt") {
         isReady = ethPrice < parseFloat(value);
       } else if (comparator === "lte") {
@@ -76,19 +70,17 @@ const syncConditionTx = async () => {
     }
 
     if (isReady) {
-      await condition.update("completed", "ready");
+      await condition.set("completed", "ready");
+      await condition.save();
     }
   }
 };
 
 const findConditionTx = async () => {
   await Conditions.sync();
-  const filter = {
-    completed: "ready",
-  };
   const calls = await Conditions.findAll({
-    attributes: ["transactionset", "useraddress"],
-    where: filter,
+    attributes: ["transactionset", "useraddress", "id"],
+    where: { completed: "ready" },
   });
   return calls;
 };

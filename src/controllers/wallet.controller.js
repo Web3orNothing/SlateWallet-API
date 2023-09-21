@@ -46,10 +46,10 @@ const condition = async (req, res) => {
       value,
       repeatvalue: undefined,
       transactionset: calls,
-      completed: "ready",
+      completed: "pending",
     });
-    await condition.save();
-    return res.status(httpStatus.CREATED).json({ status: "success" });
+    const { id } = await condition.save();
+    return res.status(httpStatus.CREATED).json({ status: "success", id });
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
@@ -77,8 +77,8 @@ const time = async (req, res) => {
       transactionset: calls,
       completed: "pending",
     });
-    await condition.save();
-    return res.status(httpStatus.CREATED).json({ status: "success" });
+    const { id } = await condition.save();
+    return res.status(httpStatus.CREATED).json({ status: "success", id });
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
@@ -147,9 +147,7 @@ const cancel = async (req, res) => {
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),
-        completed: {
-          [Sequelize.Op.in]: ["ready", "pending"],
-        },
+        completed: { [Sequelize.Op.in]: ["pending", "ready"] },
       },
     });
 
@@ -171,15 +169,19 @@ const cancel = async (req, res) => {
 };
 
 const getConditions = async (req, res) => {
-  const { accountAddress, isActive } = req.body;
+  const { accountAddress, isActive } = req.query;
 
   try {
+    const statuses =
+      isActive === undefined
+        ? ["ready", "pending", "completed"]
+        : !isActive
+        ? ["ready", "pending"]
+        : ["completed"];
     const conditions = await Conditions.findAll({
       where: {
         useraddress: accountAddress.toLowerCase(),
-        completed: {
-          [Sequelize.Op.in]: isActive ? ["ready", "pending"] : ["completed"],
-        },
+        completed: { [Sequelize.Op.in]: statuses },
       },
       raw: true,
     });

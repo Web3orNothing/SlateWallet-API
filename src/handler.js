@@ -35,15 +35,11 @@ const syncConditionTx = async () => {
   const conditions = await Conditions.findAll({
     where: {
       [Sequelize.Op.or]: [
-        {
-          completed: "pending",
-        },
+        { completed: "pending" },
         {
           completed: "completed",
           type: "time",
-          repeatvalue: {
-            [Sequelize.Op.ne]: null,
-          },
+          repeatvalue: { [Sequelize.Op.ne]: null },
         },
       ],
     },
@@ -52,7 +48,8 @@ const syncConditionTx = async () => {
   const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
-    const { type, comparator, value, repeatvalue } = condition.dataValues;
+    const { type, comparator, value, repeatvalue, completed } =
+      condition.dataValues;
     let isReady;
     if (type === "gas") {
       if (comparator === "lt") {
@@ -71,7 +68,7 @@ const syncConditionTx = async () => {
       const _value = parseInt(value);
       isReady = now >= _value && now < _value + 60;
 
-      if (!isReady && repeatvalue) {
+      if (now >= _value && !isReady && repeatvalue) {
         const _repeatvalue = parseInt(repeatvalue);
         isReady = (now - _value) % _repeatvalue < 60;
       }
@@ -89,10 +86,8 @@ const syncConditionTx = async () => {
       }
     }
 
-    if (isReady) {
-      await condition.set("completed", "ready");
-      await condition.save();
-    }
+    await condition.set("completed", isReady ? "ready" : completed);
+    await condition.save();
   }
 };
 

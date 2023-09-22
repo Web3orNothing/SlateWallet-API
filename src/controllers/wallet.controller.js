@@ -147,7 +147,7 @@ const cancel = async (req, res) => {
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),
-        completed: { [Sequelize.Op.in]: ["pending", "ready"] },
+        completed: { [Sequelize.Op.in]: ["pending", "ready", "executing"] },
       },
     });
 
@@ -174,9 +174,9 @@ const getConditions = async (req, res) => {
   try {
     const statuses =
       isActive === undefined
-        ? ["ready", "pending", "completed"]
+        ? ["ready", "pending", "executing", "completed"]
         : !isActive
-        ? ["ready", "pending"]
+        ? ["ready", "pending", "executing"]
         : ["completed"];
     const conditions = await Conditions.findAll({
       where: {

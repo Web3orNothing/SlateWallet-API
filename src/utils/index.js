@@ -318,15 +318,19 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
       } catch (_) {
         response = undefined;
       }
-      if (response && response.data.asset_platform_id) {
-        const address = response.data.platforms[chainNameForCGC];
-        if (
-          address &&
-          data &&
-          data.address.toLowerCase() === address.toLowerCase()
-        ) {
-          // matches cmc with cgc
-        } else data = undefined;
+      if (response && response.data) {
+        if (response.data.asset_platform_id) {
+          const address = response.data.platforms[chainNameForCGC];
+          if (
+            address &&
+            data &&
+            data.address.toLowerCase() === address.toLowerCase()
+          ) {
+            // matches cmc with cgc
+          } else data = undefined;
+        } else if (!data) {
+          data = { name: chainName, address: NATIVE_TOKEN };
+        }
       }
     }
   }

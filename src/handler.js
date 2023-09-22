@@ -86,8 +86,7 @@ const syncConditionTx = async () => {
       }
     }
 
-    if (isReady)
-      await condition.set("completed", isReady ? "ready" : completed);
+    await condition.set("completed", isReady ? "ready" : completed);
     await condition.save();
   }
 };

@@ -147,7 +147,7 @@ const cancel = async (req, res) => {
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),
-        completed: { [Sequelize.Op.in]: ["pending", "ready"] },
+        completed: { [Sequelize.Op.in]: ["pending", "ready", "executing"] },
       },
     });
 

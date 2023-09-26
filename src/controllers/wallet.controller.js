@@ -655,6 +655,40 @@ const getTokenBalance = async (req, res) => {
   }
 };
 
+const simulate = async (req, res) => {
+  try {
+    const { transactions } = req.body;
+    const res = await axios.post(
+      `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate-bundle`,
+      {
+        simulations: transactions.map(({ from, to, data, networkId }) => ({
+          network_id: networkId,
+          save: true,
+          save_if_fails: true,
+          simulation_type: "full",
+          from,
+          to,
+          input: data,
+        })),
+      },
+      {
+        headers: {
+          "X-Access-Key": process.env.TENDERLY_ACCESS_KEY,
+        },
+      }
+    );
+
+    res.status(httpStatus.OK).json({
+      status: "success",
+    });
+  } catch {
+    console.log("Error:", err);
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Simulation Failed" });
+  }
+};
+
 export default {
   condition,
   time,
@@ -668,4 +702,5 @@ export default {
   transfer,
   getTokenAddress,
   getTokenBalance,
+  simulate,
 };

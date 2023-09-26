@@ -41,6 +41,9 @@ routes.get("/token-address", walletController.getTokenAddress);
 // Get token balance endpoint
 routes.get("/token-balance", walletController.getTokenBalance);
 
+// Simulate endpoint
+routes.post("/simulate", walletController.simulate);
+
 // status check route
 routes.get("/status", (_req, res) => {
   res.status(httpStatus.OK).json({ status: "success" });

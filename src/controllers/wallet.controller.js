@@ -658,7 +658,7 @@ const getTokenBalance = async (req, res) => {
 const simulate = async (req, res) => {
   try {
     const { transactions } = req.body;
-    const res = await axios.post(
+    const { data } = await axios.post(
       `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate-bundle`,
       {
         simulations: transactions.map(({ from, to, data, networkId }) => ({
@@ -680,6 +680,7 @@ const simulate = async (req, res) => {
 
     res.status(httpStatus.OK).json({
       status: "success",
+      result: data,
     });
   } catch {
     console.log("Error:", err);

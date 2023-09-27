@@ -3,6 +3,8 @@ import { BigNumber, ethers, utils } from "ethers";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
+import { getBestSwapRoute } from "./swap.js";
+import { getBestBridgeRoute } from "./bridge.js";
 import { getProtocolData } from "./protocol.js";
 import aaveAbi from "../abis/aave.abi.js";
 import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
@@ -431,7 +433,7 @@ export const simulateTxs = async (txs) => {
     );
     return data;
   } catch (err) {
-    console.log(err);
+    console.log("Simulate error:", err);
     return null;
   }
 };

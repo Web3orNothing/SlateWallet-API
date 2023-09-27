@@ -336,8 +336,10 @@ const bridge = async (req, res) => {
       destinationChainName
     );
     if (!_destinationToken) {
-      _destinationToken = _sourceToken;
-      _destinationToken.name = destinationChainName;
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
     }
 
     // Step 1: Check user balance on the source chain (Web3.js required)

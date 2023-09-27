@@ -129,7 +129,7 @@ export const getRpcUrlForChain = (chainId) => {
     5000: "https://rpc.mantle.xyz",
     7700: "https://canto.slingshot.finance",
     8453: "https://mainnet.base.org",
-    42161: "https://endpoints.omniatech.io/v1/arbitrum/one/public",
+    42161: "https://arbitrum.llamarpc.com",
     42220: "https://1rpc.io/celo",
     43114: "https://endpoints.omniatech.io/v1/avax/mainnet/public",
     59144: "https://rpc.linea.build",
@@ -287,11 +287,17 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
       const target = response.data.data[symbolUp][0].contract_address.find(
         (x) => x.platform?.name === chainNameForCMC
       );
-      if (target)
+      if (target) {
         data = {
           name: target.platform.name,
           address: target.contract_address,
         };
+      } else if (!response.data.data[symbolUp][0].platform) {
+        data = {
+          name: response.data.data[symbolUp][0].name,
+          address: NATIVE_TOKEN,
+        };
+      }
     }
     if (data && data.address.toLowerCase() === NATIVE_TOKEN2.toLowerCase())
       data.address = NATIVE_TOKEN;
@@ -329,7 +335,7 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
             // matches cmc with cgc
           } else data = undefined;
         } else if (!data) {
-          data = { name: chainName, address: NATIVE_TOKEN };
+          data = { name: response.data.name, address: NATIVE_TOKEN };
         }
       }
     }

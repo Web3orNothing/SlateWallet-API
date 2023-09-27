@@ -26,6 +26,10 @@ const conditionModel = async (sequelize, Sequelize) => {
       type: Sequelize.ENUM,
       values: ["pending", "ready", "executing", "completed", "canceled"],
     },
+    simstatus: {
+      type: Sequelize.ENUM,
+      values: ["no failure", "firstsimfailed", "secondsimfailed"],
+    },
   });
 
   await ConditionSchema.sync();

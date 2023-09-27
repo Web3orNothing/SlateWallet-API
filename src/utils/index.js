@@ -3,6 +3,7 @@ import { BigNumber, ethers, utils } from "ethers";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
+import { getProtocolData } from "./protocol.js";
 import aaveAbi from "../abis/aave.abi.js";
 import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
 import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
@@ -139,19 +140,6 @@ export const getRpcUrlForChain = (chainId) => {
   return chainIdsToRpcUrls[chainId] || null;
 };
 
-export const getTokenProxy = (chainId) => {
-  const chainIdsToParaswapTokenProxy = {
-    1: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-    137: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-    56: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-    43114: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-    42161: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-    10: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
-    1101: "0xc8a21fcd5a100c3ecc037c97e2f9c53a8d3a02a1",
-  };
-
-  return chainIdsToParaswapTokenProxy[chainId] || null;
-};
 export const getProtocolAddressForChain = (
   protocol,
   chainId,
@@ -396,4 +384,445 @@ export const getTokenAmount = async (address, provider, user, amount) => {
     }
   }
   return { amount: _amount, decimals };
+};
+
+export const simulateConditionCall = async (call, address) => {
+  const body = { ...call.arguments };
+  if (address) {
+    body["accountAddress"] = address;
+    body["spender"] = address;
+  }
+  if (body["chainName"] === "") {
+    body["chainName"] = "ethereum";
+  }
+  if (body["action"]) {
+    body["action"] = body["action"].toLowerCase();
+  }
+
+  const { transactions } = await (call.name === "swap"
+    ? getSwapTx(body)
+    : call.name === "bridge"
+    ? getBridgeTx(body)
+    : call.name === "yield"
+    ? getYieldTx(body)
+    : call.name === "protocol"
+    ? getProtocolTx(body)
+    : getTransferTx(body));
+
+  return transactions ? await simulateTxs(transactions) : null;
+};
+
+export const simulateTxs = async (txs) => {
+  try {
+    const { data } = await axios.post(
+      `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate-bundle`,
+      {
+        simulations: txs.map(({ from, to, data, networkId }) => ({
+          network_id: networkId,
+          save: true,
+          save_if_fails: true,
+          simulation_type: "full",
+          from,
+          to,
+          input: data,
+        })),
+      },
+      { headers: { "X-Access-Key": process.env.TENDERLY_ACCESS_KEY } }
+    );
+    return data;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+const getTokenProxy = (chainId) => {
+  const chainIdsToParaswapTokenProxy = {
+    1: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    137: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    56: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    43114: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    42161: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    10: "0x216b4b4ba9f3e719726886d34a177484278bfcae",
+    1101: "0xc8a21fcd5a100c3ecc037c97e2f9c53a8d3a02a1",
+  };
+
+  return chainIdsToParaswapTokenProxy[chainId] || null;
+};
+
+export const getSwapTx = async (data) => {
+  try {
+    const {
+      accountAddress,
+      chainName,
+      sourceAmount,
+      sourceToken,
+      destinationToken,
+    } = data;
+    const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name: " + chainName);
+    }
+
+    const _sourceToken = await getTokenAddressForChain(sourceToken, chainName);
+    if (!_sourceToken) {
+      return {
+        status: "error",
+        message: "Token not found on the specified chain.",
+      };
+    }
+    const _destinationToken = await getTokenAddressForChain(
+      destinationToken,
+      chainName
+    );
+    if (!_destinationToken) {
+      return {
+        status: "error",
+        message: "Token not found on the specified chain.",
+      };
+    }
+
+    // Step 1: Check user balance on the given chain (Web3.js required)
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+    const { amount: balance, decimals } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress
+    );
+    const { amount: _sourceAmount } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress,
+      sourceAmount
+    );
+    if (balance.lt(_sourceAmount)) {
+      throw new Error("Insufficient balance");
+    }
+
+    // Step 2: Get best swap route
+    const gasPrice = await provider.getGasPrice();
+    const { tx, source } = await getBestSwapRoute(
+      chainId,
+      accountAddress,
+      {
+        address: _sourceToken.address,
+        symbol: sourceToken,
+        decimals,
+      },
+      {
+        address: _destinationToken.address,
+        symbol: destinationToken,
+      },
+      _sourceAmount,
+      gasPrice
+    );
+
+    // Step 3: Parse the response and extract relevant information for the transaction
+    if (!tx) {
+      throw new Error("No swap route found");
+    }
+
+    // Step 4: Check user allowance and approve if necessary (Web3.js required)
+    const transactions = [];
+    if (_sourceToken.address != NATIVE_TOKEN) {
+      const tokenProxy = getTokenProxy(chainId);
+      if (source === "paraswap" && !tokenProxy)
+        throw new Error("No token proxy for the specified chain.");
+      const approveTxs = await getApproveData(
+        provider,
+        _sourceToken.address,
+        _sourceAmount,
+        accountAddress,
+        source !== "paraswap" ? tx.to : tokenProxy
+      );
+      transactions.push(...approveTxs);
+    }
+
+    // Step 5: Return the transaction details to the client
+    transactions.push({
+      to: tx.to,
+      value: tx.value,
+      data: tx.data,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+    });
+    return { status: "success", transactions };
+  } catch (err) {
+    console.log("Swap error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getBridgeTx = async (data) => {
+  try {
+    const {
+      accountAddress,
+      sourceChainName,
+      destinationChainName,
+      sourceToken,
+      sourceAmount,
+    } = data;
+    const sourceChainId = getChainIdFromName(sourceChainName);
+    if (!sourceChainId) {
+      throw new Error("Invalid chain name: " + sourceChainName);
+    }
+    const destinationChainId = getChainIdFromName(destinationChainName);
+    if (!destinationChainId) {
+      throw new Error("Invalid chain name: " + destinationChainName);
+    }
+
+    const _sourceToken = await getTokenAddressForChain(
+      sourceToken,
+      sourceChainName
+    );
+    if (!_sourceToken) {
+      return {
+        status: "error",
+        message: "Token not found on the specified chain.",
+      };
+    }
+    let _destinationToken = await getTokenAddressForChain(
+      sourceToken,
+      destinationChainName
+    );
+    if (!_destinationToken) {
+      return {
+        status: "error",
+        message: "Token not found on the specified chain.",
+      };
+    }
+
+    // Step 1: Check user balance on the source chain (Web3.js required)
+    const rpcUrl = getRpcUrlForChain(sourceChainId);
+    const provider = new ethers.providers.JsonRpcProvider(
+      rpcUrl,
+      sourceChainId
+    );
+    const { amount: balance, decimals } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress
+    );
+    const { amount: _sourceAmount } = await getTokenAmount(
+      _sourceToken.address,
+      provider,
+      accountAddress,
+      sourceAmount
+    );
+    if (balance.lt(_sourceAmount)) {
+      throw new Error("Insufficient balance");
+    }
+
+    // Step 2: Make an HTTP request to Metamask Bridge API
+    const result = await getBestBridgeRoute(
+      sourceChainId,
+      destinationChainId,
+      accountAddress,
+      {
+        address: _sourceToken.address,
+        symbol: sourceToken,
+        decimals,
+      },
+      {
+        address: _destinationToken.address,
+        symbol: sourceToken,
+      },
+      _sourceAmount
+    );
+
+    // Step 3: Parse the response and extract relevant information for the bridge transaction
+    if (!result) {
+      throw new Error("No bridge route found");
+    }
+
+    let transactions = [];
+
+    // Step 4: Check user allowance and approve if necessary (Web3.js required)
+    if (_sourceToken.address != NATIVE_TOKEN) {
+      const approveTxs = await getApproveData(
+        provider,
+        _sourceToken.address,
+        _sourceAmount,
+        accountAddress,
+        result.to
+      );
+      transactions.push(...approveTxs);
+    }
+
+    // Step 5: Return the transaction details to the client
+    transactions.push({
+      to: result.to,
+      value: result.value,
+      data: result.data,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+    });
+
+    return { status: "success", transactions };
+  } catch (err) {
+    console.log("Bridge error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getProtocolTx = async (data) => {
+  try {
+    const {
+      spender,
+      chainName,
+      protocolName,
+      action,
+      inputToken,
+      outputToken,
+      inputAmount,
+    } = data;
+    const { transactions, error } = await getProtocolData(
+      spender,
+      chainName,
+      protocolName,
+      action,
+      inputToken,
+      outputToken,
+      inputAmount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getYieldTx = async (data) => {
+  try {
+    const { accountAddress, chainName, token, amount } = data;
+    const _token = await getTokenAddressForChain(token, chainName);
+    if (!_token) {
+      return {
+        status: "error",
+        message: "Token not found on the specified chain.",
+      };
+    }
+    const whitelistedProtocols = ["aave", "compound"]; // TODO: update supported protocols list in the future
+    const {
+      data: { data: poolData },
+    } = await axios.get(`https://yields.llama.fi/pools`);
+    let pools = poolData.filter(
+      (pool) =>
+        pool.chain.toLowerCase() === chainName.toLowerCase() &&
+        whitelistedProtocols.includes(pool.project) &&
+        (!pool.underlyingTokens ||
+          pool.underlyingTokens
+            .map((x) => x.toLowerCase())
+            .includes(_token.address.toLowerCase()))
+    );
+    if (pools.length === 0) {
+      return {
+        status: "error",
+        message: "Protocol not found for given chain and token.",
+      };
+    }
+    pools = pools.sort((a, b) => b.apy - a.apy);
+    const bestPool = pools[0];
+    const { transactions, error } = await getProtocolData(
+      accountAddress,
+      chainName,
+      bestPool.project,
+      "deposit",
+      token,
+      null,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Yield error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getTransferTx = async (data) => {
+  try {
+    const { accountAddress, token, amount, recipient, chainName } = data;
+
+    const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name: " + chainName);
+    }
+
+    const tokenInfo = await getTokenAddressForChain(token, chainName);
+    if (!tokenInfo) {
+      return {
+        status: "error",
+        message: "Token not found on the specified chain.",
+      };
+    }
+
+    let _recipient = recipient;
+    if (!ethers.utils.isAddress(recipient)) {
+      // Retrieve the recipient address
+      const rpcUrl = getRpcUrlForChain(1);
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+      try {
+        _recipient = await provider.resolveName(recipient);
+      } catch {
+        return {
+          status: "error",
+          message: "Invalid recipient provided.",
+        };
+      }
+    }
+
+    // Step 1: Check user balance on the chain (Web3.js required)
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+    const { amount: balance } = await getTokenAmount(
+      tokenInfo.address,
+      provider,
+      accountAddress
+    );
+    const { amount: _amount } = await getTokenAmount(
+      tokenInfo.address,
+      provider,
+      accountAddress,
+      amount
+    );
+    if (balance.lt(_amount)) {
+      throw new Error("Insufficient balance");
+    }
+
+    // Step 2: Return the transaction details to the client
+    let to = _recipient;
+    let txData = "0x";
+    let value = _amount;
+    if (tokenInfo.address != NATIVE_TOKEN) {
+      const _token = new ethers.Contract(
+        tokenInfo.address,
+        ERC20_ABI,
+        provider
+      );
+      to = tokenInfo.address;
+      txData = _token.interface.encodeFunctionData("transfer", [
+        _recipient,
+        _amount,
+      ]);
+      value = 0;
+    }
+    const transactionDetails = {
+      to,
+      value: value.toString(),
+      data: txData,
+      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+    };
+
+    return { status: "success", transactions: [transactionDetails] };
+  } catch (err) {
+    console.log("Transfer error:", err);
+    return { status: "error", message: "Bad request" };
+  }
 };

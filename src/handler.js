@@ -15,19 +15,19 @@ export const addSubscription = (userAddress, subscription) => {
 
 export const checkTx = async () => {
   await syncConditionTx();
-  const calls = await findConditionTx();
-  const userToCallList = {};
-  calls.map(({ id, transactionset, useraddress }) => {
+  const conditions = await findConditionTx();
+  const retVal = {};
+  conditions.map(({ id, transactionset, useraddress }) => {
     const address = useraddress.toLowerCase();
-    if (!userToCallList[address]) {
-      userToCallList[address] = [{ ...transactionset, id }];
+    if (!retVal[address]) {
+      retVal[address] = [{ ...transactionset, id }];
     } else {
-      userToCallList[address].push({ ...transactionset, id });
+      retVal[address].push({ ...transactionset, id });
     }
   });
-  const users = Object.keys(userToCallList);
+  const users = Object.keys(retVal);
   users.forEach((user) => {
-    sendConditionTxToUser(user, userToCallList[user]);
+    sendConditionTxToUser(user, retVal[user]);
   });
 };
 
@@ -93,17 +93,16 @@ const syncConditionTx = async () => {
 
 const findConditionTx = async () => {
   await Conditions.sync();
-  const calls = await Conditions.findAll({
+  return await Conditions.findAll({
     attributes: ["transactionset", "useraddress", "id"],
     where: { completed: "ready" },
   });
-  return calls;
 };
 
-const sendConditionTxToUser = (user, calls) => {
+const sendConditionTxToUser = (user, conditions) => {
   const subscription = subscriptions[user];
   if (subscription) {
-    const data = JSON.stringify({ success: true, address: user, calls });
+    const data = JSON.stringify({ success: true, address: user, conditions });
     webpush.sendNotification(subscription, data);
   }
 };

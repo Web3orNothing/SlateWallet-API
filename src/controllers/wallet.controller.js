@@ -335,7 +335,7 @@ const simulate = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    if (condition.simstatus === "firstsimfailed") {
+    if (condition.simstatus === "firstsimfailed" && !data) {
       await condition.set("simstatus", "secondsimfailed");
       await condition.save();
     }

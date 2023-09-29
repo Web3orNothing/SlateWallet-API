@@ -34,7 +34,8 @@ const condition = async (req, res) => {
 
   try {
     let simstatus = 0;
-    if (!(await simulateCalls(query.calls, accountAddress))) {
+    const { success } = await simulateCalls(query.calls, accountAddress);
+    if (!success) {
       simstatus = 1;
     }
 
@@ -69,7 +70,8 @@ const time = async (req, res) => {
 
   try {
     let simstatus = 0;
-    if (!(await simulateCalls(query.calls, accountAddress))) {
+    const { success } = await simulateCalls(query.calls, accountAddress);
+    if (!success) {
       simstatus = 1;
     }
 
@@ -310,7 +312,10 @@ const getTokenBalance = async (req, res) => {
 
 const simulate = async (req, res) => {
   const { calls, conditionId, accountAddress } = req.body;
-  const success = await simulateCalls(calls, accountAddress);
+  const { success, transactionsList } = await simulateCalls(
+    calls,
+    accountAddress
+  );
   if (!isNaN(parseInt(conditionId))) {
     const condition = await Conditions.findOne({
       where: {
@@ -336,6 +341,7 @@ const simulate = async (req, res) => {
   if (success) {
     res.status(httpStatus.OK).json({
       status: "success",
+      transactionsList,
     });
   } else {
     res

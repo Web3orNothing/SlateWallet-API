@@ -34,10 +34,10 @@ const condition = async (req, res) => {
   }
 
   try {
-    let simstatus = "no failure";
+    let simstatus = 0;
     for (let i = 0; i < query.calls.length; i++) {
       if (!(await simulateConditionCall(query.calls[i]), accountAddress)) {
-        simstatus = "firstsimfailed";
+        simstatus = 1;
         break;
       }
     }
@@ -72,10 +72,10 @@ const time = async (req, res) => {
   }
 
   try {
-    let simstatus = "no failure";
+    let simstatus = 0;
     for (let i = 0; i < query.calls.length; i++) {
       if (!(await simulateConditionCall(query.calls[i]))) {
-        simstatus = "firstsimfailed";
+        simstatus = 1;
         break;
       }
     }
@@ -335,8 +335,8 @@ const simulate = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    if (condition.simstatus === "firstsimfailed" && !data) {
-      await condition.set("simstatus", "secondsimfailed");
+    if (condition.simstatus === 1 && !data) {
+      await condition.set("simstatus", 2);
       await condition.save();
     }
   }

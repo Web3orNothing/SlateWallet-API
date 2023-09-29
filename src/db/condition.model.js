@@ -28,7 +28,7 @@ const conditionModel = async (sequelize, Sequelize) => {
     },
     simstatus: {
       type: Sequelize.ENUM,
-      values: ["no failure", "firstsimfailed", "secondsimfailed"],
+      values: [0, 1, 2], // 0: no failure, 1: first sim failed, 2: second sim failed
     },
   });
 

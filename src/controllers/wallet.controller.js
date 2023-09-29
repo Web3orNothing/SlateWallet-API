@@ -11,8 +11,7 @@ import {
   getYieldTx,
   getSwapTx,
   getBridgeTx,
-  simulateConditionCall,
-  simulateTxs,
+  simulateCalls,
 } from "../utils/index.js";
 import { Conditions } from "../db/index.js";
 
@@ -35,11 +34,8 @@ const condition = async (req, res) => {
 
   try {
     let simstatus = 0;
-    for (let i = 0; i < query.calls.length; i++) {
-      if (!(await simulateConditionCall(query.calls[i]), accountAddress)) {
-        simstatus = 1;
-        break;
-      }
+    if (!(await simulateCalls(query.calls, accountAddress))) {
+      simstatus = 1;
     }
 
     const condition = new Conditions({
@@ -73,11 +69,8 @@ const time = async (req, res) => {
 
   try {
     let simstatus = 0;
-    for (let i = 0; i < query.calls.length; i++) {
-      if (!(await simulateConditionCall(query.calls[i]))) {
-        simstatus = 1;
-        break;
-      }
+    if (!(await simulateCalls(query.calls, accountAddress))) {
+      simstatus = 1;
     }
 
     const condition = new Conditions({
@@ -316,13 +309,13 @@ const getTokenBalance = async (req, res) => {
 };
 
 const simulate = async (req, res) => {
-  const { transactions, conditionId } = req.body;
-  const data = await simulateTxs(transactions);
+  const { calls, conditionId, accountAddress } = req.body;
+  const success = await simulateCalls(calls, accountAddress);
   if (!isNaN(parseInt(conditionId))) {
     const condition = await Conditions.findOne({
       where: {
         id: parseInt(conditionId),
-        useraddress: transactions[0].from.toLowerCase(),
+        useraddress: accountAddress.toLowerCase(),
         completed: {
           [Sequelize.Op.notIn]: ["completed", "canceled"],
         },
@@ -335,15 +328,14 @@ const simulate = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    if (condition.simstatus === 1 && !data) {
+    if (condition.simstatus === 1 && !success) {
       await condition.set("simstatus", 2);
       await condition.save();
     }
   }
-  if (data) {
+  if (success) {
     res.status(httpStatus.OK).json({
       status: "success",
-      result: data,
     });
   } else {
     res

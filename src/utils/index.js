@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BigNumber, ethers, utils } from "ethers";
+import { BigNumber, Contract, ethers, utils } from "ethers";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
@@ -388,54 +388,153 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   return { amount: _amount, decimals };
 };
 
-export const simulateConditionCall = async (call, address) => {
-  const body = { ...call.arguments };
-  if (address) {
-    body["accountAddress"] = address;
-    body["spender"] = address;
-  }
-  if (body["chainName"] === "") {
-    body["chainName"] = "ethereum";
-  }
-  if (body["action"]) {
-    body["action"] = body["action"].toLowerCase();
-  }
+export const simulateCalls = async (calls, address) => {
+  for (let i = 0; i < calls.length; i++) {
+    const call = calls[i];
+    let token;
+    let chainName;
 
-  const { transactions } = await (call.name === "swap"
-    ? getSwapTx(body)
-    : call.name === "bridge"
-    ? getBridgeTx(body)
-    : call.name === "yield"
-    ? getYieldTx(body)
-    : call.name === "protocol"
-    ? getProtocolTx(body)
-    : getTransferTx(body));
+    try {
+      const body = fillBody(call.arguments, address);
+      chainName =
+        call.arguments["chainName"] || call.arguments["destinationChainName"];
+      if (call.name === "swap" || call.name === "bridge") {
+        if (i < calls.length - 1) {
+          token =
+            call.arguments["destinationToken"] || call.arguments["sourceToken"];
+        }
+      }
 
-  return transactions ? await simulateTxs(transactions) : null;
+      let txs;
+      switch (call.name) {
+        case "swap": {
+          const { message, transactions } = await getSwapTx(body);
+          if (message) return false;
+          txs = transactions;
+          break;
+        }
+        case "bridge": {
+          const { message, transactions } = await getBridgeTx(body);
+          if (message) return false;
+          txs = transactions;
+          break;
+        }
+        case "protocol": {
+          const { message, transactions } = await getProtocolTx(body);
+          if (message) return false;
+          txs = transactions;
+          break;
+        }
+        case "yield": {
+          const { message, transactions } = await getYieldTx(body);
+          if (message) return false;
+          txs = transactions;
+          break;
+        }
+        case "transfer": {
+          const { message, transactions } = await getTransferTx(body);
+          if (message) return false;
+          txs = transactions;
+          break;
+        }
+      }
+
+      const chainId = getChainIdFromName(chainName);
+      const rpcUrl = getRpcUrlForChain(chainId);
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+      const { data: res } = await axios.post(
+        `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate-bundle`,
+        {
+          simulations: txs.map(({ to, value, data }) => ({
+            network_id: chainId,
+            save: true,
+            save_if_fails: true,
+            simulation_type: "full",
+            from: address,
+            to,
+            value,
+            input: data,
+          })),
+        },
+        { headers: { "X-Access-Key": process.env.TENDERLY_ACCESS_KEY } }
+      );
+      const length = res.simulation_results.length;
+      for (let j = 0; j < length; j++) {
+        if (!res.simulation_results[j].transaction.status) return false;
+      }
+
+      if (!token) continue;
+
+      let _token = await getTokenAddressForChain(token, chainName);
+      if (!_token) return false;
+      _token = _token.address.toLowerCase();
+      const tokenContract = new Contract(_token, ERC20_ABI, provider);
+
+      const nextCall = calls[i + 1];
+      let amount;
+      if (call.name === "swap") {
+        const { logs } =
+          res.simulation_results[length - 1].transaction.transaction_info;
+        for (let k = 0; k < logs.length; k++) {
+          const { raw: log } = logs[k];
+          if (
+            log.topics[0] ===
+              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" &&
+            log.address.toLowerCase() === _token
+          ) {
+            const [to] = utils.defaultAbiCoder.decode(
+              ["address"],
+              log.topics[2]
+            );
+            if (to.toLowerCase() === address?.toLowerCase()) {
+              const [value] = utils.defaultAbiCoder.decode(
+                ["uint256"],
+                log.data
+              );
+              const decimals = await tokenContract.decimals();
+              const amt = utils.formatUnits(value, decimals);
+              amount = amt.toString();
+              break;
+            }
+          }
+        }
+      } else if (
+        call.name === "bridge" &&
+        (nextCall.arguments["chainName"] ||
+          nextCall.arguments["sourceChainName"]) === chainName &&
+        call.arguments["sourceToken"] === nextCall.arguments["sourceToken"]
+      ) {
+        amount = body["sourceAmount"];
+      }
+
+      if (nextCall.name === "swap" || nextCall.name === "bridge") {
+        calls[i + 1].arguments["sourceAmount"] =
+          calls[i + 1].arguments["sourceAmount"] || amount;
+      } else if (nextCall.name === "transfer") {
+        calls[i + 1].arguments["amount"] =
+          calls[i + 1].arguments["amount"] || amount;
+      }
+    } catch (err) {
+      console.log("Simulate error:", err);
+      return false;
+    }
+  }
+  return true;
 };
 
-export const simulateTxs = async (txs) => {
-  try {
-    const { data } = await axios.post(
-      `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate-bundle`,
-      {
-        simulations: txs.map(({ from, to, data, networkId }) => ({
-          network_id: networkId,
-          save: true,
-          save_if_fails: true,
-          simulation_type: "full",
-          from,
-          to,
-          input: data,
-        })),
-      },
-      { headers: { "X-Access-Key": process.env.TENDERLY_ACCESS_KEY } }
-    );
-    return data;
-  } catch (err) {
-    console.log("Simulate error:", err);
-    return null;
+export const fillBody = (body, address) => {
+  const result = { ...body };
+  if (address) {
+    result["accountAddress"] = address;
+    result["spender"] = address;
   }
+  if (result["chainName"] === "") {
+    result["chainName"] = "ethereum"; // Default to Ethereum Mainnet
+  }
+  if (result["action"]) {
+    result["action"] = result["action"].toLowerCase();
+  }
+  return result;
 };
 
 const getTokenProxy = (chainId) => {

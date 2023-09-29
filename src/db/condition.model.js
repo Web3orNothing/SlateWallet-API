@@ -26,6 +26,9 @@ const conditionModel = async (sequelize, Sequelize) => {
       type: Sequelize.ENUM,
       values: ["pending", "ready", "executing", "completed", "canceled"],
     },
+    simstatus: {
+      type: Sequelize.INTEGER,
+    },
   });
 
   await ConditionSchema.sync();

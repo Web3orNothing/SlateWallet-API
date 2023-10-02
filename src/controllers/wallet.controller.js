@@ -13,7 +13,7 @@ import {
   getBridgeTx,
   simulateCalls,
 } from "../utils/index.js";
-import { Conditions } from "../db/index.js";
+import { Conditions, Histories } from "../db/index.js";
 
 const comparatorMap = {
   "less than": "lt",
@@ -203,6 +203,49 @@ const getConditions = async (req, res) => {
   }
 };
 
+const addHistory = async (req, res) => {
+  const { accountAddress, query } = req.body;
+  if (!query) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      status: "error",
+      message: "Invalid Request Body",
+    });
+  }
+
+  try {
+    const history = new Histories({
+      useraddress: accountAddress.toLowerCase(),
+      query,
+    });
+    const { id } = await history.save();
+    return res.status(httpStatus.CREATED).json({ status: "success", id });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to store condition" });
+  }
+};
+
+const getHistories = async (req, res) => {
+  const { accountAddress } = req.query;
+
+  try {
+    const histories = await Histories.findAll({
+      where: { useraddress: accountAddress.toLowerCase() },
+      raw: true,
+    });
+
+    return res.status(httpStatus.OK).json({
+      status: "success",
+      histories,
+    });
+  } catch {
+    return res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Failed to get histories" });
+  }
+};
+
 const swap = async (req, res) => {
   const { status, message, transactions } = await getSwapTx(req.body);
   if (message) {
@@ -339,10 +382,7 @@ const simulate = async (req, res) => {
     }
   }
   if (success) {
-    res.status(httpStatus.OK).json({
-      status: "success",
-      transactionsList,
-    });
+    res.status(httpStatus.OK).json({ status: "success", transactionsList });
   } else {
     res
       .status(httpStatus.BAD_REQUEST)
@@ -356,6 +396,8 @@ export default {
   updateStatus,
   cancel,
   getConditions,
+  addHistory,
+  getHistories,
   swap,
   bridge,
   protocol,

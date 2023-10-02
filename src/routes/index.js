@@ -20,6 +20,12 @@ routes.post("/cancel", walletController.cancel);
 // Get condition txs endpoint
 routes.get("/condition", walletController.getConditions);
 
+// Create history endpoint
+routes.post("/history", walletController.addHistory);
+
+// Get histories endpoint
+routes.get("/history", walletController.getHistories);
+
 // Swap endpoint
 routes.post("/swap", walletController.swap);
 

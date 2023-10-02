@@ -3,9 +3,6 @@ const historyModel = async (sequelize, Sequelize) => {
     useraddress: {
       type: Sequelize.STRING,
     },
-    condition: {
-      type: Sequelize.JSONB,
-    },
     query: {
       type: Sequelize.JSONB,
     },

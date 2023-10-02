@@ -204,7 +204,7 @@ const getConditions = async (req, res) => {
 };
 
 const addHistory = async (req, res) => {
-  const { accountAddress, query, conditionId } = req.body;
+  const { accountAddress, query } = req.body;
   if (!query) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
@@ -213,17 +213,8 @@ const addHistory = async (req, res) => {
   }
 
   try {
-    let condition = null;
-    if (!isNaN(parseInt(conditionId)))
-      condition = await Conditions.findOne({
-        where: {
-          id: parseInt(conditionId),
-        },
-      });
-
     const history = new Histories({
       useraddress: accountAddress.toLowerCase(),
-      condition,
       query,
     });
     const { id } = await history.save();
@@ -240,15 +231,13 @@ const getHistories = async (req, res) => {
 
   try {
     const histories = await Histories.findAll({
-      where: {
-        useraddress: accountAddress.toLowerCase(),
-      },
+      where: { useraddress: accountAddress.toLowerCase() },
       raw: true,
     });
 
     return res.status(httpStatus.OK).json({
       status: "success",
-      histories: histories.map(({ query, ...x }) => ({ ...x, ...query })),
+      histories,
     });
   } catch {
     return res
@@ -393,10 +382,7 @@ const simulate = async (req, res) => {
     }
   }
   if (success) {
-    res.status(httpStatus.OK).json({
-      status: "success",
-      transactionsList,
-    });
+    res.status(httpStatus.OK).json({ status: "success", transactionsList });
   } else {
     res
       .status(httpStatus.BAD_REQUEST)

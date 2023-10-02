@@ -390,6 +390,53 @@ export const getTokenAmount = async (address, provider, user, amount) => {
 
 export const simulateCalls = async (calls, address) => {
   const transactionsList = [];
+
+  // Check for gas
+  const firstCall = calls[0];
+  const chainId = getChainIdFromName(
+    firstCall.arguments["chainName"] || firstCall.arguments["sourceChainName"]
+  );
+  const chainName =
+    firstCall.arguments["chainName"] ||
+    firstCall.arguments["destinationChainName"];
+  const token =
+    firstCall.arguments["token"] || firstCall.arguments["inputToken"];
+  const amount =
+    firstCall.arguments["amount"] || firstCall.arguments["inputAmount"];
+  const ethBalance = await getEthBalanceForUser(
+    chainId,
+    embeddedWallet?.address
+  );
+  if (ethBalance.eq(0)) {
+    const txs = [];
+    let gasAmount = chainId === 1 ? "0.2" : "0.1";
+    if (token === "ETH") {
+      gasAmount = (parseFloat(gasAmount) + parseFloat(amount)).toString();
+    }
+    txs.push({
+      from: "",
+      to: address,
+      value: utils.parseEther(gasAmount),
+    });
+
+    if (token !== "ETH") {
+      const tokenAddress = await getTokenAddressForChain(token, chainName);
+      const contract = new ethers.Contract(tokenAddress, ERC20_ABI);
+      const decimals = await contract.decimals();
+      const data = contract.interface.encodeFunctionData("transfer", [
+        embeddedWallet.address,
+        utils.parseUnits(amount, decimals),
+      ]);
+      txs.push({
+        from: "",
+        to: tokenAddress,
+        data,
+      });
+    }
+
+    transactionsList.push(txs);
+  }
+
   for (let i = 0; i < calls.length; i++) {
     const call = calls[i];
     let token;

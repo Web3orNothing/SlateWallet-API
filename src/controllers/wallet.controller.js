@@ -355,10 +355,11 @@ const getTokenBalance = async (req, res) => {
 
 const simulate = async (req, res) => {
   const { calls, conditionId, accountAddress } = req.body;
-  const { success, transactionsList } = await simulateCalls(
-    calls,
-    accountAddress
-  );
+  const {
+    success,
+    transactionsList,
+    calls: updatedCalls,
+  } = await simulateCalls(calls, accountAddress);
   if (!isNaN(parseInt(conditionId))) {
     const condition = await Conditions.findOne({
       where: {
@@ -382,7 +383,11 @@ const simulate = async (req, res) => {
     }
   }
   if (success) {
-    res.status(httpStatus.OK).json({ status: "success", transactionsList });
+    res.status(httpStatus.OK).json({
+      status: "success",
+      transactionsList,
+      calls: updatedCalls,
+    });
   } else {
     res
       .status(httpStatus.BAD_REQUEST)

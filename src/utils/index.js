@@ -392,49 +392,94 @@ export const simulateCalls = async (calls, address) => {
   const transactionsList = [];
 
   // Check for gas
-  const firstCall = calls[0];
-  const chainId = getChainIdFromName(
-    firstCall.arguments["chainName"] || firstCall.arguments["sourceChainName"]
-  );
-  const chainName =
-    firstCall.arguments["chainName"] ||
-    firstCall.arguments["destinationChainName"];
-  const token =
-    firstCall.arguments["token"] || firstCall.arguments["inputToken"];
-  const amount =
-    firstCall.arguments["amount"] || firstCall.arguments["inputAmount"];
-  const ethBalance = await getEthBalanceForUser(
-    chainId,
-    embeddedWallet?.address
-  );
-  if (ethBalance.eq(0)) {
-    const txs = [];
-    let gasAmount = chainId === 1 ? "0.2" : "0.1";
-    if (token === "ETH") {
-      gasAmount = (parseFloat(gasAmount) + parseFloat(amount)).toString();
+  let prevCall = calls[0];
+  let prevChainName = (
+    prevCall.arguments["chainName"] || prevCall.arguments["sourceChainName"]
+  ).toLowerCase();
+  let prevChainId = getChainIdFromName(prevChainName);
+  let i = 1;
+  while (i < calls.length) {
+    const curCall = calls[i];
+    const curChainName = (
+      curCall.arguments["chainName"] || curCall.arguments["sourceChainName"]
+    ).toLowerCase();
+    const curChainId = getChainIdFromName(curChainName);
+    if (prevChainId === curChainId) {
+      prevCall = curCall;
+      i++;
+      continue;
     }
-    txs.push({
-      from: "",
-      to: address,
-      value: utils.parseEther(gasAmount),
-    });
 
-    if (token !== "ETH") {
-      const tokenAddress = await getTokenAddressForChain(token, chainName);
+    const token = (
+      curCall.arguments["token"] || curCall.arguments["inputToken"]
+    ).toLowerCase();
+    const amount =
+      curCall.arguments["amount"] || curCall.arguments["inputAmount"];
+    const ethBalance = await getEthBalanceForUser(curChainId, address);
+    if (ethBalance.eq(0)) {
+      let gasAmount = curChainId === 1 ? "0.2" : "0.1";
+      if (
+        prevCall.name === "bridge" &&
+        prevCall.arguments["destinationChainName"].toLowerCase() ===
+          curChainName &&
+        prevCall.arguments["sourceToken"].toLowerCase() === "eth"
+      ) {
+        calls[i - 1].arguments["sourceAmount"] = (
+          parseFloat(calls[i - 1].arguments["sourceAmount"]) +
+          parseFloat(gasAmount)
+        ).toString();
+      } else {
+        calls.splice(i, 0, {
+          name: "bridge",
+          arguments: {
+            accountAddress: address,
+            sourceChainName: prevChainName,
+            destinationChainName: curChainName,
+            sourceToken: "ETH",
+            sourceAmount: gasAmount,
+          },
+        });
+        i++;
+      }
+    }
+    if (token !== "eth") {
+      const tokenAddress = await getTokenAddressForChain(token, curChainName);
       const contract = new ethers.Contract(tokenAddress, ERC20_ABI);
       const decimals = await contract.decimals();
-      const data = contract.interface.encodeFunctionData("transfer", [
-        embeddedWallet.address,
-        utils.parseUnits(amount, decimals),
-      ]);
-      txs.push({
-        from: "",
-        to: tokenAddress,
-        data,
-      });
+      const balance = await contract.balanceOf();
+      const _amount = utils.parseUnits(amount, decimals);
+      if (balance.lt(_amount)) {
+        if (
+          prevCall.name === "bridge" &&
+          prevCall.arguments["destinationChainName"].toLowerCase() ===
+            curChainName &&
+          prevCall.arguments["sourceToken"].toLowerCase() === token
+        ) {
+          calls[i - 1].arguments["sourceAmount"] = (
+            parseFloat(calls[i - 1].arguments["sourceAmount"]) +
+            parseFloat(amount) -
+            utils.formatUnits(balance, decimals)
+          ).toString();
+        } else {
+          calls.splice(i, 0, {
+            name: "bridge",
+            arguments: {
+              accountAddress: address,
+              sourceChainName: prevChainName,
+              destinationChainName: curChainName,
+              sourceToken: token,
+              sourceAmount: amount,
+            },
+          });
+          i++;
+        }
+      }
     }
 
-    transactionsList.push(txs);
+    prevCall = curCall;
+    prevChainName = curChainName;
+    prevChainId = curChainId;
+    i++;
   }
 
   for (let i = 0; i < calls.length; i++) {
@@ -457,31 +502,31 @@ export const simulateCalls = async (calls, address) => {
       switch (call.name) {
         case "swap": {
           const { message, transactions } = await getSwapTx(body);
-          if (message) return { success: false, transactionsList: null };
+          if (message) return { success: false, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "bridge": {
           const { message, transactions } = await getBridgeTx(body);
-          if (message) return { success: false, transactionsList: null };
+          if (message) return { success: false, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "protocol": {
           const { message, transactions } = await getProtocolTx(body);
-          if (message) return { success: false, transactionsList: null };
+          if (message) return { success: false, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "yield": {
           const { message, transactions } = await getYieldTx(body);
-          if (message) return { success: false, transactionsList: null };
+          if (message) return { success: false, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "transfer": {
           const { message, transactions } = await getTransferTx(body);
-          if (message) return { success: false, transactionsList: null };
+          if (message) return { success: false, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
@@ -511,13 +556,13 @@ export const simulateCalls = async (calls, address) => {
       const length = res.simulation_results.length;
       for (let j = 0; j < length; j++) {
         if (!res.simulation_results[j].transaction.status)
-          return { success: false, transactionsList: null };
+          return { success: false, transactionsList: null, calls: null };
       }
 
       if (!token) continue;
 
       let _token = await getTokenAddressForChain(token, chainName);
-      if (!_token) return { success: false, transactionsList: null };
+      if (!_token) return { success: false, transactionsList: null, calls: null };
       _token = _token.address.toLowerCase();
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
@@ -567,10 +612,10 @@ export const simulateCalls = async (calls, address) => {
       }
     } catch (err) {
       console.log("Simulate error:", err);
-      return { success: false, transactionsList: null };
+      return { success: false, transactionsList: null, calls: null };
     }
   }
-  return { success: true, transactionsList };
+  return { success: true, transactionsList, calls };
 };
 
 export const fillBody = (body, address) => {

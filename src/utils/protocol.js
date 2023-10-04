@@ -1,4 +1,4 @@
-import { ethers, utils } from "ethers";
+import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
@@ -12,7 +12,6 @@ import {
   getTokenAmount,
 } from "../utils/index.js";
 
-import ERC20_ABI from "../abis/erc20.abi.js";
 import { getQuoteFromParaSwap } from "../utils/swap.js";
 import { NATIVE_TOKEN } from "../constants.js";
 
@@ -39,7 +38,7 @@ export const getProtocolData = async (
     };
   }
   let _outputToken;
-  if (["sushiswap", "uniswap", "curve"].includes(protocolName)) {
+  if (["sushiswap", "uniswap", "curve", "balancer"].includes(protocolName)) {
     _outputToken = await getTokenAddressForChain(outputToken, chainName);
     if (!_outputToken) {
       return {
@@ -66,7 +65,8 @@ export const getProtocolData = async (
   switch (_protocolName) {
     case "sushiswap":
     case "uniswap":
-    case "curve": {
+    case "curve":
+    case "balancer": {
       switch (action) {
         case "swap": {
           let dexList;
@@ -76,6 +76,8 @@ export const getProtocolData = async (
             dexList = ["UniswapV2", "UniswapV3"];
           } else if (_protocolName === "curve") {
             dexList = ["Curve"];
+          } else if (_protocolName === "balancer") {
+            dexList = ["Balancer"];
           }
           const data = await getQuoteFromParaSwap(
             chainId,

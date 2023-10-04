@@ -127,6 +127,14 @@ export default {
       withdraw: "0x8dC7C04644b14e04E7A84654680Bbf5E83A88332",
     },
   },
+  plutus: {
+    42161: {
+      "staking-1": "0x27Aaa9D562237BF8E024F9b21DE177e20ae50c05",
+      "staking-3": "0xE59DADf5F7a9decB8337402Ccdf06abE5c0B2B3E",
+      "staking-6": "0xBEB981021ed9c85AA51d96C0c2edA10ee4404A2e",
+      masterchef: "0x5593473e318F0314Eb2518239c474e183c4cBED5",
+    },
+  },
   rodeo: {
     42161: {
       usdc: "0x0032F5E1520a66C6E572e96A11fBF54aea26f9bE",

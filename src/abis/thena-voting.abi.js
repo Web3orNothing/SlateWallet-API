@@ -1,4 +1,3 @@
-// bribe/gauge factory only
 export default [
   {
     inputs: [],

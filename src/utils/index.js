@@ -11,6 +11,21 @@ import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
 import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
 import compoundWETHAbi from "../abis/compound-weth.abi.js";
 import hopAbi from "../abis/hop.abi.js";
+import lidoAbi from "../abis/lido.abi.js";
+import gmxAbi from "../abis/gmx.abi.js";
+import rocketpoolAbi from "../abis/rocketpool.abi.js";
+import pendleAbi from "../abis/pendle.abi.js";
+import jonesdaoAbi from "../abis/jonesdao.abi.js";
+import lodestarStakingAbi from "../abis/lodestar-staking.abi.js";
+import lodestarVotingAbi from "../abis/lodestar-voting.abi.js";
+import dolomiteAbi from "../abis/dolomite.abi.js";
+import dolomiteAdminAbi from "../abis/dolomite-admin.abi.js";
+import plutusMasterchefAbi from "../abis/plutus-masterchef.abi.js";
+import plutusStakingAbi from "../abis/plutus-staking.abi.js";
+import rodeoAbi from "../abis/rodeo.abi.js";
+import stargateStakingAbi from "../abis/stargate-staking.abi.js";
+import stargateStakingTimeAbi from "../abis/stargate-staking-time.abi.js";
+import thenaVotingAbi from "../abis/thena-voting.abi.js";
 
 const abis = {
   aave: aaveAbi,
@@ -18,6 +33,21 @@ const abis = {
   "compound-usdc": compoundUSDCAbi,
   "compound-weth": compoundWETHAbi,
   hop: hopAbi,
+  lido: lidoAbi,
+  gmx: gmxAbi,
+  rocketpool: rocketpoolAbi,
+  pendle: pendleAbi,
+  jonesdao: jonesdaoAbi,
+  "lodestar-staking": lodestarStakingAbi,
+  "lodestar-voting": lodestarVotingAbi,
+  dolomite: dolomiteAbi,
+  "dolomite-admin": dolomiteAdminAbi,
+  "plutus-masterchef": plutusMasterchefAbi,
+  "plutus-staking": plutusStakingAbi,
+  rodeo: rodeoAbi,
+  "stargate-staking": stargateStakingAbi,
+  "stargate-staking-time": stargateStakingTimeAbi,
+  "thena-voting": thenaVotingAbi,
 };
 
 export const metamaskApiHeaders = {
@@ -163,6 +193,24 @@ export const getFunctionName = (protocol, action) => {
     case "hop":
       if (action === "deposit") return "stake";
       if (action === "claim") return "getReward";
+      return action;
+    case "rocketpool":
+      if (action === "withdraw") return "withdrawExcessBalance";
+      return action;
+    case "pendle":
+      if (action === "lock") return "increaseLockPosition";
+      return action;
+    case "lodestar":
+      if (action === "stake") return "stakeLODE";
+      if (action === "unstake") return "unstakeLODE";
+      return action;
+    case "rodeo":
+      if (action === "deposit") return "mint";
+      if (action === "withdraw") return "burn";
+      return action;
+    case "kwenta":
+      if (action === "long" || action === "short" || action === "close")
+        return "execute";
       return action;
     default:
       return action;

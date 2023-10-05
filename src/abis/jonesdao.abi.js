@@ -1,4 +1,3 @@
-// deposit, withdraw
 export default [
   {
     inputs: [

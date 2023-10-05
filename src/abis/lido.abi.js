@@ -1,4 +1,3 @@
-// deposit only
 export default [
   {
     constant: false,

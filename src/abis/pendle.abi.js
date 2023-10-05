@@ -1,4 +1,3 @@
-// increaseLockPosition, withdraw
 export default [
   {
     inputs: [

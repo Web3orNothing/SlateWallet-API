@@ -354,10 +354,11 @@ const getTokenBalance = async (req, res) => {
 };
 
 const simulate = async (req, res) => {
-  const { calls, conditionId, accountAddress } = req.body;
+  const { calls, conditionId, accountAddress, connectedChainName } = req.body;
   const { success, transactionsList } = await simulateCalls(
     calls,
-    accountAddress
+    accountAddress,
+    connectedChainName
   );
   if (!isNaN(parseInt(conditionId))) {
     const condition = await Conditions.findOne({

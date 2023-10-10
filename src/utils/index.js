@@ -431,7 +431,7 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   return { amount: _amount, decimals };
 };
 
-export const simulateCalls = async (calls, address) => {
+export const simulateCalls = async (calls, address, connectedChainName) => {
   const transactionsList = [];
 
   // Check for gas
@@ -532,13 +532,17 @@ export const simulateCalls = async (calls, address) => {
     let chainName;
 
     try {
-      const body = fillBody(call.arguments, address);
-      chainName =
-        call.arguments["chainName"] || call.arguments["destinationChainName"];
+      const body = fillBody(call.args, address, connectedChainName);
+      const sourceChainName =
+        call.args["sourceChainName"] ||
+        call.args["chainName"] ||
+        connectedChainName;
+      const chainId = getChainIdFromName(sourceChainName);
       if (call.name === "swap" || call.name === "bridge") {
         if (i < calls.length - 1) {
-          token =
-            call.arguments["destinationToken"] || call.arguments["sourceToken"];
+          token = call.args["outputToken"] || call.args["inputToken"];
+          chainName =
+            call.args["destinationChainName"] || call.args["chainName"];
         }
       }
 
@@ -583,7 +587,6 @@ export const simulateCalls = async (calls, address) => {
 
       transactionsList.push(txs);
 
-      const chainId = getChainIdFromName(chainName);
       const rpcUrl = getRpcUrlForChain(chainId);
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
       const { data: res } = await axios.post(
@@ -647,11 +650,10 @@ export const simulateCalls = async (calls, address) => {
         }
       } else if (
         call.name === "bridge" &&
-        (nextCall.arguments["chainName"] ||
-          nextCall.arguments["sourceChainName"]) === chainName &&
-        call.arguments["sourceToken"] === nextCall.arguments["sourceToken"]
+        sourceChainName === chainName &&
+        call.args["inputToken"] === nextCall.args["inputToken"]
       ) {
-        amount = body["sourceAmount"];
+        amount = body["inputAmount"];
       }
 
       if (call.name === "bridge") {
@@ -699,11 +701,10 @@ export const simulateCalls = async (calls, address) => {
       }
 
       if (nextCall.name === "swap" || nextCall.name === "bridge") {
-        calls[i + 1].arguments["sourceAmount"] =
-          calls[i + 1].arguments["sourceAmount"] || amount;
+        calls[i + 1].args["inputAmount"] =
+          calls[i + 1].args["inputAmount"] || amount;
       } else if (nextCall.name === "transfer") {
-        calls[i + 1].arguments["amount"] =
-          calls[i + 1].arguments["amount"] || amount;
+        calls[i + 1].args["amount"] = calls[i + 1].args["amount"] || amount;
       }
     } catch (err) {
       console.log("Simulate error:", err);
@@ -713,14 +714,23 @@ export const simulateCalls = async (calls, address) => {
   return { success: true, transactionsList, calls };
 };
 
-export const fillBody = (body, address) => {
+export const fillBody = (body, address, connectedChainName = "Ethereum") => {
   const result = { ...body };
   if (address) {
     result["accountAddress"] = address;
     result["spender"] = address;
   }
-  if (result["chainName"] === "") {
-    result["chainName"] = "ethereum"; // Default to Ethereum Mainnet
+  if (result["chainName"] === "" || !result["chainName"]) {
+    result["chainName"] = connectedChainName.toLowerCase();
+  }
+  if (result["sourceChainName"] === "" || !result["sourceChainName"]) {
+    result["sourceChainName"] = connectedChainName.toLowerCase();
+  }
+  if (
+    result["destinationChainName"] === "" ||
+    !result["destinationChainName"]
+  ) {
+    result["destinationChainName"] = connectedChainName.toLowerCase();
   }
   if (result["action"]) {
     result["action"] = result["action"].toLowerCase();
@@ -744,30 +754,22 @@ const getTokenProxy = (chainId) => {
 
 export const getSwapTx = async (data) => {
   try {
-    const {
-      accountAddress,
-      chainName,
-      sourceAmount,
-      sourceToken,
-      destinationToken,
-    } = data;
+    const { accountAddress, chainName, inputAmount, inputToken, outputToken } =
+      data;
     const chainId = getChainIdFromName(chainName);
     if (!chainId) {
       throw new Error("Invalid chain name: " + chainName);
     }
 
-    const _sourceToken = await getTokenAddressForChain(sourceToken, chainName);
-    if (!_sourceToken) {
+    const _inputToken = await getTokenAddressForChain(inputToken, chainName);
+    if (!_inputToken) {
       return {
         status: "error",
         message: "Token not found on the specified chain.",
       };
     }
-    const _destinationToken = await getTokenAddressForChain(
-      destinationToken,
-      chainName
-    );
-    if (!_destinationToken) {
+    const _outputToken = await getTokenAddressForChain(outputToken, chainName);
+    if (!_outputToken) {
       return {
         status: "error",
         message: "Token not found on the specified chain.",
@@ -778,17 +780,17 @@ export const getSwapTx = async (data) => {
     const rpcUrl = getRpcUrlForChain(chainId);
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
     const { amount: balance, decimals } = await getTokenAmount(
-      _sourceToken.address,
+      _inputToken.address,
       provider,
       accountAddress
     );
-    const { amount: _sourceAmount } = await getTokenAmount(
-      _sourceToken.address,
+    const { amount: _inputAmount } = await getTokenAmount(
+      _inputToken.address,
       provider,
       accountAddress,
-      sourceAmount
+      inputAmount
     );
-    if (balance.lt(_sourceAmount)) {
+    if (balance.lt(_inputAmount)) {
       throw new Error("Insufficient balance");
     }
 
@@ -798,15 +800,15 @@ export const getSwapTx = async (data) => {
       chainId,
       accountAddress,
       {
-        address: _sourceToken.address,
-        symbol: sourceToken,
+        address: _inputToken.address,
+        symbol: inputToken,
         decimals,
       },
       {
-        address: _destinationToken.address,
-        symbol: destinationToken,
+        address: _outputToken.address,
+        symbol: outputToken,
       },
-      _sourceAmount,
+      _inputAmount,
       gasPrice
     );
 
@@ -817,14 +819,14 @@ export const getSwapTx = async (data) => {
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
     const transactions = [];
-    if (_sourceToken.address != NATIVE_TOKEN) {
+    if (_inputToken.address != NATIVE_TOKEN) {
       const tokenProxy = getTokenProxy(chainId);
       if (source === "paraswap" && !tokenProxy)
         throw new Error("No token proxy for the specified chain.");
       const approveTxs = await getApproveData(
         provider,
-        _sourceToken.address,
-        _sourceAmount,
+        _inputToken.address,
+        _inputAmount,
         accountAddress,
         source !== "paraswap" ? tx.to : tokenProxy
       );
@@ -851,8 +853,8 @@ export const getBridgeTx = async (data) => {
       accountAddress,
       sourceChainName,
       destinationChainName,
-      sourceToken,
-      sourceAmount,
+      token,
+      amount,
     } = data;
     const sourceChainId = getChainIdFromName(sourceChainName);
     if (!sourceChainId) {
@@ -863,21 +865,18 @@ export const getBridgeTx = async (data) => {
       throw new Error("Invalid chain name: " + destinationChainName);
     }
 
-    const _sourceToken = await getTokenAddressForChain(
-      sourceToken,
-      sourceChainName
-    );
-    if (!_sourceToken) {
+    const _token = await getTokenAddressForChain(token, sourceChainName);
+    if (!_token) {
       return {
         status: "error",
         message: "Token not found on the specified chain.",
       };
     }
-    let _destinationToken = await getTokenAddressForChain(
-      sourceToken,
+    let _outputToken = await getTokenAddressForChain(
+      token,
       destinationChainName
     );
-    if (!_destinationToken) {
+    if (!_outputToken) {
       return {
         status: "error",
         message: "Token not found on the specified chain.",
@@ -891,17 +890,17 @@ export const getBridgeTx = async (data) => {
       sourceChainId
     );
     const { amount: balance, decimals } = await getTokenAmount(
-      _sourceToken.address,
+      _token.address,
       provider,
       accountAddress
     );
-    const { amount: _sourceAmount } = await getTokenAmount(
-      _sourceToken.address,
+    const { amount: _amount } = await getTokenAmount(
+      _token.address,
       provider,
       accountAddress,
-      sourceAmount
+      amount
     );
-    if (balance.lt(_sourceAmount)) {
+    if (balance.lt(_amount)) {
       throw new Error("Insufficient balance");
     }
 
@@ -911,15 +910,15 @@ export const getBridgeTx = async (data) => {
       destinationChainId,
       accountAddress,
       {
-        address: _sourceToken.address,
-        symbol: sourceToken,
+        address: _token.address,
+        symbol: token,
         decimals,
       },
       {
-        address: _destinationToken.address,
-        symbol: sourceToken,
+        address: _outputToken.address,
+        symbol: token,
       },
-      _sourceAmount
+      _amount
     );
 
     // Step 3: Parse the response and extract relevant information for the bridge transaction
@@ -930,11 +929,11 @@ export const getBridgeTx = async (data) => {
     let transactions = [];
 
     // Step 4: Check user allowance and approve if necessary (Web3.js required)
-    if (_sourceToken.address != NATIVE_TOKEN) {
+    if (_token.address != NATIVE_TOKEN) {
       const approveTxs = await getApproveData(
         provider,
-        _sourceToken.address,
-        _sourceAmount,
+        _token.address,
+        _amount,
         accountAddress,
         result.to
       );

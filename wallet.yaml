@@ -18,14 +18,14 @@ servers:
 
 components:
   securitySchemes:
-      OAuth2:
-        type: oauth2
-        flows:
-          implicit:
-            authorizationUrl: https://example.com/oauth/authorize
-            scopes:
-              read: Read access
-              write: Write access
+    OAuth2:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://example.com/oauth/authorize
+          scopes:
+            read: Read access
+            write: Write access
 
   schemas:
     Transaction:
@@ -62,21 +62,21 @@ components:
         chainName:
           type: string
           description: The ID of the blockchain where the token swap will occur.
-        sourceAmount:
+        inputAmount:
           type: string
-          description: The amount of sourceToken to be swapped.
-        sourceToken:
+          description: The amount of inputToken to be swapped.
+        inputToken:
           type: string
           description: The token to be swapped from.
-        destinationToken:
+        outputToken:
           type: string
           description: The token to be received in the swap.
       required:
         - accountAddress
         - chainName
-        - sourceAmount
-        - sourceToken
-        - destinationToken
+        - inputAmount
+        - inputToken
+        - outputToken
 
     BridgeRequest:
       type: object
@@ -90,18 +90,18 @@ components:
         destinationChainName:
           type: string
           description: The ID of the destination blockchain.
-        sourceToken:
+        inputToken:
           type: string
           description: The token to be transferred from the source chain to the destination chain.
-        sourceAmount:
+        inputAmount:
           type: string
           description: The amount of tokens to be transferred.
       required:
         - accountAddress
         - sourceChainName
         - destinationChainName
-        - sourceToken
-        - sourceAmount
+        - inputToken
+        - inputAmount
 
     YieldRequest:
       type: object
@@ -181,7 +181,6 @@ components:
         - spender
         - chainName
 
-
 paths:
   /swap:
     post:
@@ -192,9 +191,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SwapRequest'
+              $ref: "#/components/schemas/SwapRequest"
       responses:
-        '200':
+        "200":
           description: Response containing transaction details.
           content:
             application/json:
@@ -206,8 +205,8 @@ paths:
                   transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Transaction'
-        '400':
+                      $ref: "#/components/schemas/Transaction"
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -228,9 +227,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BridgeRequest'
+              $ref: "#/components/schemas/BridgeRequest"
       responses:
-        '200':
+        "200":
           description: Response containing transaction details.
           content:
             application/json:
@@ -242,8 +241,8 @@ paths:
                   transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Transaction'
-        '400':
+                      $ref: "#/components/schemas/Transaction"
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -264,9 +263,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/YieldRequest'
+              $ref: "#/components/schemas/YieldRequest"
       responses:
-        '200':
+        "200":
           description: Response containing transaction details.
           content:
             application/json:
@@ -278,8 +277,8 @@ paths:
                   transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Transaction'
-        '400':
+                      $ref: "#/components/schemas/Transaction"
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -300,9 +299,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransferRequest'
+              $ref: "#/components/schemas/TransferRequest"
       responses:
-        '200':
+        "200":
           description: Response containing transaction details.
           content:
             application/json:
@@ -314,8 +313,8 @@ paths:
                   transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Transaction'
-        '400':
+                      $ref: "#/components/schemas/Transaction"
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -336,9 +335,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProtocolRequest'
+              $ref: "#/components/schemas/ProtocolRequest"
       responses:
-        '200':
+        "200":
           description: Response containing transaction details.
           content:
             application/json:
@@ -350,8 +349,8 @@ paths:
                   transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Transaction'
-        '400':
+                      $ref: "#/components/schemas/Transaction"
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -362,7 +361,7 @@ paths:
                     type: string
                   message:
                     type: string
-                    
+
   /token-balance:
     get:
       summary: Get the user's token balance on a specific chain.
@@ -387,7 +386,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Response containing the user's token balance.
           content:
             application/json:
@@ -398,7 +397,7 @@ paths:
                     type: string
                   balance:
                     type: float
-        '400':
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -409,7 +408,6 @@ paths:
                     type: string
                   message:
                     type: string
-
 
 security:
   - OAuth2: []

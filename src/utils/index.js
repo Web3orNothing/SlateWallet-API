@@ -437,14 +437,14 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
   // Check for gas
   let prevCall = calls[0];
   let prevChainName = (
-    prevCall.arguments["chainName"] || prevCall.arguments["sourceChainName"]
+    prevCall.args["chainName"] || prevCall.args["sourceChainName"] || connectedChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;
   while (i < calls.length) {
     const curCall = calls[i];
     const curChainName = (
-      curCall.arguments["chainName"] || curCall.arguments["sourceChainName"]
+      curCall.args["chainName"] || curCall.args["sourceChainName"]
     ).toLowerCase();
     const curChainId = getChainIdFromName(curChainName);
     if (prevChainId === curChainId) {
@@ -454,27 +454,27 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     }
 
     const token = (
-      curCall.arguments["token"] || curCall.arguments["inputToken"]
+      curCall.args["token"] || curCall.args["inputToken"]
     ).toLowerCase();
     const amount =
-      curCall.arguments["amount"] || curCall.arguments["inputAmount"];
+      curCall.args["amount"] || curCall.args["inputAmount"];
     const ethBalance = await getEthBalanceForUser(curChainId, address);
     if (ethBalance.eq(0)) {
       let gasAmount = curChainId === 1 ? "0.2" : "0.1";
       if (
         prevCall.name === "bridge" &&
-        prevCall.arguments["destinationChainName"].toLowerCase() ===
+        prevCall.args["destinationChainName"].toLowerCase() ===
           curChainName &&
-        prevCall.arguments["sourceToken"].toLowerCase() === "eth"
+        prevCall.args["sourceToken"].toLowerCase() === "eth"
       ) {
-        calls[i - 1].arguments["sourceAmount"] = (
-          parseFloat(calls[i - 1].arguments["sourceAmount"]) +
+        calls[i - 1].args["sourceAmount"] = (
+          parseFloat(calls[i - 1].args["sourceAmount"]) +
           parseFloat(gasAmount)
         ).toString();
       } else {
         calls.splice(i, 0, {
           name: "bridge",
-          arguments: {
+          args: {
             accountAddress: address,
             sourceChainName: prevChainName,
             destinationChainName: curChainName,
@@ -494,19 +494,19 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       if (balance.lt(_amount)) {
         if (
           prevCall.name === "bridge" &&
-          prevCall.arguments["destinationChainName"].toLowerCase() ===
+          prevCall.args["destinationChainName"].toLowerCase() ===
             curChainName &&
-          prevCall.arguments["sourceToken"].toLowerCase() === token
+          prevCall.args["sourceToken"].toLowerCase() === token
         ) {
-          calls[i - 1].arguments["sourceAmount"] = (
-            parseFloat(calls[i - 1].arguments["sourceAmount"]) +
+          calls[i - 1].args["sourceAmount"] = (
+            parseFloat(calls[i - 1].args["sourceAmount"]) +
             parseFloat(amount) -
             utils.formatUnits(balance, decimals)
           ).toString();
         } else {
           calls.splice(i, 0, {
             name: "bridge",
-            arguments: {
+            args: {
               accountAddress: address,
               sourceChainName: prevChainName,
               destinationChainName: curChainName,
@@ -658,12 +658,12 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
 
       if (call.name === "bridge") {
         const destChainId = getChainIdFromName(
-          call.arguments["destinationChainName"]
+          call.args["destinationChainName"]
         );
 
         const destToken = await getTokenAddressForChain(
-          call.arguments["sourceToken"],
-          call.arguments["destinationChainName"]
+          call.args["sourceToken"],
+          call.args["destinationChainName"]
         );
         const destRpcUrl = getRpcUrlForChain(destChainId);
         const destProvider = new ethers.providers.JsonRpcProvider(

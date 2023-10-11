@@ -1,16 +1,24 @@
 import Sequelize from "sequelize";
 import httpStatus from "http-status";
-import { ethers, utils } from "ethers";
+import { utils } from "ethers";
 import {
-  getChainIdFromName,
-  getProtocolTx,
-  getRpcUrlForChain,
-  getTokenAddressForChain,
-  getTokenAmount,
-  getTransferTx,
-  getYieldTx,
   getSwapTx,
   getBridgeTx,
+  getDepositTx,
+  getWithdrawTx,
+  getClaimTx,
+  getBorrowTx,
+  getLendTx,
+  getRepayTx,
+  getStakeTx,
+  getUnstakeTx,
+  getLongTx,
+  getShortTx,
+  getLockTx,
+  getUnlockTx,
+  getVoteTx,
+  getTransferTx,
+  getTokenAddressForChain,
   simulateCalls,
 } from "../utils/index.js";
 import { Conditions, Histories } from "../db/index.js";
@@ -264,8 +272,8 @@ const bridge = async (req, res) => {
   }
 };
 
-const protocol = async (req, res) => {
-  const { status, message, transactions } = await getProtocolTx(req.body);
+const deposit = async (req, res) => {
+  const { status, message, transactions } = await getDepositTx(req.body);
   if (message) {
     res.status(httpStatus.BAD_REQUEST).json({ status, message });
   } else {
@@ -273,8 +281,107 @@ const protocol = async (req, res) => {
   }
 };
 
-const yieldHandler = async (req, res) => {
-  const { status, message, transactions } = await getYieldTx(req.body);
+const withdraw = async (req, res) => {
+  const { status, message, transactions } = await getWithdrawTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const claim = async (req, res) => {
+  const { status, message, transactions } = await getClaimTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const borrow = async (req, res) => {
+  const { status, message, transactions } = await getBorrowTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const lend = async (req, res) => {
+  const { status, message, transactions } = await getLendTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const repay = async (req, res) => {
+  const { status, message, transactions } = await getRepayTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const stake = async (req, res) => {
+  const { status, message, transactions } = await getStakeTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const unstake = async (req, res) => {
+  const { status, message, transactions } = await getUnstakeTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const long = async (req, res) => {
+  const { status, message, transactions } = await getLongTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const short = async (req, res) => {
+  const { status, message, transactions } = await getShortTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const lock = async (req, res) => {
+  const { status, message, transactions } = await getLockTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const unlock = async (req, res) => {
+  const { status, message, transactions } = await getUnlockTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const vote = async (req, res) => {
+  const { status, message, transactions } = await getVoteTx(req.body);
   if (message) {
     res.status(httpStatus.BAD_REQUEST).json({ status, message });
   } else {
@@ -306,44 +413,6 @@ const getTokenAddress = async (req, res) => {
     res.status(httpStatus.OK).json({
       status: "success",
       address: token.address,
-    });
-  } catch (err) {
-    console.log("Error:", err);
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Bad request" });
-  }
-};
-
-const getTokenBalance = async (req, res) => {
-  try {
-    const { accountAddress, chainName, tokenName } = req.query;
-    const chainId = getChainIdFromName(chainName);
-    if (!chainId) {
-      throw new Error("Invalid chain name: " + chainName);
-    }
-
-    // Step 1: Fetch the token address for the given tokenName on the specified chain
-    const token = await getTokenAddressForChain(tokenName, chainName);
-    if (!token) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Token not found on the specified chain.",
-      });
-    }
-
-    const rpcUrl = getRpcUrlForChain(chainId);
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-
-    const { amount: balance } = await getTokenAmount(
-      token.address,
-      provider,
-      accountAddress
-    );
-
-    res.status(httpStatus.OK).json({
-      status: "success",
-      balance: balance.toString(),
     });
   } catch (err) {
     console.log("Error:", err);
@@ -405,10 +474,20 @@ export default {
   getHistories,
   swap,
   bridge,
-  protocol,
-  yieldHandler,
+  deposit,
+  withdraw,
+  claim,
+  borrow,
+  lend,
+  repay,
+  stake,
+  unstake,
+  long,
+  short,
+  lock,
+  unlock,
+  vote,
   transfer,
   getTokenAddress,
-  getTokenBalance,
   simulate,
 };

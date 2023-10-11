@@ -714,23 +714,19 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
   return { success: true, transactionsList, calls };
 };
 
-export const fillBody = (body, address, connectedChainName = "Ethereum") => {
+export const fillBody = (body, address, chainName = "Ethereum") => {
   const result = { ...body };
   if (address) {
     result["accountAddress"] = address;
-    result["spender"] = address;
   }
-  if (result["chainName"] === "" || !result["chainName"]) {
-    result["chainName"] = connectedChainName.toLowerCase();
+  if ((result["chainName"] || "") === "") {
+    result["chainName"] = chainName.toLowerCase();
   }
-  if (result["sourceChainName"] === "" || !result["sourceChainName"]) {
-    result["sourceChainName"] = connectedChainName.toLowerCase();
+  if ((result["sourceChainName"] || "") === "") {
+    result["sourceChainName"] = chainName.toLowerCase();
   }
-  if (
-    result["destinationChainName"] === "" ||
-    !result["destinationChainName"]
-  ) {
-    result["destinationChainName"] = connectedChainName.toLowerCase();
+  if ((result["destinationChainName"] || "") === "") {
+    result["destinationChainName"] = chainName.toLowerCase();
   }
   if (result["action"]) {
     result["action"] = result["action"].toLowerCase();

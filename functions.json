@@ -355,7 +355,7 @@
                     "description": "The multiplier to apply to the input token when doing long or short with leverage."
                 }
             },
-            "required": ["protocolName", "outputToken", "leverageMultipler"],
+            "required": ["protocolName", "outputToken", "leverageMultiplier"],
             "unevaluatedProperties": false
         }
     },
@@ -390,7 +390,7 @@
                     "description": "The multiplier to apply to the input token when doing long or short with leverage."
                 }
             },
-            "required": ["protocolName", "outputToken", "leverageMultipler"],
+            "required": ["protocolName", "outputToken", "leverageMultiplier"],
             "unevaluatedProperties": false
         }
     },

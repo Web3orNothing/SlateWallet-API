@@ -5,7 +5,19 @@ import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
 import { getBestSwapRoute } from "./swap.js";
 import { getBestBridgeRoute } from "./bridge.js";
-import { getProtocolData } from "./protocol.js";
+import { getDepositData } from "./protocol/deposit.js";
+import { getWithdrawData } from "./protocol/withdraw.js";
+import { getClaimData } from "./protocol/claim.js";
+import { getBorrowData } from "./protocol/borrow.js";
+import { getLendData } from "./protocol/lend.js";
+import { getRepayData } from "./protocol/repay.js";
+import { getStakeData } from "./protocol/stake.js";
+import { getUnstakeData } from "./protocol/unstake.js";
+import { getLongData } from "./protocol/long.js";
+import { getShortData } from "./protocol/short.js";
+import { getLockData } from "./protocol/lock.js";
+import { getUnlockData } from "./protocol/unlock.js";
+import { getVoteData } from "./protocol/vote.js";
 import aaveAbi from "../abis/aave.abi.js";
 import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
 import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
@@ -437,7 +449,9 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
   // Check for gas
   let prevCall = calls[0];
   let prevChainName = (
-    prevCall.args["chainName"] || prevCall.args["sourceChainName"] || connectedChainName
+    prevCall.args["chainName"] ||
+    prevCall.args["sourceChainName"] ||
+    connectedChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;
@@ -456,20 +470,17 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     const token = (
       curCall.args["token"] || curCall.args["inputToken"]
     ).toLowerCase();
-    const amount =
-      curCall.args["amount"] || curCall.args["inputAmount"];
+    const amount = curCall.args["amount"] || curCall.args["inputAmount"];
     const ethBalance = await getEthBalanceForUser(curChainId, address);
     if (ethBalance.eq(0)) {
       let gasAmount = curChainId === 1 ? "0.2" : "0.1";
       if (
         prevCall.name === "bridge" &&
-        prevCall.args["destinationChainName"].toLowerCase() ===
-          curChainName &&
+        prevCall.args["destinationChainName"].toLowerCase() === curChainName &&
         prevCall.args["sourceToken"].toLowerCase() === "eth"
       ) {
         calls[i - 1].args["sourceAmount"] = (
-          parseFloat(calls[i - 1].args["sourceAmount"]) +
-          parseFloat(gasAmount)
+          parseFloat(calls[i - 1].args["sourceAmount"]) + parseFloat(gasAmount)
         ).toString();
       } else {
         calls.splice(i, 0, {
@@ -953,22 +964,13 @@ export const getBridgeTx = async (data) => {
 
 export const getDepositTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getDepositData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "deposit",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName,
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -983,22 +985,13 @@ export const getDepositTx = async (data) => {
 
 export const getWithdrawTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getWithdrawData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "withdraw",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName,
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1013,22 +1006,11 @@ export const getWithdrawTx = async (data) => {
 
 export const getClaimTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName } = data;
+    const { transactions, error } = await getClaimData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "claim",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName
     );
     if (error) {
       return { status: "error", message: error };
@@ -1043,22 +1025,13 @@ export const getClaimTx = async (data) => {
 
 export const getBorrowTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getBorrowData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "borrow",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName,
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1073,22 +1046,13 @@ export const getBorrowTx = async (data) => {
 
 export const getLendTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getLendData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "lend",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName,
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1103,22 +1067,13 @@ export const getLendTx = async (data) => {
 
 export const getRepayTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getRepayData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "repay",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName,
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1133,22 +1088,12 @@ export const getRepayTx = async (data) => {
 
 export const getStakeTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getStakeData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "stake",
-      inputToken,
-      outputToken,
-      inputAmount
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1163,22 +1108,12 @@ export const getStakeTx = async (data) => {
 
 export const getUnstakeTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getUnstakeData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "unstake",
-      inputToken,
-      outputToken,
-      inputAmount
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1194,21 +1129,20 @@ export const getUnstakeTx = async (data) => {
 export const getLongTx = async (data) => {
   try {
     const {
-      spender,
-      chainName,
       protocolName,
+      chainName,
       inputToken,
-      outputToken,
       inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
-      chainName,
-      protocolName,
-      "long",
-      inputToken,
       outputToken,
-      inputAmount
+      leverageMultiplier,
+    } = data;
+    const { transactions, error } = await getLongData(
+      protocolName,
+      chainName,
+      inputToken,
+      inputAmount,
+      outputToken,
+      leverageMultiplier
     );
     if (error) {
       return { status: "error", message: error };
@@ -1224,21 +1158,20 @@ export const getLongTx = async (data) => {
 export const getShortTx = async (data) => {
   try {
     const {
-      spender,
-      chainName,
       protocolName,
+      chainName,
       inputToken,
-      outputToken,
       inputAmount,
+      outputToken,
+      leverageMultiplier,
     } = data;
     const { transactions, error } = await getProtocolData(
-      spender,
-      chainName,
       protocolName,
-      "short",
+      chainName,
       inputToken,
+      inputAmount,
       outputToken,
-      inputAmount
+      leverageMultiplier
     );
     if (error) {
       return { status: "error", message: error };
@@ -1253,22 +1186,12 @@ export const getShortTx = async (data) => {
 
 export const getLockTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getLockData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "lock",
-      inputToken,
-      outputToken,
-      inputAmount
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1283,22 +1206,12 @@ export const getLockTx = async (data) => {
 
 export const getUnlockTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getUnlockData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "unlock",
-      inputToken,
-      outputToken,
-      inputAmount
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -1313,22 +1226,11 @@ export const getUnlockTx = async (data) => {
 
 export const getVoteTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName } = data;
+    const { transactions, error } = await getVoteData(
       protocolName,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      "vote",
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName
     );
     if (error) {
       return { status: "error", message: error };

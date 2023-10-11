@@ -17,12 +17,12 @@ export const checkTx = async () => {
   await syncConditionTx();
   const conditions = await findConditionTx();
   const retVal = {};
-  conditions.map(({ id, transactionset, useraddress }) => {
+  conditions.map(({ id, query, useraddress }) => {
     const address = useraddress.toLowerCase();
     if (!retVal[address]) {
-      retVal[address] = [{ ...transactionset, id }];
+      retVal[address] = [{ ...query, id }];
     } else {
-      retVal[address].push({ ...transactionset, id });
+      retVal[address].push({ ...query, id });
     }
   });
   const users = Object.keys(retVal);
@@ -39,7 +39,7 @@ const syncConditionTx = async () => {
         {
           completed: "completed",
           type: "time",
-          repeatvalue: { [Sequelize.Op.ne]: null },
+          recurrence: { [Sequelize.Op.ne]: null },
         },
       ],
     },
@@ -48,7 +48,7 @@ const syncConditionTx = async () => {
   const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
-    const { type, comparator, value, repeatvalue, completed } =
+    const { type, comparator, value, recurrence, completed } =
       condition.dataValues;
     let isReady;
     if (type === "gas") {
@@ -68,9 +68,9 @@ const syncConditionTx = async () => {
       const _value = parseInt(value);
       isReady = now >= _value && now < _value + 60;
 
-      if (now >= _value && !isReady && repeatvalue) {
-        const _repeatvalue = parseInt(repeatvalue);
-        isReady = (now - _value) % _repeatvalue < 60;
+      if (now >= _value && !isReady && recurrence) {
+        const interval = getInterval(recurrence);
+        isReady = (now - _value) % interval < 60;
       }
     } else if (type === "price") {
       if (comparator === "lt") {
@@ -91,10 +91,31 @@ const syncConditionTx = async () => {
   }
 };
 
+const getInterval = (recurrence) => {
+  let range;
+  switch (recurrence.type) {
+    case "hourly":
+      range = 60 * 24;
+      break;
+    case "daily":
+      range = 60 * 60 * 24;
+      break;
+    case "weekly":
+      range = 60 * 60 * 24 * 7;
+      break;
+    case "monthly":
+      range = 60 * 60 * 24 * 30;
+      break;
+    default:
+      range = 1;
+  }
+  return recurrence.interval * range;
+};
+
 const findConditionTx = async () => {
   await Conditions.sync();
   return await Conditions.findAll({
-    attributes: ["transactionset", "useraddress", "id"],
+    attributes: ["query", "useraddress", "id"],
     where: { completed: "ready" },
   });
 };

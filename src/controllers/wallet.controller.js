@@ -56,8 +56,8 @@ const condition = async (req, res) => {
       subject,
       comparator: comparatorMap[comparator],
       value,
-      repeatvalue: undefined,
-      transactionset: query,
+      recurrence: undefined,
+      query,
       completed: "pending",
       simstatus,
     });
@@ -71,8 +71,11 @@ const condition = async (req, res) => {
 };
 
 const time = async (req, res) => {
-  const { accountAddress, query, value, repeat_value } = req.body;
-  if (!value) {
+  const { accountAddress, query, start_time, recurrence } = req.body;
+  if (
+    !start_time ||
+    !["hourly", "daily", "weekly", "monthly"].includes(recurrence.type)
+  ) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
@@ -91,9 +94,9 @@ const time = async (req, res) => {
       type: "time",
       subject: "time",
       comparator: "eq",
-      value,
-      repeatvalue: repeat_value,
-      transactionset: query,
+      value: start_time,
+      recurrence,
+      query,
       completed: "pending",
       simstatus,
     });

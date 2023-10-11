@@ -3,14 +3,25 @@ import httpStatus from "http-status";
 import { ethers, utils } from "ethers";
 import {
   getChainIdFromName,
-  getProtocolTx,
   getRpcUrlForChain,
-  getTokenAddressForChain,
   getTokenAmount,
-  getTransferTx,
-  getYieldTx,
+  getTokenAddressForChain,
   getSwapTx,
   getBridgeTx,
+  getDepositTx,
+  getWithdrawTx,
+  getClaimTx,
+  getBorrowTx,
+  getLendTx,
+  getRepayTx,
+  getStakeTx,
+  getUnstakeTx,
+  getLongTx,
+  getShortTx,
+  getLockTx,
+  getUnlockTx,
+  getVoteTx,
+  getTransferTx,
   simulateCalls,
 } from "../utils/index.js";
 import { Conditions, Histories } from "../db/index.js";
@@ -45,8 +56,8 @@ const condition = async (req, res) => {
       subject,
       comparator: comparatorMap[comparator],
       value,
-      repeatvalue: undefined,
-      transactionset: query,
+      recurrence: undefined,
+      query,
       completed: "pending",
       simstatus,
     });
@@ -60,8 +71,11 @@ const condition = async (req, res) => {
 };
 
 const time = async (req, res) => {
-  const { accountAddress, query, value, repeat_value } = req.body;
-  if (!value) {
+  const { accountAddress, query, start_time, recurrence } = req.body;
+  if (
+    !start_time ||
+    !["hourly", "daily", "weekly", "monthly"].includes(recurrence.type)
+  ) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
@@ -80,9 +94,9 @@ const time = async (req, res) => {
       type: "time",
       subject: "time",
       comparator: "eq",
-      value,
-      repeatvalue: repeat_value,
-      transactionset: query,
+      value: start_time,
+      recurrence,
+      query,
       completed: "pending",
       simstatus,
     });
@@ -264,8 +278,8 @@ const bridge = async (req, res) => {
   }
 };
 
-const protocol = async (req, res) => {
-  const { status, message, transactions } = await getProtocolTx(req.body);
+const deposit = async (req, res) => {
+  const { status, message, transactions } = await getDepositTx(req.body);
   if (message) {
     res.status(httpStatus.BAD_REQUEST).json({ status, message });
   } else {
@@ -273,8 +287,107 @@ const protocol = async (req, res) => {
   }
 };
 
-const yieldHandler = async (req, res) => {
-  const { status, message, transactions } = await getYieldTx(req.body);
+const withdraw = async (req, res) => {
+  const { status, message, transactions } = await getWithdrawTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const claim = async (req, res) => {
+  const { status, message, transactions } = await getClaimTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const borrow = async (req, res) => {
+  const { status, message, transactions } = await getBorrowTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const lend = async (req, res) => {
+  const { status, message, transactions } = await getLendTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const repay = async (req, res) => {
+  const { status, message, transactions } = await getRepayTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const stake = async (req, res) => {
+  const { status, message, transactions } = await getStakeTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const unstake = async (req, res) => {
+  const { status, message, transactions } = await getUnstakeTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const long = async (req, res) => {
+  const { status, message, transactions } = await getLongTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const short = async (req, res) => {
+  const { status, message, transactions } = await getShortTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const lock = async (req, res) => {
+  const { status, message, transactions } = await getLockTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const unlock = async (req, res) => {
+  const { status, message, transactions } = await getUnlockTx(req.body);
+  if (message) {
+    res.status(httpStatus.BAD_REQUEST).json({ status, message });
+  } else {
+    res.status(httpStatus.OK).json({ status, transactions });
+  }
+};
+
+const vote = async (req, res) => {
+  const { status, message, transactions } = await getVoteTx(req.body);
   if (message) {
     res.status(httpStatus.BAD_REQUEST).json({ status, message });
   } else {
@@ -405,10 +518,20 @@ export default {
   getHistories,
   swap,
   bridge,
-  protocol,
-  yieldHandler,
+  deposit,
+  withdraw,
+  claim,
+  borrow,
+  lend,
+  repay,
+  stake,
+  unstake,
+  long,
+  short,
+  lock,
+  unlock,
+  vote,
   transfer,
   getTokenAddress,
-  getTokenBalance,
   simulate,
 };

@@ -5,7 +5,19 @@ import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
 import { getBestSwapRoute } from "./swap.js";
 import { getBestBridgeRoute } from "./bridge.js";
-import { getProtocolData } from "./protocol.js";
+import { getDepositData } from "./protocol/deposit.js";
+import { getWithdrawData } from "./protocol/withdraw.js";
+import { getClaimData } from "./protocol/claim.js";
+import { getBorrowData } from "./protocol/borrow.js";
+import { getLendData } from "./protocol/lend.js";
+import { getRepayData } from "./protocol/repay.js";
+import { getStakeData } from "./protocol/stake.js";
+import { getUnstakeData } from "./protocol/unstake.js";
+import { getLongData } from "./protocol/long.js";
+import { getShortData } from "./protocol/short.js";
+import { getLockData } from "./protocol/lock.js";
+import { getUnlockData } from "./protocol/unlock.js";
+import { getVoteData } from "./protocol/vote.js";
 import aaveAbi from "../abis/aave.abi.js";
 import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
 import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
@@ -437,7 +449,9 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
   // Check for gas
   let prevCall = calls[0];
   let prevChainName = (
-    prevCall.args["chainName"] || prevCall.args["sourceChainName"] || connectedChainName
+    prevCall.args["chainName"] ||
+    prevCall.args["sourceChainName"] ||
+    connectedChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;
@@ -456,20 +470,17 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     const token = (
       curCall.args["token"] || curCall.args["inputToken"]
     ).toLowerCase();
-    const amount =
-      curCall.args["amount"] || curCall.args["inputAmount"];
+    const amount = curCall.args["amount"] || curCall.args["inputAmount"];
     const ethBalance = await getEthBalanceForUser(curChainId, address);
     if (ethBalance.eq(0)) {
       let gasAmount = curChainId === 1 ? "0.2" : "0.1";
       if (
         prevCall.name === "bridge" &&
-        prevCall.args["destinationChainName"].toLowerCase() ===
-          curChainName &&
+        prevCall.args["destinationChainName"].toLowerCase() === curChainName &&
         prevCall.args["sourceToken"].toLowerCase() === "eth"
       ) {
         calls[i - 1].args["sourceAmount"] = (
-          parseFloat(calls[i - 1].args["sourceAmount"]) +
-          parseFloat(gasAmount)
+          parseFloat(calls[i - 1].args["sourceAmount"]) + parseFloat(gasAmount)
         ).toString();
       } else {
         calls.splice(i, 0, {
@@ -714,23 +725,19 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
   return { success: true, transactionsList, calls };
 };
 
-export const fillBody = (body, address, connectedChainName = "Ethereum") => {
+export const fillBody = (body, address, chainName = "Ethereum") => {
   const result = { ...body };
   if (address) {
     result["accountAddress"] = address;
-    result["spender"] = address;
   }
-  if (result["chainName"] === "" || !result["chainName"]) {
-    result["chainName"] = connectedChainName.toLowerCase();
+  if ((result["chainName"] || "") === "") {
+    result["chainName"] = chainName.toLowerCase();
   }
-  if (result["sourceChainName"] === "" || !result["sourceChainName"]) {
-    result["sourceChainName"] = connectedChainName.toLowerCase();
+  if ((result["sourceChainName"] || "") === "") {
+    result["sourceChainName"] = chainName.toLowerCase();
   }
-  if (
-    result["destinationChainName"] === "" ||
-    !result["destinationChainName"]
-  ) {
-    result["destinationChainName"] = connectedChainName.toLowerCase();
+  if ((result["destinationChainName"] || "") === "") {
+    result["destinationChainName"] = chainName.toLowerCase();
   }
   if (result["action"]) {
     result["action"] = result["action"].toLowerCase();
@@ -955,25 +962,15 @@ export const getBridgeTx = async (data) => {
   }
 };
 
-export const getProtocolTx = async (data) => {
+export const getDepositTx = async (data) => {
   try {
-    const {
-      spender,
-      chainName,
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getDepositData(
       protocolName,
-      action,
-      inputToken,
-      outputToken,
-      inputAmount,
-    } = data;
-    const { transactions, error } = await getProtocolData(
-      spender,
       chainName,
-      protocolName,
-      action,
-      inputToken,
-      outputToken,
-      inputAmount
+      poolName,
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };
@@ -986,6 +983,267 @@ export const getProtocolTx = async (data) => {
   }
 };
 
+export const getWithdrawTx = async (data) => {
+  try {
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getWithdrawData(
+      protocolName,
+      chainName,
+      poolName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getClaimTx = async (data) => {
+  try {
+    const { protocolName, chainName, poolName } = data;
+    const { transactions, error } = await getClaimData(
+      protocolName,
+      chainName,
+      poolName
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getBorrowTx = async (data) => {
+  try {
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getBorrowData(
+      protocolName,
+      chainName,
+      poolName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getLendTx = async (data) => {
+  try {
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getLendData(
+      protocolName,
+      chainName,
+      poolName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getRepayTx = async (data) => {
+  try {
+    const { protocolName, chainName, poolName, token, amount } = data;
+    const { transactions, error } = await getRepayData(
+      protocolName,
+      chainName,
+      poolName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getStakeTx = async (data) => {
+  try {
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getStakeData(
+      protocolName,
+      chainName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getUnstakeTx = async (data) => {
+  try {
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getUnstakeData(
+      protocolName,
+      chainName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getLongTx = async (data) => {
+  try {
+    const {
+      protocolName,
+      chainName,
+      inputToken,
+      inputAmount,
+      outputToken,
+      leverageMultiplier,
+    } = data;
+    const { transactions, error } = await getLongData(
+      protocolName,
+      chainName,
+      inputToken,
+      inputAmount,
+      outputToken,
+      leverageMultiplier
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getShortTx = async (data) => {
+  try {
+    const {
+      protocolName,
+      chainName,
+      inputToken,
+      inputAmount,
+      outputToken,
+      leverageMultiplier,
+    } = data;
+    const { transactions, error } = await getProtocolData(
+      protocolName,
+      chainName,
+      inputToken,
+      inputAmount,
+      outputToken,
+      leverageMultiplier
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getLockTx = async (data) => {
+  try {
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getLockData(
+      protocolName,
+      chainName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getUnlockTx = async (data) => {
+  try {
+    const { protocolName, chainName, token, amount } = data;
+    const { transactions, error } = await getUnlockData(
+      protocolName,
+      chainName,
+      token,
+      amount
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getVoteTx = async (data) => {
+  try {
+    const { protocolName, chainName, poolName } = data;
+    const { transactions, error } = await getVoteData(
+      protocolName,
+      chainName,
+      poolName
+    );
+    if (error) {
+      return { status: "error", message: error };
+    } else {
+      return { status: "success", transactions };
+    }
+  } catch (err) {
+    console.log("Protocol error:", err);
+    return { status: "error", message: "Bad request" };
+  }
+};
+
+/* 
 export const getYieldTx = async (data) => {
   try {
     const { accountAddress, chainName, token, amount } = data;
@@ -1036,6 +1294,7 @@ export const getYieldTx = async (data) => {
     return { status: "error", message: "Bad request" };
   }
 };
+ */
 
 export const getTransferTx = async (data) => {
   try {

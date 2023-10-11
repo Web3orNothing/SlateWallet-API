@@ -1,7 +1,11 @@
 import Sequelize from "sequelize";
 import httpStatus from "http-status";
-import { utils } from "ethers";
+import { ethers, utils } from "ethers";
 import {
+  getChainIdFromName,
+  getRpcUrlForChain,
+  getTokenAmount,
+  getTokenAddressForChain,
   getSwapTx,
   getBridgeTx,
   getDepositTx,
@@ -18,7 +22,6 @@ import {
   getUnlockTx,
   getVoteTx,
   getTransferTx,
-  getTokenAddressForChain,
   simulateCalls,
 } from "../utils/index.js";
 import { Conditions, Histories } from "../db/index.js";
@@ -413,6 +416,44 @@ const getTokenAddress = async (req, res) => {
     res.status(httpStatus.OK).json({
       status: "success",
       address: token.address,
+    });
+  } catch (err) {
+    console.log("Error:", err);
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
+  }
+};
+
+const getTokenBalance = async (req, res) => {
+  try {
+    const { accountAddress, chainName, tokenName } = req.query;
+    const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name: " + chainName);
+    }
+
+    // Step 1: Fetch the token address for the given tokenName on the specified chain
+    const token = await getTokenAddressForChain(tokenName, chainName);
+    if (!token) {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        status: "error",
+        message: "Token not found on the specified chain.",
+      });
+    }
+
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+    const { amount: balance } = await getTokenAmount(
+      token.address,
+      provider,
+      accountAddress
+    );
+
+    res.status(httpStatus.OK).json({
+      status: "success",
+      balance: balance.toString(),
     });
   } catch (err) {
     console.log("Error:", err);

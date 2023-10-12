@@ -4,7 +4,8 @@ const conditionModel = async (sequelize, Sequelize) => {
       type: Sequelize.STRING,
     },
     type: {
-      type: Sequelize.STRING,
+      type: Sequelize.ENUM,
+      values: ["gas", "time", "price", "balance", "market cap", "yield"],
     },
     subject: {
       type: Sequelize.STRING,
@@ -16,10 +17,10 @@ const conditionModel = async (sequelize, Sequelize) => {
     value: {
       type: Sequelize.STRING,
     },
-    repeatvalue: {
-      type: Sequelize.STRING,
+    recurrence: {
+      type: Sequelize.JSONB,
     },
-    transactionset: {
+    query: {
       type: Sequelize.JSONB,
     },
     completed: {

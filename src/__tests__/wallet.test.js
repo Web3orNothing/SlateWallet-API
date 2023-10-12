@@ -16,9 +16,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ether",
-        sourceToken: "WETH",
-        sourceAmount: "10",
-        destinationToken: "USDC",
+        inputToken: "WETH",
+        inputAmount: "10",
+        outputToken: "USDC",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -31,9 +31,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "WETH",
-        sourceAmount: "10",
-        destinationToken: "USDC",
+        inputToken: "WETH",
+        inputAmount: "10",
+        outputToken: "USDC",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -46,9 +46,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "null",
-        sourceAmount: "10",
-        destinationToken: "USDC",
+        inputToken: "null",
+        inputAmount: "10",
+        outputToken: "USDC",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -63,9 +63,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "ETH",
-        sourceAmount: "0.01",
-        destinationToken: "USDC",
+        inputToken: "ETH",
+        inputAmount: "0.01",
+        outputToken: "USDC",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
@@ -80,9 +80,9 @@ describe("Test Wallet API", () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         chainName: "ethereum",
-        sourceToken: "WETH",
-        sourceAmount: "1",
-        destinationToken: "USDC",
+        inputToken: "WETH",
+        inputAmount: "1",
+        outputToken: "USDC",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");
@@ -104,9 +104,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ether",
         destinationChainName: "arbitrum",
-        sourceToken: "WETH",
-        sourceAmount: "1",
-        destinationToken: "WETH",
+        inputToken: "WETH",
+        inputAmount: "1",
+        outputToken: "WETH",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -118,9 +118,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbi",
-        sourceToken: "WETH",
-        sourceAmount: "0.1",
-        destinationToken: "WETH",
+        inputToken: "WETH",
+        inputAmount: "0.1",
+        outputToken: "WETH",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -134,9 +134,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbitrum",
-        sourceToken: "WETH",
-        sourceAmount: "10",
-        destinationToken: "WETH",
+        inputToken: "WETH",
+        inputAmount: "10",
+        outputToken: "WETH",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -150,9 +150,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbitrum",
-        sourceToken: "null",
-        sourceAmount: "0.1",
-        destinationToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+        inputToken: "null",
+        inputAmount: "0.1",
+        outputToken: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
       });
       expect(res.statusCode).toEqual(400);
       expect(res.body).toHaveProperty("status");
@@ -168,9 +168,9 @@ describe("Test Wallet API", () => {
         accountAddress: "0xc5a05570da594f8edcc9beaa2385c69411c28cbe",
         sourceChainName: "ethereum",
         destinationChainName: "arbitrum",
-        sourceToken: "WETH",
-        sourceAmount: "0.1",
-        destinationToken: "WETH",
+        inputToken: "WETH",
+        inputAmount: "0.1",
+        outputToken: "WETH",
       });
       expect(res.statusCode).toEqual(200);
       expect(res.body).toHaveProperty("status");

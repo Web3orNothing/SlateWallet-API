@@ -10,19 +10,17 @@ import {
   getABIForProtocol,
   getFunctionName,
   getTokenAmount,
-} from "../utils/index.js";
+} from "../index.js";
 
-import { getQuoteFromParaSwap } from "../utils/swap.js";
-import { NATIVE_TOKEN } from "../constants.js";
+import { getQuoteFromParaSwap } from "../swap.js";
+import { NATIVE_TOKEN } from "../../constants.js";
 
-export const getProtocolData = async (
-  spender,
-  chainName,
+export const getDepositData = async (
   protocolName,
-  action,
-  inputToken,
-  outputToken,
-  inputAmount
+  chainName,
+  poolName,
+  token,
+  amount
 ) => {
   const _protocolName = protocolName.toLowerCase();
 
@@ -31,37 +29,28 @@ export const getProtocolData = async (
     throw new Error("Invalid chain name");
   }
 
-  const _inputToken = await getTokenAddressForChain(inputToken, chainName);
-  if (!["aave", "compound"].includes(protocolName) && !_inputToken) {
-    return {
-      error: "Token not found on the specified chain.",
-    };
-  }
-  let _outputToken;
-  if (["sushiswap", "uniswap", "curve", "balancer"].includes(protocolName)) {
-    _outputToken = await getTokenAddressForChain(outputToken, chainName);
-    if (!_outputToken) {
-      return {
-        error: "Token not found on the specified chain.",
-      };
-    }
+  const _token = await getTokenAddressForChain(token, chainName);
+  if (!_token) {
+    return { error: "Token not found on the specified chain." };
   }
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
   const gasPrice = await provider.getGasPrice();
 
-  const { amount: _inputAmount, decimals } = await getTokenAmount(
-    _inputToken.address,
+  const { amount: _amount, decimals } = await getTokenAmount(
+    _token.address,
     provider,
     spender,
-    inputAmount
+    amount
   );
 
   let approveTxs = [];
   let address = null;
   let abi = [];
   const params = [];
+
+  /* 
   switch (_protocolName) {
     case "sushiswap":
     case "uniswap":
@@ -83,15 +72,15 @@ export const getProtocolData = async (
             chainId,
             spender,
             {
-              address: _inputToken.address,
-              symbol: inputToken,
+              address: _token.address,
+              symbol: token,
               decimals,
             },
             {
               address: _outputToken.address,
               symbol: outputToken,
             },
-            inputAmount,
+            amount,
             gasPrice,
             1,
             dexList
@@ -99,11 +88,11 @@ export const getProtocolData = async (
           if (data) {
             const { tx } = data;
             const transactions = [];
-            if (_inputToken.address !== NATIVE_TOKEN) {
+            if (_token.address !== NATIVE_TOKEN) {
               const approveTxs = await getApproveData(
                 provider,
-                _inputToken.address,
-                _inputAmount,
+                _token.address,
+                _amount,
                 spender,
                 tx.to
               );
@@ -133,13 +122,13 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
       abi = getABIForProtocol(_protocolName);
       params.push(spender);
-      params.push(_inputAmount);
+      params.push(_amount);
 
-      if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
+      if (_token.address !== NATIVE_TOKEN && action === "deposit") {
         approveTxs = await getApproveData(
           provider,
-          _inputToken.address,
-          _inputAmount,
+          _token.address,
+          _amount,
           spender,
           address
         );
@@ -147,27 +136,34 @@ export const getProtocolData = async (
       break;
     }
     case "compound": {
-      const key = action === "claim" ? "rewards" : inputToken.toLowerCase();
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
-      if (action === "claim") {
+      const funcName = getFunctionName(_protocolName, action);
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        funcName === "claim" ? "rewards" : token.toLowerCase()
+      );
+      abi = getABIForProtocol(
+        _protocolName,
+        funcName === "claim" ? "rewards" : token.toLowerCase()
+      );
+      if (funcName === "claim") {
         const comet = getProtocolAddressForChain(
           _protocolName,
           chainId,
-          inputToken.toLowerCase()
+          token.toLowerCase()
         );
         params.push(comet);
         params.push(spender);
         params.push(true);
       } else {
-        params.push(_inputToken.address);
-        params.push(_inputAmount);
+        params.push(_token.address);
+        params.push(_amount);
 
-        if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
+        if (_token.address !== NATIVE_TOKEN && action === "deposit") {
           approveTxs = await getApproveData(
             provider,
-            _inputToken.address,
-            _inputAmount,
+            _token.address,
+            _amount,
             spender,
             address
           );
@@ -199,9 +195,9 @@ export const getProtocolData = async (
     case "lido": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _maxDepositsCount */);
-      params.push(0 /* uint256 _stakingModuleId */);
-      params.push("0x0" /* bytes _depositCalldata */);
+      params.push(0 /* uint256 _maxDepositsCount );
+      params.push(0 /* uint256 _stakingModuleId );
+      params.push("0x0" /* bytes _depositCalldata );
       break;
     }
     case "gmx": {
@@ -318,7 +314,7 @@ export const getProtocolData = async (
           )),
           value: executionFee.toNumber(),
         });
-      } */
+      } 
 
       break;
     }
@@ -334,7 +330,7 @@ export const getProtocolData = async (
       if (action === "withdraw") params.push(_inputAmount);
       else if (action === "lock") {
         params.push(_inputAmount);
-        params.push(0 /* uint128 newExpiry */);
+        params.push(0 /* uint128 newExpiry );
 
         if (_inputToken.address !== NATIVE_TOKEN) {
           approveTxs = await getApproveData(
@@ -351,7 +347,7 @@ export const getProtocolData = async (
     case "jonesdao": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid */);
+      params.push(0 /* uint256 _pid );
       if (action !== "harvest") params.push(_inputAmount);
 
       if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
@@ -370,9 +366,9 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(_protocolName, chainId, key);
       abi = getABIForProtocol(_protocolName, key);
       if (action === "vote") {
-        params.push([] /* string[] tokens */);
-        params.push([] /* VotingConstants.OperationType[] operations */);
-        params.push([] /* uint256[] shares */);
+        params.push([] /* string[] tokens );
+        params.push([] /* VotingConstants.OperationType[] operations );
+        params.push([] /* uint256[] shares );
       } else {
         if (action === "stake") params.push(spender);
         params.push(_inputAmount);
@@ -392,7 +388,7 @@ export const getProtocolData = async (
     case "dolomite": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      /* build operation and execute */
+      /* build operation and execute 
       break;
     }
     case "plutus": {
@@ -405,80 +401,38 @@ export const getProtocolData = async (
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        key === "staking" ? key + "-" + [1, 3, 6][0 /* based on param */] : key
+        `${token.toLowerCase()}${
+          outputToken.toLowerCase() === "hop"
+            ? ""
+            : `-${outputToken.toLowerCase()}`
+        }`
       );
-      abi = getABIForProtocol(_protocolName, key);
-      if (key === "staking") {
-        if (action === "stake") params.push(_inputAmount);
-      } else if (key === "masterchef") {
-        params.push(0 /* uint256 _pid */);
-        params.push(_inputAmount);
-      }
-
-      if (
-        _inputToken.address !== NATIVE_TOKEN &&
-        (action === "deposit" || action === "stake")
-      ) {
-        approveTxs = await getApproveData(
-          provider,
-          _inputToken.address,
-          _inputAmount,
-          spender,
-          address
-        );
-      }
-      break;
-    }
-    case "rodeo": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(_inputAmount);
-      if (action === "deposit" || action === "withdraw") params.push(spender);
+      if (action !== "claim") {
+        params.push(_amount);
 
-      if (
-        _inputToken.address !== NATIVE_TOKEN &&
-        (action === "deposit" || action === "borrow")
-      ) {
-        approveTxs = await getApproveData(
-          provider,
-          _inputToken.address,
-          _inputAmount,
-          spender,
-          address
-        );
-      }
-      break;
-    }
-    case "kwenta": {
-      const key =
-        action === "stake" || action === "unstake" ? "staking" : "margin";
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
-
-      if (key === "staking") {
-        params.push(_inputAmount);
-        if (_inputToken.address !== NATIVE_TOKEN && action === "stake") {
+        if (_token.address !== NATIVE_TOKEN && action === "deposit") {
           approveTxs = await getApproveData(
             provider,
-            _inputToken.address,
-            _inputAmount,
+            _token.address,
+            _amount,
             spender,
             address
           );
         }
       } else {
-        params.push([] /* IAccount.Command[] _commands */);
-        params.push([] /* bytes[] _inputs */);
+        params.push([] /* IAccount.Command[] _commands);
+        params.push([] /* bytes[] _inputs);
       }
       break;
     }
     case "stargate": {
-      const key = true /* based on param */ ? "staking" : "staking-time";
+      const key = true /* based on param  ? "staking" : "staking-time";
       address = getProtocolAddressForChain(_protocolName, chainId, key);
       abi = getABIForProtocol(_protocolName, key);
 
       if (action === "unstake") params.push(spender);
-      params.push(0 /* uint256 _pid */);
+      params.push(0 /* uint256 _pid );
       params.push(_inputAmount);
 
       if (_inputToken.address !== NATIVE_TOKEN && action === "stake") {
@@ -497,33 +451,29 @@ export const getProtocolData = async (
 
       address = getProtocolAddressForChain(_protocolName, chainId, "voting");
       abi = getABIForProtocol(_protocolName, "voting");
-      params.push(0 /* uint256 _tokenId */);
-      params.push([] /* address[] _poolVote */);
-      params.push([] /* uint256[] _weights */);
+      params.push(0 /* uint256 _tokenId );
+      params.push([] /* address[] _poolVote );
+      params.push([] /* uint256[] _weights );
 
       break;
     }
     default: {
       return { error: "Protocol not supported" };
     }
-  }
+  } */
 
   if (!address) {
-    return {
-      error: "Protocol address not found on the specified chain.",
-    };
+    return { error: "Protocol address not found on the specified chain." };
   }
   if (!abi || abi.length === 0) {
-    return {
-      error: "Protocol ABI not found for the specified action.",
-    };
+    return { error: "Protocol ABI not found for the specified action." };
   }
 
   const data = await getFunctionData(
     address,
     abi,
     provider,
-    getFunctionName(_protocolName, action),
+    getFunctionName(_protocolName, "deposit"),
     params,
     "0"
   );

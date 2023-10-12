@@ -16,6 +16,7 @@ import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getDepositData = async (
+  accountAddress,
   protocolName,
   chainName,
   poolName,
@@ -41,7 +42,7 @@ export const getDepositData = async (
   const { amount: _amount, decimals } = await getTokenAmount(
     _token.address,
     provider,
-    spender,
+    accountAddress,
     amount
   );
 
@@ -70,7 +71,7 @@ export const getDepositData = async (
           }
           const data = await getQuoteFromParaSwap(
             chainId,
-            spender,
+            accountAddress,
             {
               address: _token.address,
               symbol: token,
@@ -93,7 +94,7 @@ export const getDepositData = async (
                 provider,
                 _token.address,
                 _amount,
-                spender,
+                accountAddress,
                 tx.to
               );
               transactions.push(...approveTxs);
@@ -121,7 +122,7 @@ export const getDepositData = async (
     case "aave": {
       address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
       abi = getABIForProtocol(_protocolName);
-      params.push(spender);
+      params.push(accountAddress);
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN && action === "deposit") {
@@ -129,7 +130,7 @@ export const getDepositData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -153,7 +154,7 @@ export const getDepositData = async (
           token.toLowerCase()
         );
         params.push(comet);
-        params.push(spender);
+        params.push(accountAddress);
         params.push(true);
       } else {
         params.push(_token.address);
@@ -164,7 +165,7 @@ export const getDepositData = async (
             provider,
             _token.address,
             _amount,
-            spender,
+            accountAddress,
             address
           );
         }
@@ -416,7 +417,7 @@ export const getDepositData = async (
             provider,
             _token.address,
             _amount,
-            spender,
+            accountAddress,
             address
           );
         }

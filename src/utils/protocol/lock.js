@@ -15,7 +15,13 @@ import {
 import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
-export const getLockData = async (protocolName, chainName, token, amount) => {
+export const getLockData = async (
+  accountAddress,
+  protocolName,
+  chainName,
+  token,
+  amount
+) => {
   const _protocolName = protocolName.toLowerCase();
 
   const chainId = getChainIdFromName(chainName);
@@ -35,7 +41,7 @@ export const getLockData = async (protocolName, chainName, token, amount) => {
   const { amount: _amount, decimals } = await getTokenAmount(
     _token.address,
     provider,
-    spender,
+    accountAddress,
     amount
   );
 

@@ -1012,8 +1012,10 @@ export const getBridgeTx = async (data) => {
 
 export const getDepositTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getDepositData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1033,8 +1035,10 @@ export const getDepositTx = async (data) => {
 
 export const getWithdrawTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getWithdrawData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1054,8 +1058,9 @@ export const getWithdrawTx = async (data) => {
 
 export const getClaimTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName } = data;
+    const { accountAddress, protocolName, chainName, poolName } = data;
     const { transactions, error } = await getClaimData(
+      accountAddress,
       protocolName,
       chainName,
       poolName
@@ -1073,8 +1078,10 @@ export const getClaimTx = async (data) => {
 
 export const getBorrowTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getBorrowData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1094,8 +1101,10 @@ export const getBorrowTx = async (data) => {
 
 export const getLendTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getLendData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1115,8 +1124,10 @@ export const getLendTx = async (data) => {
 
 export const getRepayTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getRepayData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1136,8 +1147,9 @@ export const getRepayTx = async (data) => {
 
 export const getStakeTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getStakeData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1156,8 +1168,9 @@ export const getStakeTx = async (data) => {
 
 export const getUnstakeTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getUnstakeData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1177,6 +1190,7 @@ export const getUnstakeTx = async (data) => {
 export const getLongTx = async (data) => {
   try {
     const {
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1185,6 +1199,7 @@ export const getLongTx = async (data) => {
       leverageMultiplier,
     } = data;
     const { transactions, error } = await getLongData(
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1206,6 +1221,7 @@ export const getLongTx = async (data) => {
 export const getShortTx = async (data) => {
   try {
     const {
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1214,6 +1230,7 @@ export const getShortTx = async (data) => {
       leverageMultiplier,
     } = data;
     const { transactions, error } = await getProtocolData(
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1234,8 +1251,9 @@ export const getShortTx = async (data) => {
 
 export const getLockTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getLockData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1254,8 +1272,9 @@ export const getLockTx = async (data) => {
 
 export const getUnlockTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getUnlockData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1274,8 +1293,9 @@ export const getUnlockTx = async (data) => {
 
 export const getVoteTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName } = data;
+    const { accountAddress, protocolName, chainName, poolName } = data;
     const { transactions, error } = await getVoteData(
+      accountAddress,
       protocolName,
       chainName,
       poolName

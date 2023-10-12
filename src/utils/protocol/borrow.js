@@ -16,6 +16,7 @@ import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getBorrowData = async (
+  accountAddress,
   protocolName,
   chainName,
   poolName,
@@ -41,7 +42,7 @@ export const getBorrowData = async (
   const { amount: _amount, decimals } = await getTokenAmount(
     _token.address,
     provider,
-    spender,
+    accountAddress,
     amount
   );
 

@@ -14,7 +14,12 @@ import {
 import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
-export const getVoteData = async (protocolName, chainName, poolName) => {
+export const getVoteData = async (
+  accountAddress,
+  protocolName,
+  chainName,
+  poolName
+) => {
   const _protocolName = protocolName.toLowerCase();
 
   const chainId = getChainIdFromName(chainName);

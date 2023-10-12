@@ -632,6 +632,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
       const nextCall = calls[i + 1];
+      if (!nextCall) continue;
       let amount;
       if (call.name === "swap") {
         const { logs } =

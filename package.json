@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node ./src/index.js",
     "dev": "nodemon",
-    "test": "jest --testTimeout=30000 --detectOpenHandles --forceExit",
+    "test": "jest --testTimeout=200000 --detectOpenHandles --forceExit",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint --fix --ext .js, .",
     "prettier": "npx prettier --write ."

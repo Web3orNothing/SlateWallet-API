@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getProtocolAddressForChain,
   getFunctionData,
@@ -10,9 +9,6 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
-
-import { getQuoteFromParaSwap } from "../swap.js";
-import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getUnstakeData = async (
   accountAddress,
@@ -35,9 +31,8 @@ export const getUnstakeData = async (
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount, decimals } = await getTokenAmount(
+  const { amount: _amount } = await getTokenAmount(
     _token.address,
     provider,
     accountAddress,
@@ -47,6 +42,41 @@ export const getUnstakeData = async (
   let address = null;
   let abi = [];
   const params = [];
+
+  switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(accountAddress);
+      params.push(_amount);
+      break;
+    }
+    case "lodestar":
+    case "kwenta": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName, "staking");
+      params.push(_amount);
+      break;
+    }
+    case "stargate": {
+      const key = true /* based on param */ ? "staking" : "staking-time";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
+
+      params.push(accountAddress);
+      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
+      break;
+    }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName);
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

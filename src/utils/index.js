@@ -18,49 +18,7 @@ import { getShortData } from "./protocol/short.js";
 import { getLockData } from "./protocol/lock.js";
 import { getUnlockData } from "./protocol/unlock.js";
 import { getVoteData } from "./protocol/vote.js";
-import aaveAbi from "../abis/aave.abi.js";
-import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
-import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
-import compoundWETHAbi from "../abis/compound-weth.abi.js";
-import hopAbi from "../abis/hop.abi.js";
-import lidoAbi from "../abis/lido.abi.js";
-import gmxAbi from "../abis/gmx.abi.js";
-import rocketpoolAbi from "../abis/rocketpool.abi.js";
-import pendleAbi from "../abis/pendle.abi.js";
-import jonesdaoAbi from "../abis/jonesdao.abi.js";
-import lodestarStakingAbi from "../abis/lodestar-staking.abi.js";
-import lodestarVotingAbi from "../abis/lodestar-voting.abi.js";
-import dolomiteAbi from "../abis/dolomite.abi.js";
-import dolomiteAdminAbi from "../abis/dolomite-admin.abi.js";
-import plutusMasterchefAbi from "../abis/plutus-masterchef.abi.js";
-import plutusStakingAbi from "../abis/plutus-staking.abi.js";
-import rodeoAbi from "../abis/rodeo.abi.js";
-import stargateStakingAbi from "../abis/stargate-staking.abi.js";
-import stargateStakingTimeAbi from "../abis/stargate-staking-time.abi.js";
-import thenaVotingAbi from "../abis/thena-voting.abi.js";
-
-const abis = {
-  aave: aaveAbi,
-  "compound-rewards": compoundRewardsAbi,
-  "compound-usdc": compoundUSDCAbi,
-  "compound-weth": compoundWETHAbi,
-  hop: hopAbi,
-  lido: lidoAbi,
-  gmx: gmxAbi,
-  rocketpool: rocketpoolAbi,
-  pendle: pendleAbi,
-  jonesdao: jonesdaoAbi,
-  "lodestar-staking": lodestarStakingAbi,
-  "lodestar-voting": lodestarVotingAbi,
-  dolomite: dolomiteAbi,
-  "dolomite-admin": dolomiteAdminAbi,
-  "plutus-masterchef": plutusMasterchefAbi,
-  "plutus-staking": plutusStakingAbi,
-  rodeo: rodeoAbi,
-  "stargate-staking": stargateStakingAbi,
-  "stargate-staking-time": stargateStakingTimeAbi,
-  "thena-voting": thenaVotingAbi,
-};
+import { abis } from "../abis";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -196,14 +154,13 @@ export const getABIForProtocol = (protocol, key) =>
 export const getFunctionName = (protocol, action) => {
   switch (protocol) {
     case "aave":
-      if (action === "deposit") return "stake";
-      if (action === "withdraw") return "redeem";
-      return "claimRewards";
+      if (action === "unstake") return "redeem";
+      if (action === "claim") return "claimRewards";
+      return action;
     case "compound":
       if (action === "deposit") return "supply";
       return action;
     case "hop":
-      if (action === "deposit") return "stake";
       if (action === "claim") return "getReward";
       return action;
     case "rocketpool":
@@ -1229,7 +1186,7 @@ export const getShortTx = async (data) => {
       outputToken,
       leverageMultiplier,
     } = data;
-    const { transactions, error } = await getProtocolData(
+    const { transactions, error } = await getShortData(
       accountAddress,
       protocolName,
       chainName,
@@ -1310,59 +1267,6 @@ export const getVoteTx = async (data) => {
     return { status: "error", message: "Bad request" };
   }
 };
-
-/* 
-export const getYieldTx = async (data) => {
-  try {
-    const { accountAddress, chainName, token, amount } = data;
-    const _token = await getTokenAddressForChain(token, chainName);
-    if (!_token) {
-      return {
-        status: "error",
-        message: "Token not found on the specified chain.",
-      };
-    }
-    const whitelistedProtocols = ["aave", "compound"]; // TODO: update supported protocols list in the future
-    const {
-      data: { data: poolData },
-    } = await axios.get(`https://yields.llama.fi/pools`);
-    let pools = poolData.filter(
-      (pool) =>
-        pool.chain.toLowerCase() === chainName.toLowerCase() &&
-        whitelistedProtocols.includes(pool.project) &&
-        (!pool.underlyingTokens ||
-          pool.underlyingTokens
-            .map((x) => x.toLowerCase())
-            .includes(_token.address.toLowerCase()))
-    );
-    if (pools.length === 0) {
-      return {
-        status: "error",
-        message: "Protocol not found for given chain and token.",
-      };
-    }
-    pools = pools.sort((a, b) => b.apy - a.apy);
-    const bestPool = pools[0];
-    const { transactions, error } = await getProtocolData(
-      accountAddress,
-      chainName,
-      bestPool.project,
-      "deposit",
-      token,
-      null,
-      amount
-    );
-    if (error) {
-      return { status: "error", message: error };
-    } else {
-      return { status: "success", transactions };
-    }
-  } catch (err) {
-    console.log("Yield error:", err);
-    return { status: "error", message: "Bad request" };
-  }
-};
- */
 
 export const getTransferTx = async (data) => {
   try {

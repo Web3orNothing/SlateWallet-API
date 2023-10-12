@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
   getProtocolAddressForChain,
@@ -12,7 +11,6 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getDepositData = async (
@@ -37,9 +35,8 @@ export const getDepositData = async (
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount, decimals } = await getTokenAmount(
+  const { amount: _amount } = await getTokenAmount(
     _token.address,
     provider,
     accountAddress,
@@ -51,81 +48,12 @@ export const getDepositData = async (
   let abi = [];
   const params = [];
 
-  /* 
   switch (_protocolName) {
-    case "sushiswap":
-    case "uniswap":
-    case "curve":
-    case "balancer": {
-      switch (action) {
-        case "swap": {
-          let dexList;
-          if (_protocolName === "sushiswap") {
-            dexList = ["SushiSwap"];
-          } else if (_protocolName === "uniswap") {
-            dexList = ["UniswapV2", "UniswapV3"];
-          } else if (_protocolName === "curve") {
-            dexList = ["Curve"];
-          } else if (_protocolName === "balancer") {
-            dexList = ["Balancer"];
-          }
-          const data = await getQuoteFromParaSwap(
-            chainId,
-            accountAddress,
-            {
-              address: _token.address,
-              symbol: token,
-              decimals,
-            },
-            {
-              address: _outputToken.address,
-              symbol: outputToken,
-            },
-            amount,
-            gasPrice,
-            1,
-            dexList
-          );
-          if (data) {
-            const { tx } = data;
-            const transactions = [];
-            if (_token.address !== NATIVE_TOKEN) {
-              const approveTxs = await getApproveData(
-                provider,
-                _token.address,
-                _amount,
-                accountAddress,
-                tx.to
-              );
-              transactions.push(...approveTxs);
-            }
-            transactions.push({
-              to: tx.to,
-              value: tx.value,
-              data: tx.data,
-              ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-            });
-            return { transactions };
-          } else {
-            return {
-              error: "No swap route found",
-            };
-          }
-        }
-        default: {
-          return {
-            error: "Protocol action not supported",
-          };
-        }
-      }
-    }
-    case "aave": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
-      abi = getABIForProtocol(_protocolName);
-      params.push(accountAddress);
+    case "compound": {
+      params.push(_token.address);
       params.push(_amount);
 
-      if (_token.address !== NATIVE_TOKEN && action === "deposit") {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
           _token.address,
@@ -136,69 +64,12 @@ export const getDepositData = async (
       }
       break;
     }
-    case "compound": {
-      const funcName = getFunctionName(_protocolName, action);
-      address = getProtocolAddressForChain(
-        _protocolName,
-        chainId,
-        funcName === "claim" ? "rewards" : token.toLowerCase()
-      );
-      abi = getABIForProtocol(
-        _protocolName,
-        funcName === "claim" ? "rewards" : token.toLowerCase()
-      );
-      if (funcName === "claim") {
-        const comet = getProtocolAddressForChain(
-          _protocolName,
-          chainId,
-          token.toLowerCase()
-        );
-        params.push(comet);
-        params.push(accountAddress);
-        params.push(true);
-      } else {
-        params.push(_token.address);
-        params.push(_amount);
-
-        if (_token.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTxs = await getApproveData(
-            provider,
-            _token.address,
-            _amount,
-            accountAddress,
-            address
-          );
-        }
-      }
-      break;
-    }
-    case "hop": {
-      let key = inputToken.toLowerCase();
-      if (outputToken.toLowerCase() !== "hop")
-        key += `-${outputToken.toLowerCase()}`;
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName);
-      if (action !== "claim") {
-        params.push(_inputAmount);
-
-        if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTxs = await getApproveData(
-            provider,
-            _inputToken.address,
-            _inputAmount,
-            spender,
-            address
-          );
-        }
-      }
-      break;
-    }
     case "lido": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _maxDepositsCount );
-      params.push(0 /* uint256 _stakingModuleId );
-      params.push("0x0" /* bytes _depositCalldata );
+      params.push(0 /* uint256 _maxDepositsCount */);
+      params.push(0 /* uint256 _stakingModuleId */);
+      params.push("0x0" /* bytes _depositCalldata */);
       break;
     }
     case "gmx": {
@@ -206,9 +77,9 @@ export const getDepositData = async (
       abi = getABIForProtocol(_protocolName);
       // TODO: Build transaction
       /*
-       // Get execution fee and minimum USD value for amount of input token
+       // Get execution fee and minimum USD value for amount of  token
       const executionFee = await positionRouter.minExecutionFee();
-      const usdMin = await vault.tokenToUsdMin(inputToken, inputAmount);
+      const usdMin = await vault.tokenToUsdMin(Token, Amount);
 
       // Populate transaction data
       if (action == "long" || action == "short") {
@@ -232,7 +103,7 @@ export const getDepositData = async (
         }
 
         // Set allowance if allowance is not enough
-        if (allowance.lt(inputAmount)) {
+        if (allowance.lt(Amount)) {
           // If allowance is not zero, reset it to 0
           if (!allowance.isZero()) {
             transactions.push(
@@ -242,11 +113,11 @@ export const getDepositData = async (
               )
             );
           }
-          // Approve router to spend amount of input token
+          // Approve router to spend amount of  token
           transactions.push(
             await token.populateTransaction.approve(
               addresses[network].router,
-              inputAmount
+              Amount
             )
           );
         }
@@ -255,12 +126,12 @@ export const getDepositData = async (
 
         if (action == "long") {
           // Get transaction data for creation of long position
-          const priceMax = await vault.getMaxPrice(inputToken);
+          const priceMax = await vault.getMaxPrice(Token);
           transactions.push({
             ...(await positionRouter.populateTransaction.createIncreasePosition(
-              [inputToken],
+              [Token],
               outputToken,
-              inputAmount,
+              Amount,
               0, // Minimum out when swap
               sizeDelta, // USD value of the change in position size
               true, // Whether to long or short
@@ -273,12 +144,12 @@ export const getDepositData = async (
           });
         } else {
           // Get transaction data for creation of short position
-          const priceMin = await vault.getMinPrice(inputToken);
+          const priceMin = await vault.getMinPrice(Token);
           transactions.push({
             ...(await positionRouter.populateTransaction.createIncreasePosition(
-              [inputToken],
+              [Token],
               outputToken,
-              inputAmount,
+              Amount,
               0, // Minimum out when swap
               sizeDelta, // USD value of the change in position size
               false, // Whether to long or short
@@ -292,16 +163,16 @@ export const getDepositData = async (
         }
       } else {
         // Determine whether it's long or short
-        const isLong = !(await vault.stableTokens(inputToken));
+        const isLong = !(await vault.stableTokens(Token));
         const acceptablePrice = isLong
-          ? await vault.getMinPrice(inputToken)
-          : await vault.getMaxPrice(inputToken);
+          ? await vault.getMinPrice(Token)
+          : await vault.getMaxPrice(Token);
         const sizeDelta = usdMin.mul(leverageMultiplier);
 
         // Get transaction data for position close
         transactions.push({
           ...(await positionRouter.populateTransaction.createDecreasePosition(
-            [inputToken],
+            [Token],
             outputToken,
             usdMin, // The amount of collateral in USD value to withdraw
             sizeDelta, // The USD value of the change in position size
@@ -316,152 +187,62 @@ export const getDepositData = async (
           value: executionFee.toNumber(),
         });
       } 
-
+*/
       break;
     }
     case "rocketpool": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      if (action === "withdraw") params.push(_inputAmount);
-      break;
-    }
-    case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      if (action === "withdraw") params.push(_inputAmount);
-      else if (action === "lock") {
-        params.push(_inputAmount);
-        params.push(0 /* uint128 newExpiry );
-
-        if (_inputToken.address !== NATIVE_TOKEN) {
-          approveTxs = await getApproveData(
-            provider,
-            _inputToken.address,
-            _inputAmount,
-            spender,
-            address
-          );
-        }
-      }
       break;
     }
     case "jonesdao": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid );
-      if (action !== "harvest") params.push(_inputAmount);
+      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
 
-      if (_inputToken.address !== NATIVE_TOKEN && action === "deposit") {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _inputToken.address,
-          _inputAmount,
+          _token.address,
+          _amount,
           spender,
           address
         );
-      }
-      break;
-    }
-    case "lodestar": {
-      const key = action === "vote" ? "voting" : "staking";
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
-      if (action === "vote") {
-        params.push([] /* string[] tokens );
-        params.push([] /* VotingConstants.OperationType[] operations );
-        params.push([] /* uint256[] shares );
-      } else {
-        if (action === "stake") params.push(spender);
-        params.push(_inputAmount);
-
-        if (_inputToken.address !== NATIVE_TOKEN && action === "stake") {
-          approveTxs = await getApproveData(
-            provider,
-            _inputToken.address,
-            _inputAmount,
-            spender,
-            address
-          );
-        }
       }
       break;
     }
     case "dolomite": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      /* build operation and execute 
+      /* build operation and execute */
       break;
     }
     case "plutus": {
-      const key =
-        action === "deposit" || action === "withdraw"
-          ? "masterchef"
-          : action === "stake" || stake === "unstake"
-          ? "staking"
-          : "voting";
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        `${token.toLowerCase()}${
-          outputToken.toLowerCase() === "hop"
-            ? ""
-            : `-${outputToken.toLowerCase()}`
-        }`
+        "masterchef"
       );
       abi = getABIForProtocol(_protocolName);
-      if (action !== "claim") {
-        params.push(_amount);
+      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
 
-        if (_token.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTxs = await getApproveData(
-            provider,
-            _token.address,
-            _amount,
-            accountAddress,
-            address
-          );
-        }
-      } else {
-        params.push([] /* IAccount.Command[] _commands);
-        params.push([] /* bytes[] _inputs);
-      }
-      break;
-    }
-    case "stargate": {
-      const key = true /* based on param  ? "staking" : "staking-time";
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
-
-      if (action === "unstake") params.push(spender);
-      params.push(0 /* uint256 _pid );
-      params.push(_inputAmount);
-
-      if (_inputToken.address !== NATIVE_TOKEN && action === "stake") {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _inputToken.address,
-          _inputAmount,
-          spender,
+          _token.address,
+          _amount,
+          accountAddress,
           address
         );
       }
       break;
     }
-    case "thena": {
-      if (action !== "vote") break;
-
-      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
-      abi = getABIForProtocol(_protocolName, "voting");
-      params.push(0 /* uint256 _tokenId );
-      params.push([] /* address[] _poolVote );
-      params.push([] /* uint256[] _weights );
-
-      break;
-    }
     default: {
       return { error: "Protocol not supported" };
     }
-  } */
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

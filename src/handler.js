@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import webpush from "web-push";
 
 import { Conditions } from "./db/index.js";
-import ORACLE_ABI from "./abi/oracle.js";
+import ORACLE_ABI from "./abis/oracle.abi.js";
 
 // Maintain subscriptions
 const subscriptions = {};

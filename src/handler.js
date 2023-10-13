@@ -2,7 +2,8 @@ import Sequelize from "sequelize";
 import { ethers } from "ethers";
 import webpush from "web-push";
 
-import { Conditions } from "./db/index.js";
+import { sequelize } from "./db/index.js";
+import conditionModel from "./db/condition.model.js";
 import ORACLE_ABI from "./abi/oracle.js";
 
 // Maintain subscriptions
@@ -32,6 +33,7 @@ export const checkTx = async () => {
 };
 
 const syncConditionTx = async () => {
+  const Conditions = await conditionModel(sequelize, Sequelize);
   const conditions = await Conditions.findAll({
     where: {
       [Sequelize.Op.or]: [
@@ -113,6 +115,7 @@ const getInterval = (recurrence) => {
 };
 
 const findConditionTx = async () => {
+  const Conditions = await conditionModel(sequelize, Sequelize);
   await Conditions.sync();
   return await Conditions.findAll({
     attributes: ["query", "useraddress", "id"],

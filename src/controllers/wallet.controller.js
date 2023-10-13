@@ -467,44 +467,50 @@ const getTokenBalance = async (req, res) => {
 };
 
 const simulate = async (req, res) => {
-  const { calls, conditionId, accountAddress, connectedChainName } = req.body;
-  const {
-    success,
-    transactionsList,
-    calls: updatedCalls,
-  } = await simulateCalls(calls, accountAddress, connectedChainName);
-  if (!isNaN(parseInt(conditionId))) {
-    const condition = await Conditions.findOne({
-      where: {
-        id: parseInt(conditionId),
-        useraddress: accountAddress.toLowerCase(),
-        completed: {
-          [Sequelize.Op.notIn]: ["completed", "canceled"],
-        },
-      },
-    });
-
-    if (!condition) {
-      return res
-        .status(httpStatus.NOT_FOUND)
-        .json({ status: "error", message: "Condition does not exist" });
-    }
-
-    if (condition.simstatus === 1 && !success) {
-      await condition.set("simstatus", 2);
-      await condition.save();
-    }
-  }
-  if (success) {
-    res.status(httpStatus.OK).json({
-      status: "success",
+  try {
+    const { calls, conditionId, accountAddress, connectedChainName } = req.body;
+    const {
+      success,
       transactionsList,
       calls: updatedCalls,
-    });
-  } else {
+    } = await simulateCalls(calls, accountAddress, connectedChainName);
+    if (!isNaN(parseInt(conditionId))) {
+      const condition = await Conditions.findOne({
+        where: {
+          id: parseInt(conditionId),
+          useraddress: accountAddress.toLowerCase(),
+          completed: {
+            [Sequelize.Op.notIn]: ["completed", "canceled"],
+          },
+        },
+      });
+
+      if (!condition) {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .json({ status: "error", message: "Condition does not exist" });
+      }
+
+      if (condition.simstatus === 1 && !success) {
+        await condition.set("simstatus", 2);
+        await condition.save();
+      }
+    }
+    if (success) {
+      res.status(httpStatus.OK).json({
+        status: "success",
+        transactionsList,
+        calls: updatedCalls,
+      });
+    } else {
+      res
+        .status(httpStatus.BAD_REQUEST)
+        .json({ status: "error", message: "Simulation failed" });
+    }
+  } catch {
     res
       .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Simulation Failed" });
+      .json({ status: "error", message: "Simulation failed" });
   }
 };
 

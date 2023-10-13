@@ -458,7 +458,9 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
   while (i < calls.length) {
     const curCall = calls[i];
     const curChainName = (
-      curCall.args["chainName"] || curCall.args["sourceChainName"]
+      curCall.args["chainName"] ||
+      curCall.args["sourceChainName"] ||
+      prevChainName
     ).toLowerCase();
     const curChainId = getChainIdFromName(curChainName);
     if (prevChainId === curChainId) {
@@ -536,6 +538,11 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     i++;
   }
 
+  prevChainName = (
+    prevCall.args["chainName"] ||
+    prevCall.args["sourceChainName"] ||
+    connectedChainName
+  ).toLowerCase();
   const state_objects = {};
   for (let i = 0; i < calls.length; i++) {
     const call = calls[i];
@@ -543,11 +550,10 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     let chainName;
 
     try {
-      const body = fillBody(call.args, address, connectedChainName);
+      const body = fillBody(call.args, address, prevChainName);
       const sourceChainName =
-        call.args["sourceChainName"] ||
-        call.args["chainName"] ||
-        connectedChainName;
+        call.args["sourceChainName"] || call.args["chainName"] || prevChainName;
+      prevChainName = sourceChainName;
       const chainId = getChainIdFromName(sourceChainName);
       if (call.name === "swap" || call.name === "bridge") {
         if (i < calls.length - 1) {
@@ -718,7 +724,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         calls[i + 1].args["amount"] = calls[i + 1].args["amount"] || amount;
       }
     } catch (err) {
-      console.log("Simulate error:", err);
+      console.log("Simulate error:", err.message, err.response.data);
       return { success: false, transactionsList: null, calls: null };
     }
   }

@@ -160,8 +160,10 @@ export const getABIForProtocol = (protocol, key) =>
 export const getFunctionName = (protocol, action) => {
   switch (protocol) {
     case "aave":
-      if (action === "unstake") return "redeem";
-      if (action === "claim") return "claimRewards";
+      if (action === "deposit" || action === "lend") return "supply";
+      if (action === "withdraw") return "withdraw";
+      if (action === "borrow") return "borrow";
+      if (action === "repay") return "repay";
       return action;
     case "compound":
       if (action === "deposit") return "supply";
@@ -186,6 +188,8 @@ export const getFunctionName = (protocol, action) => {
     case "kwenta":
       if (action === "long" || action === "short" || action === "close")
         return "execute";
+    case "yieldyak":
+      if (action === "swap") return "swapNoSplit";
       return action;
     default:
       return action;
@@ -993,15 +997,25 @@ export const getBridgeTx = async (data, ignoreBalanceCheck = false) => {
 
 export const getDepositTx = async (data) => {
   try {
-    const { accountAddress, protocolName, chainName, poolName, token, amount } =
-      data;
+    const {
+      accountAddress,
+      protocolName,
+      chainName,
+      poolName,
+      token0,
+      amount0,
+      token1,
+      amount1,
+    } = data;
     const { transactions, error } = await getDepositData(
       accountAddress,
       protocolName,
       chainName,
       poolName,
-      token,
-      amount
+      token0,
+      amount0,
+      token1,
+      amount1
     );
     if (error) {
       return { status: "error", message: error };

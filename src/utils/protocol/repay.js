@@ -49,6 +49,15 @@ export const getRepayData = async (
   const params = [];
 
   switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(_token.address);
+      params.push(_amount);
+      params.push(2); // interest rate mode
+      params.push(accountAddress);
+      break;
+    }
     case "rodeo": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);

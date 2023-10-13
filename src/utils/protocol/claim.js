@@ -31,13 +31,6 @@ export const getClaimData = async (
   const params = [];
 
   switch (_protocolName) {
-    case "aave": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      params.push(accountAddress);
-      params.push(_amount);
-      break;
-    }
     case "compound": {
       address = getProtocolAddressForChain(_protocolName, chainId, "rewards");
       abi = getABIForProtocol(_protocolName, "rewards");

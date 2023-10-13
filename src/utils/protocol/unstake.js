@@ -44,13 +44,6 @@ export const getUnstakeData = async (
   const params = [];
 
   switch (_protocolName) {
-    case "aave": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      params.push(accountAddress);
-      params.push(_amount);
-      break;
-    }
     case "lodestar":
     case "kwenta": {
       address = getProtocolAddressForChain(_protocolName, chainId, "staking");

@@ -48,37 +48,51 @@ export const getQuoteFromLiFi = async (
   } catch {}
 };
 
-// export const getQuoteFromSynapse = async (
-//   sourceChainId,
-//   destChainId,
-//   account,
-//   sourceToken,
-//   destToken,
-//   amount
-// ) => {
-//   try {
-//     const queryParams = new URLSearchParams({
-//       fromChain: sourceChainId,
-//       toChain: destChainId,
-//       fromToken: "USDC",
-//       toToken: "USDC",
-//       amount: parseFloat(amount),
-//     });
-//     const { data } = await axios.get(
-//       `https://synapse-rest-api-v2.herokuapp.com/bridge?${queryParams}`
-//     );
-//     return {
-//       amountOut: estimate.toAmount,
-//       tx: {
-//         to: transactionRequest.to,
-//         value: BigNumber.from(transactionRequest.value).toString(),
-//         data: transactionRequest.data,
-//       },
-//     };
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
+export const getQuoteFromSynapse = async (
+  sourceChainId,
+  destChainId,
+  account,
+  sourceToken,
+  destToken,
+  amount
+) => {
+  try {
+    const apiBaseUrl = "https://synapse-rest-api-v2.herokuapp.com";
+    const headers = {
+      headers: {
+        accept: "application/json",
+      },
+    };
+    const bridgeParams = {
+      fromChain: sourceChainId,
+      toChain: destChainId,
+      fromToken: sourceToken.symbol,
+      toToken: destToken.symbol,
+      amount: utils.formatUnits(amount, sourceToken.decimals),
+    };
+    const url =
+      apiBaseUrl + "/bridge?" + new URLSearchParams(bridgeParams).toString();
+
+    const { data: quote } = await axios.get(url, headers);
+    bridgeParams.destAddress = account;
+    const {
+      data: { to, data },
+    } = await axios.get(
+      apiBaseUrl +
+        "/bridgeTxInfo?" +
+        new URLSearchParams(bridgeParams).toString(),
+      headers
+    );
+    return {
+      amountOut: BigNumber.from(quote.maxAmountOut).toString(),
+      tx: {
+        to,
+        value: sourceToken.address === NATIVE_TOKEN ? amount.toString() : "0",
+        data,
+      },
+    };
+  } catch {}
+};
 
 export const getQuoteFromAxelar = async (
   sourceChainId,
@@ -121,7 +135,7 @@ export const getQuoteFromAxelar = async (
 
 const bridgeRoutes = [
   getQuoteFromLiFi,
-  // getQuoteFromSynapse,
+  getQuoteFromSynapse,
   getQuoteFromAxelar,
 ];
 

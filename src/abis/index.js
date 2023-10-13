@@ -20,6 +20,8 @@ import rodeoAbi from "./rodeo.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
+import uniswapAbi from "../abis/uniswap.abi.js";
+import yieldYakAbi from "../abis/yield-yak.abi.js";
 
 export const abis = {
   aave: aaveAbi,
@@ -44,4 +46,6 @@ export const abis = {
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,
   "thena-voting": thenaVotingAbi,
+  uniswap: uniswapAbi,
+  yieldyak: yieldYakAbi,
 };

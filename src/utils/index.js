@@ -160,8 +160,7 @@ export const getABIForProtocol = (protocol, key) =>
 export const getFunctionName = (protocol, action) => {
   switch (protocol) {
     case "aave":
-      if (action === "unstake") return "redeem";
-      if (action === "claim") return "claimRewards";
+      if (action === "deposit" || action === "lend") return "supply";
       return action;
     case "compound":
       if (action === "deposit") return "supply";
@@ -186,6 +185,8 @@ export const getFunctionName = (protocol, action) => {
     case "kwenta":
       if (action === "long" || action === "short" || action === "close")
         return "execute";
+    case "yieldyak":
+      if (action === "swap") return "swapNoSplit";
       return action;
     default:
       return action;

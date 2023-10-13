@@ -9,6 +9,7 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
+// import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
 
 export const getWithdrawData = async (
   accountAddress,
@@ -25,13 +26,13 @@ export const getWithdrawData = async (
     throw new Error("Invalid chain name");
   }
 
+  const rpcUrl = getRpcUrlForChain(chainId);
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
   const _token = await getTokenAddressForChain(token, chainName);
   if (!_token) {
     return { error: "Token not found on the specified chain." };
   }
-
-  const rpcUrl = getRpcUrlForChain(chainId);
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
   const { amount: _amount } = await getTokenAmount(
     _token.address,
@@ -40,11 +41,29 @@ export const getWithdrawData = async (
     amount
   );
 
+  let _token1;
+  if (token1) {
+    _token1 = await getTokenAddressForChain(_token1, chainName);
+    if (!_token1) {
+      return {
+        error: "Token not found on the specified chain.",
+      };
+    }
+  }
+
   let address = null;
   let abi = [];
   const params = [];
 
   switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(_token.address);
+      params.push(_amount);
+      params.push(accountAddress);
+      break;
+    }
     case "compound": {
       address = getProtocolAddressForChain(
         _protocolName,
@@ -113,6 +132,48 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    // case "uniswap": {
+    //   address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    //   abi = getABIForProtocol(_protocolName);
+    //   const isToken0Eth = token.toLowerCase() === "eth";
+    //   const isToken1Eth = token1.toLowerCase() === "eth";
+    //   const hasEth = isToken0Eth || isToken1Eth;
+    //   if (hasEth) {
+    //     // removeLiquidityETH
+    //     funcName = "removeLiquidityETH";
+    //     params.push(isToken0Eth ? _token1.address : _token.address);
+    //     params.push(_amount);
+    //     params.push(0);
+    //     params.push(0);
+    //   } else {
+    //     // removeLiquidity
+    //     funcName = "removeLiquidity";
+    //     params.push(_token.address);
+    //     params.push(_token1.address);
+    //     params.push(_amount);
+    //     params.push(0);
+    //     params.push(0);
+    //   }
+    //   const factoryContract = new ethers.Contract(
+    //     "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    //     uniswapFactoryAbi,
+    //     provider
+    //   );
+    //   const lpTokenAddress = await factoryContract.getPair(
+    //     _token.address,
+    //     _token1.address
+    //   );
+    //   approveTxs = await getApproveData(
+    //     provider,
+    //     lpTokenAddress,
+    //     _amount,
+    //     spender,
+    //     address
+    //   );
+    //   params.push(address);
+    //   params.push(Math.floor(Date.now() / 1000) + 1200);
+    //   break;
+    // }
     default: {
       return { error: "Protocol not supported" };
     }

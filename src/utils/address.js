@@ -1,8 +1,7 @@
 export default {
   aave: {
     1: {
-      stkAAVE: "0xaa9faa887bce5182c39f68ac46c43f36723c395b",
-      stkABPT: "0xa1116930326d21fb917d5a27f1e9943a9595fb47",
+      default: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
     },
   },
   compound: {
@@ -195,6 +194,11 @@ export default {
   thena: {
     56: {
       voting: "0x3A1D0952809F4948d15EBCe8d345962A282C4fCb",
+    },
+  },
+  yieldyak: {
+    43114: {
+      default: "0xC4729E56b831d74bBc18797e0e17A295fA77488c",
     },
   },
 };

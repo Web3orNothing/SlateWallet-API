@@ -64,7 +64,7 @@ export const getQuoteFrom1inch = async (
     amount: amount.toString(),
     from: account,
     slippage,
-    disableEstimate: false,
+    disableEstimate: true,
     allowPartialFill: false,
   };
   const url =
@@ -80,6 +80,50 @@ export const getQuoteFrom1inch = async (
         data: data.tx.data,
       },
       source: "1inch",
+    };
+  } catch {}
+};
+
+export const getQuoteFromSynapse = async (
+  chainId,
+  account,
+  tokenIn,
+  tokenOut,
+  amount,
+  _,
+  slippage = 1
+) => {
+  const apiBaseUrl = "https://synapse-rest-api-v2.herokuapp.com";
+  const headers = {
+    headers: {
+      accept: "application/json",
+    },
+  };
+  const swapParams = {
+    chain: chainId,
+    fromToken: tokenIn.symbol,
+    toToken: tokenOut.symbol,
+    amount: utils.formatUnits(amount, tokenIn.decimals),
+  };
+  const url =
+    apiBaseUrl + "/swap?" + new URLSearchParams(swapParams).toString();
+
+  try {
+    const { data: quote } = await axios.get(url, headers);
+    const {
+      data: { to, data },
+    } = await axios.get(
+      apiBaseUrl + "/swapTxInfo?" + new URLSearchParams(swapParams).toString(),
+      headers
+    );
+    return {
+      amountOut: BigNumber.from(quote.maxAmountOut).toString(),
+      tx: {
+        to,
+        value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
+        data,
+      },
+      source: "synapse",
     };
   } catch {}
 };
@@ -282,7 +326,7 @@ export const getQuoteFromKyber = async (
       amountOut: _data.amountOut,
       tx: {
         to: _data.routerAddress,
-        value: tokenIn.address === NATIVE_TOKEN ? amountIn : "0",
+        value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
         data: _data.data,
       },
       source: "kyber",
@@ -294,9 +338,10 @@ const swapRoutes = [
   getQuoteFromOpenOcean,
   getQuoteFrom1inch,
   getQuoteFromParaSwap,
-  // getQuoteFrom0x,
+  getQuoteFrom0x,
   // getQuoteFromFirebird,
   getQuoteFromKyber,
+  getQuoteFromSynapse,
 ];
 
 export const getBestSwapRoute = async (

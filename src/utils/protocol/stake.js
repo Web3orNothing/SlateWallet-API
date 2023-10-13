@@ -48,23 +48,6 @@ export const getStakeData = async (
   const params = [];
 
   switch (_protocolName) {
-    case "aave": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
-      abi = getABIForProtocol(_protocolName);
-      params.push(accountAddress);
-      params.push(_amount);
-
-      if (_token.address !== NATIVE_TOKEN && action === "deposit") {
-        approveTxs = await getApproveData(
-          provider,
-          _token.address,
-          _amount,
-          accountAddress,
-          address
-        );
-      }
-      break;
-    }
     case "hop": {
       let key = token.toLowerCase();
       const outputToken = "TODO: lp token 1 symbol";

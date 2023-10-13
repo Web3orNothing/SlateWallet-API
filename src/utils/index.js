@@ -161,9 +161,6 @@ export const getFunctionName = (protocol, action) => {
   switch (protocol) {
     case "aave":
       if (action === "deposit" || action === "lend") return "supply";
-      if (action === "withdraw") return "withdraw";
-      if (action === "borrow") return "borrow";
-      if (action === "repay") return "repay";
       return action;
     case "compound":
       if (action === "deposit") return "supply";
@@ -997,25 +994,15 @@ export const getBridgeTx = async (data, ignoreBalanceCheck = false) => {
 
 export const getDepositTx = async (data) => {
   try {
-    const {
-      accountAddress,
-      protocolName,
-      chainName,
-      poolName,
-      token0,
-      amount0,
-      token1,
-      amount1,
-    } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getDepositData(
       accountAddress,
       protocolName,
       chainName,
       poolName,
-      token0,
-      amount0,
-      token1,
-      amount1
+      token,
+      amount
     );
     if (error) {
       return { status: "error", message: error };

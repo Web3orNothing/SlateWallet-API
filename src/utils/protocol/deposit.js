@@ -18,10 +18,8 @@ export const getDepositData = async (
   protocolName,
   chainName,
   poolName,
-  token0,
-  amount0,
-  token1,
-  amount1
+  token,
+  amount
 ) => {
   const _protocolName = protocolName.toLowerCase();
 
@@ -33,35 +31,35 @@ export const getDepositData = async (
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
-  const _token0 = await getTokenAddressForChain(token0, chainName);
-  if (!_token0) {
+  const _token = await getTokenAddressForChain(token, chainName);
+  if (!_token) {
     return { error: "Token not found on the specified chain." };
   }
 
-  const { amount: _amount0 } = await getTokenAmount(
-    _token0.address,
+  const { amount: _amount } = await getTokenAmount(
+    _token.address,
     provider,
     accountAddress,
-    amount0
+    amount
   );
 
-  let _token1;
-  let _amount1;
-  if (token1) {
-    _token1 = await getTokenAddressForChain(_token1, chainName);
-    if (!_token1) {
-      return {
-        error: "Token not found on the specified chain.",
-      };
-    }
-    const { amount } = await getTokenAmount(
-      _token1.address,
-      provider,
-      accountAddress,
-      amount1
-    );
-    _amount1 = amount;
-  }
+  // let _token1;
+  // let _amount1;
+  // if (token1) {
+  //   _token1 = await getTokenAddressForChain(_token1, chainName);
+  //   if (!_token1) {
+  //     return {
+  //       error: "Token not found on the specified chain.",
+  //     };
+  //   }
+  //   const { amount } = await getTokenAmount(
+  //     _token1.address,
+  //     provider,
+  //     accountAddress,
+  //     amount1
+  //   );
+  //   _amount1 = amount;
+  // }
 
   let approveTxs = [];
   let address = null;
@@ -74,18 +72,16 @@ export const getDepositData = async (
     case "aave": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(_token0.address);
-      params.push(_amount0);
+      params.push(_token.address);
+      params.push(_amount);
       params.push(accountAddress);
       params.push(0);
 
-      if (
-        _token0.address !== NATIVE_TOKEN
-      ) {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _token0.address,
-          _amount0,
+          _token.address,
+          _amount,
           accountAddress,
           address
         );
@@ -93,14 +89,14 @@ export const getDepositData = async (
       break;
     }
     case "compound": {
-      params.push(_token0.address);
-      params.push(_amount0);
+      params.push(_token.address);
+      params.push(_amount);
 
-      if (_token0.address !== NATIVE_TOKEN) {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _token0.address,
-          _amount0,
+          _token.address,
+          _amount,
           accountAddress,
           address
         );
@@ -242,13 +238,13 @@ export const getDepositData = async (
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
       params.push(0 /* uint256 _pid */);
-      params.push(_amount0);
+      params.push(_amount);
 
-      if (_token0.address !== NATIVE_TOKEN) {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _token0.address,
-          _amount0,
+          _token.address,
+          _amount,
           spender,
           address
         );
@@ -269,72 +265,72 @@ export const getDepositData = async (
       );
       abi = getABIForProtocol(_protocolName);
       params.push(0 /* uint256 _pid */);
-      params.push(_amount0);
+      params.push(_amount);
 
-      if (_token0.address !== NATIVE_TOKEN) {
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _token0.address,
-          _amount0,
+          _token.address,
+          _amount,
           accountAddress,
           address
         );
       }
       break;
     }
-    case "uniswap": {
-      address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-      abi = getABIForProtocol(_protocolName);
-      const isToken0Eth = token0.toLowerCase() === "eth";
-      const isToken1Eth = token1.toLowerCase() === "eth";
-      const hasEth = isToken0Eth || isToken1Eth;
-      if (hasEth) {
-        // addLiquidityETH
-        funcName = "addLiquidityETH";
-        value = isToken0Eth
-          ? utils.parseEther(amount0)
-          : utils.parseEther(amount1);
-        params.push(isToken0Eth ? _token1.address : _token0.address);
-        params.push(isToken0Eth ? _amount1 : _amount0);
-        params.push(0);
+    // case "uniswap": {
+    //   address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    //   abi = getABIForProtocol(_protocolName);
+    //   const isToken0Eth = token.toLowerCase() === "eth";
+    //   const isToken1Eth = token1.toLowerCase() === "eth";
+    //   const hasEth = isToken0Eth || isToken1Eth;
+    //   if (hasEth) {
+    //     // addLiquidityETH
+    //     funcName = "addLiquidityETH";
+    //     value = isToken0Eth
+    //       ? utils.parseEther(amount)
+    //       : utils.parseEther(amount1);
+    //     params.push(isToken0Eth ? _token1.address : _token.address);
+    //     params.push(isToken0Eth ? _amount1 : _amount);
+    //     params.push(0);
 
-        approveTxs = await getApproveData(
-          provider,
-          isToken0Eth ? _token1.address : _token0.address,
-          isToken0Eth ? _amount1 : _amount0,
-          spender,
-          address
-        );
-      } else {
-        // addLiquidity
-        funcName = "addLiquidity";
-        params.push(_token0.address);
-        params.push(_token1.address);
-        params.push(_amount0);
-        params.push(_amount1);
-        params.push(0);
-        params.push(0);
+    //     approveTxs = await getApproveData(
+    //       provider,
+    //       isToken0Eth ? _token1.address : _token.address,
+    //       isToken0Eth ? _amount1 : _amount,
+    //       spender,
+    //       address
+    //     );
+    //   } else {
+    //     // addLiquidity
+    //     funcName = "addLiquidity";
+    //     params.push(_token.address);
+    //     params.push(_token1.address);
+    //     params.push(_amount);
+    //     params.push(_amount1);
+    //     params.push(0);
+    //     params.push(0);
 
-        const approveTx1 = await getApproveData(
-          provider,
-          _token0.address,
-          _amount0,
-          spender,
-          address
-        );
-        const approveTx2 = await getApproveData(
-          provider,
-          _token1.address,
-          _amount1,
-          spender,
-          address
-        );
-        approveTxs = [...approveTx1, ...approveTx2];
-      }
-      params.push(address);
-      params.push(Math.floor(Date.now() / 1000) + 1200);
-      break;
-    }
+    //     const approveTx1 = await getApproveData(
+    //       provider,
+    //       _token.address,
+    //       _amount,
+    //       spender,
+    //       address
+    //     );
+    //     const approveTx2 = await getApproveData(
+    //       provider,
+    //       _token1.address,
+    //       _amount1,
+    //       spender,
+    //       address
+    //     );
+    //     approveTxs = [...approveTx1, ...approveTx2];
+    //   }
+    //   params.push(address);
+    //   params.push(Math.floor(Date.now() / 1000) + 1200);
+    //   break;
+    // }
     default: {
       return { error: "Protocol not supported" };
     }

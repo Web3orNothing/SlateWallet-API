@@ -9,16 +9,15 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
-import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
+// import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
 
 export const getWithdrawData = async (
   accountAddress,
   protocolName,
   chainName,
   poolName,
-  token0,
-  amount0,
-  token1
+  token,
+  amount
 ) => {
   const _protocolName = protocolName.toLowerCase();
 
@@ -30,16 +29,16 @@ export const getWithdrawData = async (
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
-  const _token0 = await getTokenAddressForChain(token0, chainName);
-  if (!_token0) {
+  const _token = await getTokenAddressForChain(token, chainName);
+  if (!_token) {
     return { error: "Token not found on the specified chain." };
   }
 
-  const { amount: _amount0 } = await getTokenAmount(
-    _token0.address,
+  const { amount: _amount } = await getTokenAmount(
+    _token.address,
     provider,
     accountAddress,
-    amount0
+    amount
   );
 
   let _token1;
@@ -60,8 +59,8 @@ export const getWithdrawData = async (
     case "aave": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(_token0.address);
-      params.push(_amount0);
+      params.push(_token.address);
+      params.push(_amount);
       params.push(accountAddress);
       break;
     }
@@ -69,30 +68,30 @@ export const getWithdrawData = async (
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        token0.toLowerCase()
+        token.toLowerCase()
       );
-      abi = getABIForProtocol(_protocolName, token0.toLowerCase());
-      params.push(_token0.address);
-      params.push(_amount0);
+      abi = getABIForProtocol(_protocolName, token.toLowerCase());
+      params.push(_token.address);
+      params.push(_amount);
       break;
     }
     case "hop": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(_amount0);
+      params.push(_amount);
       break;
     }
     case "rocketpool":
     case "pendle": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(_amount0);
+      params.push(_amount);
       break;
     }
     case "rodeo": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(_amount0);
+      params.push(_amount);
       params.push(accountAddress);
       break;
     }
@@ -104,14 +103,14 @@ export const getWithdrawData = async (
       );
       abi = getABIForProtocol(_protocolName);
       params.push(0 /* uint256 _pid */);
-      params.push(_amount0);
+      params.push(_amount);
       break;
     }
     case "jonesdao": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
       params.push(0 /* uint256 _pid */);
-      params.push(_amount0);
+      params.push(_amount);
       break;
     }
     case "stargate": {
@@ -121,51 +120,51 @@ export const getWithdrawData = async (
 
       params.push(accountAddress);
       params.push(0 /* uint256 _pid */);
-      params.push(_amount0);
+      params.push(_amount);
       break;
     }
-    case "uniswap": {
-      address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-      abi = getABIForProtocol(_protocolName);
-      const isToken0Eth = token0.toLowerCase() === "eth";
-      const isToken1Eth = token1.toLowerCase() === "eth";
-      const hasEth = isToken0Eth || isToken1Eth;
-      if (hasEth) {
-        // removeLiquidityETH
-        funcName = "removeLiquidityETH";
-        params.push(isToken0Eth ? _token1.address : _token0.address);
-        params.push(_amount0);
-        params.push(0);
-        params.push(0);
-      } else {
-        // removeLiquidity
-        funcName = "removeLiquidity";
-        params.push(_token0.address);
-        params.push(_token1.address);
-        params.push(_amount0);
-        params.push(0);
-        params.push(0);
-      }
-      const factoryContract = new ethers.Contract(
-        "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-        uniswapFactoryAbi,
-        provider
-      );
-      const lpTokenAddress = await factoryContract.getPair(
-        _token0.address,
-        _token1.address
-      );
-      approveTxs = await getApproveData(
-        provider,
-        lpTokenAddress,
-        _amount0,
-        spender,
-        address
-      );
-      params.push(address);
-      params.push(Math.floor(Date.now() / 1000) + 1200);
-      break;
-    }
+    // case "uniswap": {
+    //   address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    //   abi = getABIForProtocol(_protocolName);
+    //   const isToken0Eth = token.toLowerCase() === "eth";
+    //   const isToken1Eth = token1.toLowerCase() === "eth";
+    //   const hasEth = isToken0Eth || isToken1Eth;
+    //   if (hasEth) {
+    //     // removeLiquidityETH
+    //     funcName = "removeLiquidityETH";
+    //     params.push(isToken0Eth ? _token1.address : _token.address);
+    //     params.push(_amount);
+    //     params.push(0);
+    //     params.push(0);
+    //   } else {
+    //     // removeLiquidity
+    //     funcName = "removeLiquidity";
+    //     params.push(_token.address);
+    //     params.push(_token1.address);
+    //     params.push(_amount);
+    //     params.push(0);
+    //     params.push(0);
+    //   }
+    //   const factoryContract = new ethers.Contract(
+    //     "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    //     uniswapFactoryAbi,
+    //     provider
+    //   );
+    //   const lpTokenAddress = await factoryContract.getPair(
+    //     _token.address,
+    //     _token1.address
+    //   );
+    //   approveTxs = await getApproveData(
+    //     provider,
+    //     lpTokenAddress,
+    //     _amount,
+    //     spender,
+    //     address
+    //   );
+    //   params.push(address);
+    //   params.push(Math.floor(Date.now() / 1000) + 1200);
+    //   break;
+    // }
     default: {
       return { error: "Protocol not supported" };
     }

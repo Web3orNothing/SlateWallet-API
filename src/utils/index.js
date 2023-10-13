@@ -18,7 +18,7 @@ import { getShortData } from "./protocol/short.js";
 import { getLockData } from "./protocol/lock.js";
 import { getUnlockData } from "./protocol/unlock.js";
 import { getVoteData } from "./protocol/vote.js";
-import { abis } from "../abis";
+import { abis } from "../abis/index.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",

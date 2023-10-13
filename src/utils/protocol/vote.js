@@ -2,19 +2,18 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
-  getTokenAddressForChain,
   getProtocolAddressForChain,
   getFunctionData,
   getABIForProtocol,
   getFunctionName,
-  getTokenAmount,
 } from "../index.js";
 
-import { getQuoteFromParaSwap } from "../swap.js";
-import { NATIVE_TOKEN } from "../../constants.js";
-
-export const getVoteData = async (protocolName, chainName, poolName) => {
+export const getVoteData = async (
+  accountAddress,
+  protocolName,
+  chainName,
+  poolName
+) => {
   const _protocolName = protocolName.toLowerCase();
 
   const chainId = getChainIdFromName(chainName);
@@ -24,11 +23,35 @@ export const getVoteData = async (protocolName, chainName, poolName) => {
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
   let address = null;
   let abi = [];
   const params = [];
+
+  switch (_protocolName) {
+    case "lodestar": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
+      abi = getABIForProtocol(_protocolName, "voting");
+      params.push([] /* string[] tokens */);
+      params.push([] /* VotingConstants.OperationType[] operations */);
+      params.push([] /* uint256[] shares */);
+      break;
+    }
+    case "thena": {
+      if (action !== "vote") break;
+
+      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
+      abi = getABIForProtocol(_protocolName, "voting");
+      params.push(0 /* uint256 _tokenId */);
+      params.push([] /* address[] _poolVote */);
+      params.push([] /* uint256[] _weights */);
+
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

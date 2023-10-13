@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
   getProtocolAddressForChain,
@@ -12,10 +11,10 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getDepositData = async (
+  accountAddress,
   protocolName,
   chainName,
   poolName,
@@ -36,12 +35,11 @@ export const getDepositData = async (
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount, decimals } = await getTokenAmount(
+  const { amount: _amount } = await getTokenAmount(
     _token.address,
     provider,
-    spender,
+    accountAddress,
     amount
   );
 
@@ -50,78 +48,160 @@ export const getDepositData = async (
   let abi = [];
   const params = [];
 
-  /* 
   switch (_protocolName) {
-    case "sushiswap":
-    case "uniswap":
-    case "curve": {
-      switch (action) {
-        case "swap": {
-          let dexList;
-          if (_protocolName === "sushiswap") {
-            dexList = ["SushiSwap"];
-          } else if (_protocolName === "uniswap") {
-            dexList = ["UniswapV2", "UniswapV3"];
-          } else if (_protocolName === "curve") {
-            dexList = ["Curve"];
-          }
-          const data = await getQuoteFromParaSwap(
-            chainId,
-            spender,
-            {
-              address: _token.address,
-              symbol: token,
-              decimals,
-            },
-            {
-              address: _outputToken.address,
-              symbol: outputToken,
-            },
-            amount,
-            gasPrice,
-            1,
-            dexList
-          );
-          if (data) {
-            const { tx } = data;
-            const transactions = [];
-            if (_token.address !== NATIVE_TOKEN) {
-              const approveTxs = await getApproveData(
-                provider,
-                _token.address,
-                _amount,
-                spender,
-                tx.to
-              );
-              transactions.push(...approveTxs);
-            }
-            transactions.push({
-              to: tx.to,
-              value: tx.value,
-              data: tx.data,
-              ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-            });
-            return { transactions };
-          } else {
-            return {
-              error: "No swap route found",
-            };
-          }
-        }
-        default: {
-          return {
-            error: "Protocol action not supported",
-          };
-        }
-      }
-    }
-    case "aave": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
-      abi = getABIForProtocol(_protocolName);
-      params.push(spender);
+    case "compound": {
+      params.push(_token.address);
       params.push(_amount);
 
-      if (_token.address !== NATIVE_TOKEN && action === "deposit") {
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "lido": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(0 /* uint256 _maxDepositsCount */);
+      params.push(0 /* uint256 _stakingModuleId */);
+      params.push("0x0" /* bytes _depositCalldata */);
+      break;
+    }
+    case "gmx": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      // TODO: Build transaction
+      /*
+       // Get execution fee and minimum USD value for amount of  token
+      const executionFee = await positionRouter.minExecutionFee();
+      const usdMin = await vault.tokenToUsdMin(Token, Amount);
+
+      // Populate transaction data
+      if (action == "long" || action == "short") {
+        const isApprovedPlugin = await router.approvedPlugins(
+          account,
+          addresses[network].positionRouter
+        );
+        const allowance = await token.allowance(
+          account,
+          addresses[network].router
+        );
+
+        // If position router is not approved yet
+        if (!isApprovedPlugin) {
+          // Add position router to approved plugin list
+          transactions.push(
+            await router.populateTransaction.approvePlugin(
+              addresses[network].positionRouter
+            )
+          );
+        }
+
+        // Set allowance if allowance is not enough
+        if (allowance.lt(Amount)) {
+          // If allowance is not zero, reset it to 0
+          if (!allowance.isZero()) {
+            transactions.push(
+              await token.populateTransaction.approve(
+                addresses[network].router,
+                0
+              )
+            );
+          }
+          // Approve router to spend amount of  token
+          transactions.push(
+            await token.populateTransaction.approve(
+              addresses[network].router,
+              Amount
+            )
+          );
+        }
+
+        const sizeDelta = usdMin.mul(leverageMultiplier);
+
+        if (action == "long") {
+          // Get transaction data for creation of long position
+          const priceMax = await vault.getMaxPrice(Token);
+          transactions.push({
+            ...(await positionRouter.populateTransaction.createIncreasePosition(
+              [Token],
+              outputToken,
+              Amount,
+              0, // Minimum out when swap
+              sizeDelta, // USD value of the change in position size
+              true, // Whether to long or short
+              priceMax, // Acceptable price
+              executionFee, // Execution fee
+              constants.HashZero, // Referral code
+              constants.AddressZero // An optional callback contract
+            )),
+            value: executionFee.toNumber(),
+          });
+        } else {
+          // Get transaction data for creation of short position
+          const priceMin = await vault.getMinPrice(Token);
+          transactions.push({
+            ...(await positionRouter.populateTransaction.createIncreasePosition(
+              [Token],
+              outputToken,
+              Amount,
+              0, // Minimum out when swap
+              sizeDelta, // USD value of the change in position size
+              false, // Whether to long or short
+              priceMin, // Acceptable price
+              executionFee, // Execution fee
+              constants.HashZero, // Referral code
+              constants.AddressZero // An optional callback contract
+            )),
+            value: executionFee.toNumber(),
+          });
+        }
+      } else {
+        // Determine whether it's long or short
+        const isLong = !(await vault.stableTokens(Token));
+        const acceptablePrice = isLong
+          ? await vault.getMinPrice(Token)
+          : await vault.getMaxPrice(Token);
+        const sizeDelta = usdMin.mul(leverageMultiplier);
+
+        // Get transaction data for position close
+        transactions.push({
+          ...(await positionRouter.populateTransaction.createDecreasePosition(
+            [Token],
+            outputToken,
+            usdMin, // The amount of collateral in USD value to withdraw
+            sizeDelta, // The USD value of the change in position size
+            isLong, // Whether the position is a long or short
+            receiver, // The address to receive the withdrawn tokens
+            acceptablePrice, // Acceptable price
+            0, // Minimum out when swap
+            executionFee, // Execution fee
+            false, // Whether withdraw ETH when if WETH will be withdrawn
+            constants.AddressZero // // An optional callback contract
+          )),
+          value: executionFee.toNumber(),
+        });
+      } 
+*/
+      break;
+    }
+    case "rocketpool": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      break;
+    }
+    case "jonesdao": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
           _token.address,
@@ -132,72 +212,37 @@ export const getDepositData = async (
       }
       break;
     }
-    case "compound": {
-      const funcName = getFunctionName(_protocolName, action);
-      address = getProtocolAddressForChain(
-        _protocolName,
-        chainId,
-        funcName === "claim" ? "rewards" : token.toLowerCase()
-      );
-      abi = getABIForProtocol(
-        _protocolName,
-        funcName === "claim" ? "rewards" : token.toLowerCase()
-      );
-      if (funcName === "claim") {
-        const comet = getProtocolAddressForChain(
-          _protocolName,
-          chainId,
-          token.toLowerCase()
-        );
-        params.push(comet);
-        params.push(spender);
-        params.push(true);
-      } else {
-        params.push(_token.address);
-        params.push(_amount);
-
-        if (_token.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTxs = await getApproveData(
-            provider,
-            _token.address,
-            _amount,
-            spender,
-            address
-          );
-        }
-      }
+    case "dolomite": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      /* build operation and execute */
       break;
     }
-    case "hop": {
+    case "plutus": {
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        `${token.toLowerCase()}${
-          outputToken.toLowerCase() === "hop"
-            ? ""
-            : `-${outputToken.toLowerCase()}`
-        }`
+        "masterchef"
       );
       abi = getABIForProtocol(_protocolName);
-      if (action !== "claim") {
-        params.push(_amount);
+      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
 
-        if (_token.address !== NATIVE_TOKEN && action === "deposit") {
-          approveTxs = await getApproveData(
-            provider,
-            _token.address,
-            _amount,
-            spender,
-            address
-          );
-        }
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
       }
       break;
     }
     default: {
       return { error: "Protocol not supported" };
     }
-  } */
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

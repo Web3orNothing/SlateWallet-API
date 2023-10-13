@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
   getProtocolAddressForChain,
@@ -12,10 +11,15 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
-export const getStakeData = async (protocolName, chainName, token, amount) => {
+export const getStakeData = async (
+  accountAddress,
+  protocolName,
+  chainName,
+  token,
+  amount
+) => {
   const _protocolName = protocolName.toLowerCase();
 
   const chainId = getChainIdFromName(chainName);
@@ -30,12 +34,11 @@ export const getStakeData = async (protocolName, chainName, token, amount) => {
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount, decimals } = await getTokenAmount(
+  const { amount: _amount } = await getTokenAmount(
     _token.address,
     provider,
-    spender,
+    accountAddress,
     amount
   );
 
@@ -43,6 +46,98 @@ export const getStakeData = async (protocolName, chainName, token, amount) => {
   let address = null;
   let abi = [];
   const params = [];
+
+  switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "stkAAVE");
+      abi = getABIForProtocol(_protocolName);
+      params.push(accountAddress);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN && action === "deposit") {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "hop": {
+      let key = token.toLowerCase();
+      const outputToken = "TODO: lp token 1 symbol";
+      if (outputToken.toLowerCase() !== "hop")
+        key += `-${outputToken.toLowerCase()}`;
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "lodestar": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName, "staking");
+      params.push(accountAddress);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "kwenta": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName, "staking");
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

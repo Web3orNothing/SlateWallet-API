@@ -4,7 +4,7 @@ import webpush from "web-push";
 
 import { sequelize } from "./db/index.js";
 import conditionModel from "./db/condition.model.js";
-import ORACLE_ABI from "./abi/oracle.js";
+import ORACLE_ABI from "./abis/oracle.abi.js";
 
 // Maintain subscriptions
 const subscriptions = {};

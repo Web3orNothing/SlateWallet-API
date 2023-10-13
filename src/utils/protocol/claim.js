@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getProtocolAddressForChain,
   getFunctionData,
@@ -11,10 +10,12 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { getQuoteFromParaSwap } from "../swap.js";
-import { NATIVE_TOKEN } from "../../constants.js";
-
-export const getClaimData = async (protocolName, chainName, poolName) => {
+export const getClaimData = async (
+  accountAddress,
+  protocolName,
+  chainName,
+  poolName
+) => {
   const _protocolName = protocolName.toLowerCase();
 
   const chainId = getChainIdFromName(chainName);
@@ -24,11 +25,64 @@ export const getClaimData = async (protocolName, chainName, poolName) => {
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
   let address = null;
   let abi = [];
   const params = [];
+
+  switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(accountAddress);
+      params.push(_amount);
+      break;
+    }
+    case "compound": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "rewards");
+      abi = getABIForProtocol(_protocolName, "rewards");
+      const comet = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
+      params.push(comet);
+      params.push(accountAddress);
+      params.push(true);
+      break;
+    }
+    case "hop": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      break;
+    }
+    case "lodestar": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName, "staking");
+      break;
+    }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+      abi = getABIForProtocol(_protocolName, "staking");
+      params.push(_amount);
+      break;
+    }
+    case "thena": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
+      abi = getABIForProtocol(_protocolName, "voting");
+      params.push([] /* address[] _gauges */);
+      break;
+    }
+    case "jonesdao": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(0 /* uint256 _pid */);
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

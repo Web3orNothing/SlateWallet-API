@@ -18,19 +18,7 @@ import { getShortData } from "./protocol/short.js";
 import { getLockData } from "./protocol/lock.js";
 import { getUnlockData } from "./protocol/unlock.js";
 import { getVoteData } from "./protocol/vote.js";
-import aaveAbi from "../abis/aave.abi.js";
-import compoundRewardsAbi from "../abis/compound-rewards.abi.js";
-import compoundUSDCAbi from "../abis/compound-usdc.abi.js";
-import compoundWETHAbi from "../abis/compound-weth.abi.js";
-import hopAbi from "../abis/hop.abi.js";
-
-const abis = {
-  aave: aaveAbi,
-  "compound-rewards": compoundRewardsAbi,
-  "compound-usdc": compoundUSDCAbi,
-  "compound-weth": compoundWETHAbi,
-  hop: hopAbi,
-};
+import { abis } from "../abis/index.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -172,15 +160,32 @@ export const getABIForProtocol = (protocol, key) =>
 export const getFunctionName = (protocol, action) => {
   switch (protocol) {
     case "aave":
-      if (action === "deposit") return "stake";
-      if (action === "withdraw") return "redeem";
-      return "claimRewards";
+      if (action === "unstake") return "redeem";
+      if (action === "claim") return "claimRewards";
+      return action;
     case "compound":
       if (action === "deposit") return "supply";
       return action;
     case "hop":
-      if (action === "deposit") return "stake";
       if (action === "claim") return "getReward";
+      return action;
+    case "rocketpool":
+      if (action === "withdraw") return "withdrawExcessBalance";
+      return action;
+    case "pendle":
+      if (action === "lock") return "increaseLockPosition";
+      return action;
+    case "lodestar":
+      if (action === "stake") return "stakeLODE";
+      if (action === "unstake") return "unstakeLODE";
+      return action;
+    case "rodeo":
+      if (action === "deposit") return "mint";
+      if (action === "withdraw") return "burn";
+      return action;
+    case "kwenta":
+      if (action === "long" || action === "short" || action === "close")
+        return "execute";
       return action;
     default:
       return action;
@@ -994,8 +999,10 @@ export const getBridgeTx = async (data, ignoreBalanceCheck = false) => {
 
 export const getDepositTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getDepositData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1015,8 +1022,10 @@ export const getDepositTx = async (data) => {
 
 export const getWithdrawTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getWithdrawData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1036,8 +1045,9 @@ export const getWithdrawTx = async (data) => {
 
 export const getClaimTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName } = data;
+    const { accountAddress, protocolName, chainName, poolName } = data;
     const { transactions, error } = await getClaimData(
+      accountAddress,
       protocolName,
       chainName,
       poolName
@@ -1055,8 +1065,10 @@ export const getClaimTx = async (data) => {
 
 export const getBorrowTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getBorrowData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1076,8 +1088,10 @@ export const getBorrowTx = async (data) => {
 
 export const getLendTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getLendData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1097,8 +1111,10 @@ export const getLendTx = async (data) => {
 
 export const getRepayTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, poolName, token, amount } =
+      data;
     const { transactions, error } = await getRepayData(
+      accountAddress,
       protocolName,
       chainName,
       poolName,
@@ -1118,8 +1134,9 @@ export const getRepayTx = async (data) => {
 
 export const getStakeTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getStakeData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1138,8 +1155,9 @@ export const getStakeTx = async (data) => {
 
 export const getUnstakeTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getUnstakeData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1159,6 +1177,7 @@ export const getUnstakeTx = async (data) => {
 export const getLongTx = async (data) => {
   try {
     const {
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1167,6 +1186,7 @@ export const getLongTx = async (data) => {
       leverageMultiplier,
     } = data;
     const { transactions, error } = await getLongData(
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1188,6 +1208,7 @@ export const getLongTx = async (data) => {
 export const getShortTx = async (data) => {
   try {
     const {
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1195,7 +1216,8 @@ export const getShortTx = async (data) => {
       outputToken,
       leverageMultiplier,
     } = data;
-    const { transactions, error } = await getProtocolData(
+    const { transactions, error } = await getShortData(
+      accountAddress,
       protocolName,
       chainName,
       inputToken,
@@ -1216,8 +1238,9 @@ export const getShortTx = async (data) => {
 
 export const getLockTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getLockData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1236,8 +1259,9 @@ export const getLockTx = async (data) => {
 
 export const getUnlockTx = async (data) => {
   try {
-    const { protocolName, chainName, token, amount } = data;
+    const { accountAddress, protocolName, chainName, token, amount } = data;
     const { transactions, error } = await getUnlockData(
+      accountAddress,
       protocolName,
       chainName,
       token,
@@ -1256,8 +1280,9 @@ export const getUnlockTx = async (data) => {
 
 export const getVoteTx = async (data) => {
   try {
-    const { protocolName, chainName, poolName } = data;
+    const { accountAddress, protocolName, chainName, poolName } = data;
     const { transactions, error } = await getVoteData(
+      accountAddress,
       protocolName,
       chainName,
       poolName
@@ -1272,59 +1297,6 @@ export const getVoteTx = async (data) => {
     return { status: "error", message: "Bad request" };
   }
 };
-
-/* 
-export const getYieldTx = async (data) => {
-  try {
-    const { accountAddress, chainName, token, amount } = data;
-    const _token = await getTokenAddressForChain(token, chainName);
-    if (!_token) {
-      return {
-        status: "error",
-        message: "Token not found on the specified chain.",
-      };
-    }
-    const whitelistedProtocols = ["aave", "compound"]; // TODO: update supported protocols list in the future
-    const {
-      data: { data: poolData },
-    } = await axios.get(`https://yields.llama.fi/pools`);
-    let pools = poolData.filter(
-      (pool) =>
-        pool.chain.toLowerCase() === chainName.toLowerCase() &&
-        whitelistedProtocols.includes(pool.project) &&
-        (!pool.underlyingTokens ||
-          pool.underlyingTokens
-            .map((x) => x.toLowerCase())
-            .includes(_token.address.toLowerCase()))
-    );
-    if (pools.length === 0) {
-      return {
-        status: "error",
-        message: "Protocol not found for given chain and token.",
-      };
-    }
-    pools = pools.sort((a, b) => b.apy - a.apy);
-    const bestPool = pools[0];
-    const { transactions, error } = await getProtocolData(
-      accountAddress,
-      chainName,
-      bestPool.project,
-      "deposit",
-      token,
-      null,
-      amount
-    );
-    if (error) {
-      return { status: "error", message: error };
-    } else {
-      return { status: "success", transactions };
-    }
-  } catch (err) {
-    console.log("Yield error:", err);
-    return { status: "error", message: "Bad request" };
-  }
-};
- */
 
 export const getTransferTx = async (data, ignoreBalanceCheck = false) => {
   try {

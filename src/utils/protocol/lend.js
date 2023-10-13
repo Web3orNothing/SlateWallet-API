@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getTokenAddressForChain,
   getApproveData,
   getProtocolAddressForChain,
@@ -12,10 +11,10 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { getQuoteFromParaSwap } from "../swap.js";
 import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getLendData = async (
+  accountAddress,
   protocolName,
   chainName,
   poolName,
@@ -36,12 +35,11 @@ export const getLendData = async (
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount, decimals } = await getTokenAmount(
+  const { amount: _amount } = await getTokenAmount(
     _token.address,
     provider,
-    spender,
+    accountAddress,
     amount
   );
 

@@ -71,4 +71,118 @@ export default {
       eth: "0x12e59C59D282D2C00f3166915BED6DC2F5e2B5C7",
     },
   },
+  lido: {
+    1: {
+      default: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+    },
+  },
+  gmx: {
+    42161: {
+      default: "0xb87a436B93fFE9D75c5cFA7bAcFff96430b09868",
+    },
+    43114: {
+      default: "0xffF6D276Bc37c61A23f06410Dce4A400f66420f8",
+    },
+  },
+  rocketpool: {
+    1: {
+      default: "0xDD3f50F8A6CafbE9b31a427582963f465E745AF8",
+    },
+  },
+  pendle: {
+    1: {
+      default: "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
+    },
+    42161: {
+      default: "0x3209E9412cca80B18338f2a56ADA59c484c39644",
+    },
+    10: {
+      default: "0xd5C47D2383Fddc19596489280C0A33AC42b2bB18",
+    },
+    56: {
+      default: "0x8A09574b0401A856d89d1b583eE22E8cb0C5530B",
+    },
+  },
+  jonesdao: {
+    42161: {
+      default: "0xb94d1959084081c5a11C460012Ab522F5a0FD756",
+    },
+  },
+  lodestar: {
+    42161: {
+      staking: "0x8ab1774A6FC5eE51559964e13ECD54155340c116",
+      voting: "0xFf4eF7844fAFF2bb20a8ba5E479b0a67d8642146",
+    },
+  },
+  dolomite: {
+    42161: {
+      default: "0x6Bd780E7fDf01D77e4d475c821f1e7AE05409072",
+      admin: "0xb04CCB2d3850Bf08eCA8a9FF7dB7d018FA17cfC9",
+      call: "0xCdA1826bE8764B7104E66A3b4bF93cdBf2464419",
+      deposit: "0xF884B50A1d0D1FfD96fd8aB9e4D1C0d8D0803a33",
+      liquidate: "0x20faD8614e40E486c79F26B1c053873119B8Fa3B",
+      operation: "0x7908b447Ed2050043bb32dAffab0673970124527",
+      trade: "0x1E0bE797880d3Db0Ce503Cd40429a3a9f1cF56D7",
+      transfer: "0x2F503BEB8C79B739F55e5b702273267492f9bA90",
+      withdraw: "0x8dC7C04644b14e04E7A84654680Bbf5E83A88332",
+    },
+  },
+  plutus: {
+    42161: {
+      "staking-1": "0x27Aaa9D562237BF8E024F9b21DE177e20ae50c05",
+      "staking-3": "0xE59DADf5F7a9decB8337402Ccdf06abE5c0B2B3E",
+      "staking-6": "0xBEB981021ed9c85AA51d96C0c2edA10ee4404A2e",
+      masterchef: "0x5593473e318F0314Eb2518239c474e183c4cBED5",
+    },
+  },
+  rodeo: {
+    42161: {
+      usdc: "0x0032F5E1520a66C6E572e96A11fBF54aea26f9bE",
+    },
+  },
+  kwenta: {
+    10: {
+      staking: "0x61294940CE7cD1BDA10e349adC5B538B722CeB88",
+      margin: "0x8234F990b149Ae59416dc260305E565e5DAfEb54",
+    },
+  },
+  stargate: {
+    1: {
+      staking: "0xB0D502E938ed5f4df2E681fE6E419ff29631d62b",
+      "staking-time": "0x1c3000b8f475A958b87c73a5cc5780Ab763122FC",
+    },
+    56: {
+      staking: "0x3052A0F6ab15b4AE1df39962d5DdEFacA86DaB47",
+      "staking-time": "0x2c6dcEd426D265045737Ff55C2D746C11b2F457a",
+    },
+    43114: {
+      staking: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
+    },
+    137: {
+      staking: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
+    },
+    42161: {
+      "staking-time": "0x9774558534036Ff2E236331546691b4eB70594b1",
+    },
+    10: {
+      "staking-time": "0x4DeA9e918c6289a52cd469cAC652727B7b412Cd2",
+    },
+    250: {
+      staking: "0x224D8Fd7aB6AD4c6eb4611Ce56EF35Dec2277F03",
+    },
+    8453: {
+      "staking-time": "0x06Eb48763f117c7Be887296CDcdfad2E4092739C",
+    },
+    59144: {
+      "staking-time": "0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8",
+    },
+    2222: {
+      "staking-time": "0x35F78Adf283Fe87732AbC9747d9f6630dF33276C",
+    },
+  },
+  thena: {
+    56: {
+      voting: "0x3A1D0952809F4948d15EBCe8d345962A282C4fCb",
+    },
+  },
 };

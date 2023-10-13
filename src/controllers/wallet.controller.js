@@ -24,7 +24,9 @@ import {
   getTransferTx,
   simulateCalls,
 } from "../utils/index.js";
-import { Conditions, Histories } from "../db/index.js";
+import { sequelize } from "../db/index.js";
+import conditionModel from "../db/condition.model.js";
+import historyModel from "../db/history.model.js";
 
 const comparatorMap = {
   "less than": "lt",
@@ -50,6 +52,7 @@ const condition = async (req, res) => {
       simstatus = 1;
     }
 
+    const Conditions = await conditionModel(sequelize, Sequelize);
     const condition = new Conditions({
       useraddress: accountAddress.toLowerCase(),
       type,
@@ -89,6 +92,7 @@ const time = async (req, res) => {
       simstatus = 1;
     }
 
+    const Conditions = await conditionModel(sequelize, Sequelize);
     const condition = new Conditions({
       useraddress: accountAddress.toLowerCase(),
       type: "time",
@@ -113,6 +117,7 @@ const updateStatus = async (req, res) => {
   const { accountAddress, conditionId, status } = req.body;
 
   try {
+    const Conditions = await conditionModel(sequelize, Sequelize);
     const condition = await Conditions.findOne({
       where: {
         id: parseInt(conditionId),
@@ -166,6 +171,7 @@ const cancel = async (req, res) => {
   }
 
   try {
+    const Conditions = await conditionModel(sequelize, Sequelize);
     const condition = await Conditions.findOne({
       where: {
         id: parseInt(conditionId),
@@ -201,6 +207,7 @@ const getConditions = async (req, res) => {
         : !isActive
         ? ["ready", "pending", "executing"]
         : ["completed"];
+    const Conditions = await conditionModel(sequelize, Sequelize);
     const conditions = await Conditions.findAll({
       where: {
         useraddress: accountAddress.toLowerCase(),
@@ -227,6 +234,7 @@ const addHistory = async (req, res) => {
   }
 
   try {
+    const Histories = await historyModel(sequelize, Sequelize);
     const history = new Histories({
       useraddress: accountAddress.toLowerCase(),
       query,
@@ -236,7 +244,7 @@ const addHistory = async (req, res) => {
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Failed to store condition" });
+      .json({ status: "error", message: "Failed to store history" });
   }
 };
 
@@ -244,6 +252,7 @@ const getHistories = async (req, res) => {
   const { accountAddress } = req.query;
 
   try {
+    const Histories = await historyModel(sequelize, Sequelize);
     const histories = await Histories.findAll({
       where: { useraddress: accountAddress.toLowerCase() },
       raw: true,
@@ -475,6 +484,7 @@ const simulate = async (req, res) => {
       calls: updatedCalls,
     } = await simulateCalls(calls, accountAddress, connectedChainName);
     if (!isNaN(parseInt(conditionId))) {
+      const Conditions = await conditionModel(sequelize, Sequelize);
       const condition = await Conditions.findOne({
         where: {
           id: parseInt(conditionId),

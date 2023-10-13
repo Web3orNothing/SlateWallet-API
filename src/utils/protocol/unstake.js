@@ -51,6 +51,17 @@ export const getUnstakeData = async (
       params.push(_amount);
       break;
     }
+    case "gmx": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "staked" + token.toUpperCase() + "Tracker"
+      );
+      abi = getABIForProtocol(_protocolName, "reward-tracker");
+      params.push(_token.address);
+      params.push(_amount);
+      break;
+    }
     case "lodestar":
     case "kwenta": {
       address = getProtocolAddressForChain(_protocolName, chainId, "staking");

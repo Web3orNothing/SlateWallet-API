@@ -78,10 +78,22 @@ export default {
   },
   gmx: {
     42161: {
-      default: "0xb87a436B93fFE9D75c5cFA7bAcFff96430b09868",
+      positionRouter: "0xb87a436B93fFE9D75c5cFA7bAcFff96430b09868",
+      gmxVester: "0x199070DDfd1CFb69173aa2F7e20906F26B363004",
+      glpVester: "0xA75287d2f8b217273E7FCD7E86eF07D33972042E",
+      stakedGMXTracker: "0x908C4D94D34924765f1eDc22A1DD098397c59dD4",
+      bonusGMXTracker: "0x4d268a7d4C16ceB5a606c173Bd974984343fea13",
+      feeGMXTracker: "0xd2D1162512F927a7e282Ef43a362659E4F2a728F",
+      stakedGLPTracker: "0x1aDDD80E6039594eE970E5872D247bf0414C8903",
+      feeGLPTracker: "0x4e971a87900b931fF39d1Aad67697F49835400b6",
     },
     43114: {
-      default: "0xffF6D276Bc37c61A23f06410Dce4A400f66420f8",
+      positionRouter: "0xffF6D276Bc37c61A23f06410Dce4A400f66420f8",
+      stakedGmxTracker: "0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342",
+      bonusGmxTracker: "0x908C4D94D34924765f1eDc22A1DD098397c59dD4",
+      feeGmxTracker: "0x4d268a7d4C16ceB5a606c173Bd974984343fea13",
+      stakedGlpTracker: "0x9e295B5B976a184B14aD8cd72413aD846C299660",
+      feeGlpTracker: "0xd2D1162512F927a7e282Ef43a362659E4F2a728F",
     },
   },
   rocketpool: {

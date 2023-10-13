@@ -4,7 +4,9 @@ import compoundUSDCAbi from "./compound-usdc.abi.js";
 import compoundWETHAbi from "./compound-weth.abi.js";
 import hopAbi from "./hop.abi.js";
 import lidoAbi from "./lido.abi.js";
-import gmxAbi from "./gmx.abi.js";
+import gmxVesterAbi from "./gmx-vester.abi.js";
+import gmxRewardTrackerAbi from "./gmx-reward-tracker.abi.js";
+import gmxPositionRouterAbi from "./gmx-position-router.abi.js";
 import rocketpoolAbi from "./rocketpool.abi.js";
 import pendleAbi from "./pendle.abi.js";
 import jonesdaoAbi from "./jonesdao.abi.js";
@@ -26,7 +28,9 @@ export const abis = {
   "compound-weth": compoundWETHAbi,
   hop: hopAbi,
   lido: lidoAbi,
-  gmx: gmxAbi,
+  "gmx-vester": gmxVesterAbi,
+  "gmx-reward-tracker": gmxRewardTrackerAbi,
+  "gmx-position-router": gmxPositionRouterAbi,
   rocketpool: rocketpoolAbi,
   pendle: pendleAbi,
   jonesdao: jonesdaoAbi,

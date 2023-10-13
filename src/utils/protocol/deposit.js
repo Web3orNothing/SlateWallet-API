@@ -73,8 +73,23 @@ export const getDepositData = async (
       break;
     }
     case "gmx": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase() + "Vester"
+      );
+      abi = getABIForProtocol(_protocolName, "vester");
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
       break;
     }
     case "rocketpool": {

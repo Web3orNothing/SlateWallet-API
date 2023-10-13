@@ -56,6 +56,15 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "gmx": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase() + "Vester"
+      );
+      abi = getABIForProtocol(_protocolName, "vester");
+      break;
+    }
     case "hop": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);

@@ -45,7 +45,6 @@ export const getVoteData = async (
       params.push(0 /* uint256 _tokenId */);
       params.push([] /* address[] _poolVote */);
       params.push([] /* uint256[] _weights */);
-
       break;
     }
     default: {

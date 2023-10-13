@@ -73,7 +73,7 @@ export default {
   },
   lido: {
     1: {
-      default: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+      default: "0xFdDf38947aFB03C621C71b06C9C70bce73f12999",
     },
   },
   gmx: {

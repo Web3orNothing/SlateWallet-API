@@ -65,14 +65,13 @@ export const getStakeData = async (
       }
       break;
     }
-    case "gmx": {
-      address = getProtocolAddressForChain(
-        _protocolName,
-        chainId,
-        "staked" + token.toUpperCase() + "Tracker"
-      );
-      abi = getABIForProtocol(_protocolName, "reward-tracker");
-      params.push(_token.address);
+    case "hop": {
+      let key = token.toLowerCase();
+      const outputToken = "TODO: lp token 1 symbol";
+      if (outputToken.toLowerCase() !== "hop")
+        key += `-${outputToken.toLowerCase()}`;
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName);
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {
@@ -86,13 +85,14 @@ export const getStakeData = async (
       }
       break;
     }
-    case "hop": {
-      let key = token.toLowerCase();
-      const outputToken = "TODO: lp token 1 symbol";
-      if (outputToken.toLowerCase() !== "hop")
-        key += `-${outputToken.toLowerCase()}`;
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName);
+    case "gmx": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "staked" + token.toUpperCase() + "Tracker"
+      );
+      abi = getABIForProtocol(_protocolName, "reward-tracker");
+      params.push(_token.address);
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {

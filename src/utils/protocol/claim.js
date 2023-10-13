@@ -51,6 +51,11 @@ export const getClaimData = async (
       params.push(true);
       break;
     }
+    case "hop": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      break;
+    }
     case "gmx": {
       address = getProtocolAddressForChain(
         _protocolName,
@@ -58,11 +63,6 @@ export const getClaimData = async (
         "staked" + token.toUpperCase() + "Tracker"
       );
       abi = getABIForProtocol(_protocolName, "reward-tracker");
-      break;
-    }
-    case "hop": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
       break;
     }
     case "lodestar": {

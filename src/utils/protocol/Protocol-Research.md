@@ -13,4 +13,6 @@
    - long / PositionRouter
    - short / PositionRouter
    - close / PositionRouter
-3.
+3. Rocket Pool
+   - deposit / Deposit -> done
+   - withdraw / Deposit -> done

@@ -244,7 +244,7 @@ const addHistory = async (req, res) => {
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Failed to store condition" });
+      .json({ status: "error", message: "Failed to store history" });
   }
 };
 

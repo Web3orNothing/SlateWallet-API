@@ -153,12 +153,6 @@ export const getDepositData = async (
       }
       break;
     }
-    case "dolomite": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      /* build operation and execute */
-      break;
-    }
     case "plutus": {
       address = getProtocolAddressForChain(
         _protocolName,

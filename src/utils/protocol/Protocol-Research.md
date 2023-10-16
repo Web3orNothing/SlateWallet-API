@@ -37,3 +37,13 @@
    - claim / Staking Rewards Proxy -> done
    - harvest / Staking Rewards Proxy -> done
    - vote (+) / Voting Power Proxy -> done
+7. Dolomite (fully skipped)
+   - deposit
+   - withdraw
+   - lend
+   - borrow
+   - repay
+   - stake
+   - unstake
+   - claim
+   - harvest

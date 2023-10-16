@@ -48,6 +48,34 @@ export const getLendData = async (
   let abi = [];
   const params = [];
 
+  switch (_protocolName) {
+    case "lodestar": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "unitroller"
+      );
+      abi = getABIForProtocol(_protocolName, "unitroller");
+      params.push(_token.address);
+      params.push(accountAddress);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          spender,
+          address
+        );
+      }
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
+
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };
   }

@@ -181,6 +181,10 @@ export const getFunctionName = (protocol, action) => {
     case "lodestar":
       if (action === "stake") return "stakeLODE";
       if (action === "unstake") return "unstakeLODE";
+      if (action === "claim") return "claimRewards";
+      if (action === "lend") return "mintAllowed";
+      if (action === "borrow") return "borrowAllowed";
+      if (action === "repay") return "repayBorrowAllowed";
       return action;
     case "rodeo":
       if (action === "deposit") return "mint";

@@ -92,8 +92,8 @@ export const getStakeData = async (
     case "lodestar": {
       address = getProtocolAddressForChain(_protocolName, chainId, "staking");
       abi = getABIForProtocol(_protocolName, "staking");
-      params.push(accountAddress);
       params.push(_amount);
+      params.push(86400 /* uint256 lockTime */);
 
       if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(

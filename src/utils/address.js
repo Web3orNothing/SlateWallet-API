@@ -124,6 +124,7 @@ export default {
     42161: {
       staking: "0x8ab1774A6FC5eE51559964e13ECD54155340c116",
       voting: "0xFf4eF7844fAFF2bb20a8ba5E479b0a67d8642146",
+      unitroller: "0xa86DD95c210dd186Fa7639F93E4177E97d057576",
     },
   },
   dolomite: {

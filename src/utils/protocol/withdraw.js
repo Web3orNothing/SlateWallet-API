@@ -97,6 +97,13 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "jonesdao": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
+      break;
+    }
     case "rodeo": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
@@ -110,13 +117,6 @@ export const getWithdrawData = async (
         chainId,
         "masterchef"
       );
-      abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid */);
-      params.push(_amount);
-      break;
-    }
-    case "jonesdao": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
       params.push(0 /* uint256 _pid */);
       params.push(_amount);

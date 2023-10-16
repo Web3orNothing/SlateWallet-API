@@ -25,4 +25,15 @@
 5. JonesDAO
    - deposit / MillinerV2 -> done
    - withdraw / MillinerV2 -> done
-   - claim (harvest) / MillinerV2 -> done
+   - claim (+) / MillinerV2 -> done
+6. Lodestar
+   - deposit /
+   - withdraw /
+   - lend / Unitroller -> done
+   - borrow / Unitroller -> done
+   - repay / Unitroller -> done
+   - stake / Staking Rewards Proxy -> done
+   - unstake / Staking Rewards Proxy -> done
+   - claim / Staking Rewards Proxy -> done
+   - harvest / Staking Rewards Proxy -> done
+   - vote (+) / Voting Power Proxy -> done

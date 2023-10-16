@@ -56,6 +56,39 @@ export const getRepayData = async (
       params.push(_amount);
       params.push(2); // interest rate mode
       params.push(accountAddress);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          spender,
+          address
+        );
+      }
+      break;
+    }
+    case "lodestar": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "unitroller"
+      );
+      abi = getABIForProtocol(_protocolName, "unitroller");
+      params.push(_token.address);
+      params.push(accountAddress);
+      params.push(accountAddress);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          spender,
+          address
+        );
+      }
       break;
     }
     case "rodeo": {

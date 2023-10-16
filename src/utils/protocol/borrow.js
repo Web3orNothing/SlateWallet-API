@@ -3,15 +3,12 @@ import {
   getChainIdFromName,
   getRpcUrlForChain,
   getTokenAddressForChain,
-  getApproveData,
   getProtocolAddressForChain,
   getFunctionData,
   getABIForProtocol,
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
-
-import { NATIVE_TOKEN } from "../../constants.js";
 
 export const getBorrowData = async (
   accountAddress,
@@ -59,20 +56,22 @@ export const getBorrowData = async (
       params.push(accountAddress);
       break;
     }
+    case "lodestar": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "unitroller"
+      );
+      abi = getABIForProtocol(_protocolName, "unitroller");
+      params.push(_token.address);
+      params.push(accountAddress);
+      params.push(_amount);
+      break;
+    }
     case "rodeo": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
       params.push(_amount);
-
-      if (_token.address !== NATIVE_TOKEN) {
-        approveTxs = await getApproveData(
-          provider,
-          _token.address,
-          _amount,
-          spender,
-          address
-        );
-      }
       break;
     }
     default: {

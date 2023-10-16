@@ -11,6 +11,7 @@ import rocketpoolAbi from "./rocketpool.abi.js";
 import pendleVeAbi from "./pendle-ve.abi.js";
 import pendleVotingAbi from "./pendle-voting.abi.js";
 import jonesdaoAbi from "./jonesdao.abi.js";
+import lodestarUnitrollerAbi from "./lodestar-unitroller.abi.js";
 import lodestarStakingAbi from "./lodestar-staking.abi.js";
 import lodestarVotingAbi from "./lodestar-voting.abi.js";
 import dolomiteAbi from "./dolomite.abi.js";
@@ -38,6 +39,7 @@ export const abis = {
   "pendle-ve": pendleVeAbi,
   "pendle-voting": pendleVotingAbi,
   jonesdao: jonesdaoAbi,
+  "lodestar-unitroller": lodestarUnitrollerAbi,
   "lodestar-staking": lodestarStakingAbi,
   "lodestar-voting": lodestarVotingAbi,
   dolomite: dolomiteAbi,

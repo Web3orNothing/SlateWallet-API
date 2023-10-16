@@ -175,6 +175,9 @@ export const getFunctionName = (protocol, action) => {
       if (action === "lock") return "increaseLockPosition";
       if (action === "unlock") return "withdraw";
       return action;
+    case "jonesdao":
+      if (action === "claim") return "harvest";
+      return action;
     case "lodestar":
       if (action === "stake") return "stakeLODE";
       if (action === "unstake") return "unstakeLODE";

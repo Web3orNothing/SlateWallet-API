@@ -22,3 +22,7 @@
    - lock / VotingEscrowPendleMainChain -> done
    - unlock / VotingEscrowPendleMainChain -> done
    - vote / PendleVotingControllerUpg -> done
+5. JonesDAO
+   - deposit / MillinerV2 -> done
+   - withdraw / MillinerV2 -> done
+   - claim (harvest) / MillinerV2 -> done

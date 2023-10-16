@@ -16,3 +16,9 @@
 3. Rocket Pool
    - deposit / Deposit -> done
    - withdraw / Deposit -> done
+4. Pendle
+   - deposit / PendleMarketV2 (created by factory contract)
+   - withdraw / PendleMarketV2 (created by factory contract)
+   - lock / VotingEscrowPendleMainChain -> done
+   - unlock / VotingEscrowPendleMainChain -> done
+   - vote / PendleVotingControllerUpg -> done

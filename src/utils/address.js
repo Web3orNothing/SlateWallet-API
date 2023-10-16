@@ -102,16 +102,17 @@ export default {
   },
   pendle: {
     1: {
-      default: "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
+      ve: "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
+      voting: "0x44087E105137a5095c008AaB6a6530182821F2F0",
     },
     42161: {
-      default: "0x3209E9412cca80B18338f2a56ADA59c484c39644",
+      ve: "0x3209E9412cca80B18338f2a56ADA59c484c39644",
     },
     10: {
-      default: "0xd5C47D2383Fddc19596489280C0A33AC42b2bB18",
+      ve: "0xd5C47D2383Fddc19596489280C0A33AC42b2bB18",
     },
     56: {
-      default: "0x8A09574b0401A856d89d1b583eE22E8cb0C5530B",
+      ve: "0x8A09574b0401A856d89d1b583eE22E8cb0C5530B",
     },
   },
   jonesdao: {

@@ -10,8 +10,6 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { NATIVE_TOKEN } from "../../constants.js";
-
 export const getUnlockData = async (
   accountAddress,
   protocolName,
@@ -44,6 +42,17 @@ export const getUnlockData = async (
   let address = null;
   let abi = [];
   const params = [];
+
+  switch (_protocolName) {
+    case "pendle": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "ve");
+      abi = getABIForProtocol(_protocolName, "ve");
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };

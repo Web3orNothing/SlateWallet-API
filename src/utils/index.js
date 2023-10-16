@@ -173,6 +173,7 @@ export const getFunctionName = (protocol, action) => {
       return action;
     case "pendle":
       if (action === "lock") return "increaseLockPosition";
+      if (action === "unlock") return "withdraw";
       return action;
     case "lodestar":
       if (action === "stake") return "stakeLODE";

@@ -29,6 +29,12 @@ export const getVoteData = async (
   const params = [];
 
   switch (_protocolName) {
+    case "pendle": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
+      abi = getABIForProtocol(_protocolName, "voting");
+      params.push([] /* address[] pools */);
+      params.push([] /* uint64[] weights */);
+    }
     case "lodestar": {
       address = getProtocolAddressForChain(_protocolName, chainId, "voting");
       abi = getABIForProtocol(_protocolName, "voting");

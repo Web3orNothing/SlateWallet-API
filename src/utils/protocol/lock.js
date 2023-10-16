@@ -49,8 +49,8 @@ export const getLockData = async (
 
   switch (_protocolName) {
     case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
+      address = getProtocolAddressForChain(_protocolName, chainId, "ve");
+      abi = getABIForProtocol(_protocolName, "ve");
       params.push(_amount);
       params.push(
         Math.floor(Date.now() / 1000) + 86400 /* uint128 newExpiry */

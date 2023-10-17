@@ -67,6 +67,22 @@ export const getLockData = async (
       }
       break;
     }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "vester");
+      abi = getABIForProtocol(_protocolName, "vester");
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          spender,
+          address
+        );
+      }
+      break;
+    }
     default: {
       return { error: "Protocol not supported" };
     }

@@ -106,8 +106,8 @@ export const getStakeData = async (
       }
       break;
     }
-    case "kwenta": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking-1");
       abi = getABIForProtocol(_protocolName, "staking");
       params.push(_amount);
 
@@ -122,9 +122,9 @@ export const getStakeData = async (
       }
       break;
     }
-    case "plutus": {
+    case "kwenta": {
       address = getProtocolAddressForChain(_protocolName, chainId, "staking");
-      abi = getABIForProtocol(_protocolName);
+      abi = getABIForProtocol(_protocolName, "staking");
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {

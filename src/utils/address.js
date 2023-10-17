@@ -142,10 +142,14 @@ export default {
   },
   plutus: {
     42161: {
+      plvGLP: "0x4E5Cf54FdE5E1237e80E87fcbA555d829e1307CE",
+      plsSPA: "0x73e7c78E8a85C074733920f185d1c78163b555C8",
+      plsJONES: "0x23B87748b615096d1A0F48870daee203A720723D",
       "staking-1": "0x27Aaa9D562237BF8E024F9b21DE177e20ae50c05",
       "staking-3": "0xE59DADf5F7a9decB8337402Ccdf06abE5c0B2B3E",
       "staking-6": "0xBEB981021ed9c85AA51d96C0c2edA10ee4404A2e",
       masterchef: "0x5593473e318F0314Eb2518239c474e183c4cBED5",
+      vester: "0x581a7921c006a3a2e93bcca72abd87e50d049cd7",
     },
   },
   rodeo: {

@@ -47,3 +47,10 @@
    - unstake
    - claim
    - harvest
+8. Plutus
+   - deposit / plvGLP, plsSPA, plsJONES farm + MasterChef -> done
+   - withdraw / plvGLP, plsSPA, plsJONES farm + MasterChef -> done
+   - stake / Epoch Time 1/3/6 Month Staking -> done
+   - unstake / Epoch Time 1/3/6 Month Staking -> done
+   - lock / Vester -> done
+   - unlock / Vester -> done

@@ -62,6 +62,11 @@ export const getUnstakeData = async (
       params.push(_amount);
       break;
     }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking-1");
+      abi = getABIForProtocol(_protocolName, "staking");
+      break;
+    }
     case "stargate": {
       const key = true /* based on param */ ? "staking" : "staking-time";
       address = getProtocolAddressForChain(_protocolName, chainId, key);
@@ -69,11 +74,6 @@ export const getUnstakeData = async (
       params.push(accountAddress);
       params.push(0 /* uint256 _pid */);
       params.push(_amount);
-      break;
-    }
-    case "plutus": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
-      abi = getABIForProtocol(_protocolName);
       break;
     }
     default: {

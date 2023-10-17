@@ -186,6 +186,10 @@ export const getFunctionName = (protocol, action) => {
       if (action === "borrow") return "borrowAllowed";
       if (action === "repay") return "repayBorrowAllowed";
       return action;
+    case "plutus":
+      if (action === "lock") return "deposit";
+      if (action === "unlock") return "claim";
+      return action;
     case "rodeo":
       if (action === "deposit") return "mint";
       if (action === "withdraw") return "burn";

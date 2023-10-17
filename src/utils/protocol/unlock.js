@@ -49,6 +49,11 @@ export const getUnlockData = async (
       abi = getABIForProtocol(_protocolName, "ve");
       break;
     }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "vester");
+      abi = getABIForProtocol(_protocolName, "vester");
+      break;
+    }
     default: {
       return { error: "Protocol not supported" };
     }

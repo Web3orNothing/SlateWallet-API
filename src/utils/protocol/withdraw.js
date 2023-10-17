@@ -104,22 +104,31 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "plutus": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
+      if (address) {
+        abi = getABIForProtocol(_protocolName, token.toLowerCase());
+      } else {
+        address = getProtocolAddressForChain(
+          _protocolName,
+          chainId,
+          "masterchef"
+        );
+        abi = getABIForProtocol(_protocolName, "masterchef");
+        params.push(0 /* uint256 _pid */);
+      }
+      params.push(_amount);
+      break;
+    }
     case "rodeo": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
       params.push(_amount);
       params.push(accountAddress);
-      break;
-    }
-    case "plutus": {
-      address = getProtocolAddressForChain(
-        _protocolName,
-        chainId,
-        "masterchef"
-      );
-      abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid */);
-      params.push(_amount);
       break;
     }
     case "stargate": {

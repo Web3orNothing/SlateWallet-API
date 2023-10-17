@@ -157,10 +157,19 @@ export const getDepositData = async (
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        "masterchef"
+        token.toLowerCase()
       );
-      abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid */);
+      if (address) {
+        abi = getABIForProtocol(_protocolName, token.toLowerCase());
+      } else {
+        address = getProtocolAddressForChain(
+          _protocolName,
+          chainId,
+          "masterchef"
+        );
+        abi = getABIForProtocol(_protocolName, "masterchef");
+        params.push(0 /* uint256 _pid */);
+      }
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {

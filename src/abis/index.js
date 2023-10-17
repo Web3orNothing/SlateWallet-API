@@ -16,8 +16,12 @@ import lodestarStakingAbi from "./lodestar-staking.abi.js";
 import lodestarVotingAbi from "./lodestar-voting.abi.js";
 import dolomiteAbi from "./dolomite.abi.js";
 import dolomiteAdminAbi from "./dolomite-admin.abi.js";
-import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
+import plutusPlvGlpAbi from "./plutus-plvglp.abi.js";
+import plutusPlsSpaAbi from "./plutus-plsspa.abi.js";
+import plutusPlsJonesAbi from "./plutus-plsjones.abi.js";
 import plutusStakingAbi from "./plutus-staking.abi.js";
+import plutusVesterAbi from "./plutus-vester.abi.js";
+import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
 import rodeoAbi from "./rodeo.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
@@ -44,8 +48,12 @@ export const abis = {
   "lodestar-voting": lodestarVotingAbi,
   dolomite: dolomiteAbi,
   "dolomite-admin": dolomiteAdminAbi,
+  "plutus-plvGLP": plutusPlvGlpAbi,
+  "plutus-plsSPA": plutusPlsSpaAbi,
+  "plutus-plsJONES": plutusPlsJonesAbi,
   "plutus-masterchef": plutusMasterchefAbi,
   "plutus-staking": plutusStakingAbi,
+  "plutus-vester": plutusVesterAbi,
   rodeo: rodeoAbi,
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,

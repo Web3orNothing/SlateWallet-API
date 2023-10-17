@@ -9,7 +9,7 @@ import {
   getApproveData,
   getTokenAmount,
 } from "../index.js";
-import { getQuoteFromSynapse } from "../bridge.js";
+import { getQuoteFromLiFi, getQuoteFromSynapse } from "../bridge.js";
 
 import { NATIVE_TOKEN } from "../../constants.js";
 
@@ -56,6 +56,10 @@ export const getBridgeData = async (
 
   let getQuoteFunc;
   switch (_protocolName) {
+    case "jumper": {
+      getQuoteFunc = getQuoteFromLiFi;
+      break;
+    }
     case "synapse": {
       getQuoteFunc = getQuoteFromSynapse;
       break;

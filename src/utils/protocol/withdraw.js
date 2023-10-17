@@ -75,6 +75,29 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "synapse": {
+      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      abi = getABIForProtocol(_protocolName, "staking");
+      const contract = new ethers.Contract(address, abi, provider);
+      const tokenIdx = await contract.getTokenIndex(_token.address);
+      let count = tokenIdx + 1;
+      while (true) {
+        try {
+          await contract.getToken(count);
+          count++;
+        } catch {
+          break;
+        }
+      }
+      let amounts = new Array(count).fill(0);
+      amounts[tokenIdx] = _amount;
+
+      params.push(_amount);
+      params.push(tokenIdx);
+      params.push(0);
+      params.push(Math.floor(Date.now() / 1000) + 1200);
+      break;
+    }
     case "hop": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);

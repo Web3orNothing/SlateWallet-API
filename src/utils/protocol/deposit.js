@@ -251,6 +251,36 @@ export const getDepositData = async (
       }
       break;
     }
+    case "synapse": {
+      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      abi = getABIForProtocol(_protocolName, "staking");
+      const contract = new ethers.Contract(address, abi, provider);
+      const tokenIdx = await contract.getTokenIndex(_token.address);
+      let count = tokenIdx + 1;
+      while (true) {
+        try {
+          await contract.getToken(count);
+          count++;
+        } catch {
+          break;
+        }
+      }
+      let amounts = new Array(count).fill(0);
+      amounts[tokenIdx] = _amount;
+
+      params.push(amounts);
+      params.push(0),
+      params.push(Math.floor(Date.now() / 1000) + 1200);
+
+      approveTxs = await getApproveData(
+        provider,
+        _token.address,
+        _amount,
+        accountAddress,
+        address
+      );
+      break;
+    }
     case "dolomite": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);

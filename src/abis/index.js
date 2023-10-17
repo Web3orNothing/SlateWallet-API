@@ -17,9 +17,10 @@ import plutusStakingAbi from "./plutus-staking.abi.js";
 import rodeoAbi from "./rodeo.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
+import synapsePoolAbi from "./synapse-pool.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
-import uniswapAbi from "../abis/uniswap.abi.js";
-import yieldYakAbi from "../abis/yield-yak.abi.js";
+import uniswapAbi from "./uniswap.abi.js";
+import yieldYakAbi from "./yield-yak.abi.js";
 
 export const abis = {
   aave: aaveAbi,
@@ -44,4 +45,5 @@ export const abis = {
   "thena-voting": thenaVotingAbi,
   uniswap: uniswapAbi,
   yieldyak: yieldYakAbi,
+  "synapse-staking": synapsePoolAbi,
 };

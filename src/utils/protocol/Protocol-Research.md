@@ -60,3 +60,9 @@
    - lend / Pool (USDC) -> done
    - borrow / Pool (USDC) -> done
    - repay / Pool (USDC) -> done
+10. Kwenta
+    - deposit / StakingRewards V2 Proxy -> done
+    - withdraw / StakingRewards V2 Proxy -> done
+    - long / Smart Margin Account Factory
+    - short / Smart Margin Account Factory
+    - close / Smart Margin Account Factory

@@ -130,16 +130,6 @@ export const getWithdrawData = async (
       params.push(0 /* uint256 id */);
       break;
     }
-    case "stargate": {
-      const key = true /* based on param */ ? "staking" : "staking-time";
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
-
-      params.push(accountAddress);
-      params.push(0 /* uint256 _pid */);
-      params.push(_amount);
-      break;
-    }
     // case "uniswap": {
     //   address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     //   abi = getABIForProtocol(_protocolName);

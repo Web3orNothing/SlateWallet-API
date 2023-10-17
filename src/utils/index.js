@@ -198,6 +198,13 @@ export const getFunctionName = (protocol, action) => {
     case "kwenta":
       if (action === "long" || action === "short" || action === "close")
         return "execute";
+      return action;
+    case "stargate":
+      if (action === "deposit") return "addLiquidity";
+      if (action === "stake") return "deposit";
+      if (action === "unstake") return "withdraw";
+      if (action === "claim") return "emergencyWithdraw";
+      return action;
     case "yieldyak":
       if (action === "swap") return "swapNoSplit";
       return action;

@@ -166,6 +166,7 @@ export default {
   },
   stargate: {
     1: {
+      router: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
       staking: "0xB0D502E938ed5f4df2E681fE6E419ff29631d62b",
       "staking-time": "0x1c3000b8f475A958b87c73a5cc5780Ab763122FC",
     },

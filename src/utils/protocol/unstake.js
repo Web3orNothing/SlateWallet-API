@@ -71,7 +71,6 @@ export const getUnstakeData = async (
       const key = true /* based on param */ ? "staking" : "staking-time";
       address = getProtocolAddressForChain(_protocolName, chainId, key);
       abi = getABIForProtocol(_protocolName, key);
-      params.push(accountAddress);
       params.push(0 /* uint256 _pid */);
       params.push(_amount);
       break;

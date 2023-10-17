@@ -75,6 +75,13 @@ export const getClaimData = async (
       params.push(_amount);
       break;
     }
+    case "stargate": {
+      const key = true /* based on param */ ? "staking" : "staking-time";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
+      params.push(0 /* uint256 _pid */);
+      break;
+    }
     case "thena": {
       address = getProtocolAddressForChain(_protocolName, chainId, "voting");
       abi = getABIForProtocol(_protocolName, "voting");

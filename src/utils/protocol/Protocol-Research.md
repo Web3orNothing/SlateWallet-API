@@ -66,3 +66,11 @@
     - long / Smart Margin Account Factory
     - short / Smart Margin Account Factory
     - close / Smart Margin Account Factory
+11. Stargate
+    - deposit / Router -> done
+    - withdraw
+    - stake / Staking -> done
+    - unstake / Staking -> done
+    - claim / Staking -> done
+    - harvest
+    - vote

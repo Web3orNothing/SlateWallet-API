@@ -138,6 +138,24 @@ export const getStakeData = async (
       }
       break;
     }
+    case "stargate": {
+      const key = true /* based on param */ ? "staking" : "staking-time";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
+      params.push(0 /* uint256 _poolId */);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
     default: {
       return { error: "Protocol not supported" };
     }

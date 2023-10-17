@@ -25,6 +25,7 @@ import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
 import rodeoPoolAbi from "./rodeo-pool.abi.js";
 import rodeoFarmAbi from "./rodeo-farm.abi.js";
 import stargateRouterAbi from "./stargate-router.abi.js";
+import stargateRouterETHAbi from "./stargate-routerETH.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
@@ -59,6 +60,7 @@ export const abis = {
   "rodeo-pool": rodeoPoolAbi,
   "rodeo-farm": rodeoFarmAbi,
   "stargate-router": stargateRouterAbi,
+  "stargate-routerETH": stargateRouterETHAbi,
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,
   "thena-voting": thenaVotingAbi,

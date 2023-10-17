@@ -205,8 +205,9 @@ export const getDepositData = async (
       break;
     }
     case "stargate": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "router");
-      abi = getABIForProtocol(_protocolName, "router");
+      const key = _token.address === NATIVE_TOKEN ? "routerETH" : "router";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
       params.push(0 /* uint256 _poolId */);
       params.push(_amount);
       params.push(accountAddress);

@@ -136,6 +136,24 @@ export const getDepositData = async (
       abi = getABIForProtocol(_protocolName);
       break;
     }
+    case "pendle": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      abi = getABIForProtocol(_protocolName, "market");
+      params.push(accountAddress);
+      params.push(_amount);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
     case "jonesdao": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);

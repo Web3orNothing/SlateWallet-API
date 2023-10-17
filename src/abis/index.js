@@ -8,6 +8,7 @@ import gmxVesterAbi from "./gmx-vester.abi.js";
 import gmxRewardTrackerAbi from "./gmx-reward-tracker.abi.js";
 import gmxPositionRouterAbi from "./gmx-position-router.abi.js";
 import rocketpoolAbi from "./rocketpool.abi.js";
+import pendleMarketAbi from "./pendle-market.abi.js";
 import pendleVeAbi from "./pendle-ve.abi.js";
 import pendleVotingAbi from "./pendle-voting.abi.js";
 import jonesdaoAbi from "./jonesdao.abi.js";
@@ -44,6 +45,7 @@ export const abis = {
   "gmx-reward-tracker": gmxRewardTrackerAbi,
   "gmx-position-router": gmxPositionRouterAbi,
   rocketpool: rocketpoolAbi,
+  "pendle-market": pendleMarketAbi,
   "pendle-ve": pendleVeAbi,
   "pendle-voting": pendleVotingAbi,
   jonesdao: jonesdaoAbi,

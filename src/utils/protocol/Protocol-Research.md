@@ -13,8 +13,8 @@
    - deposit / Deposit -> done
    - withdraw / Deposit -> done
 4. Pendle
-   - deposit / PendleMarketV2 (created by factory contract) -> _can't find each pool contract address created by factory_
-   - withdraw / PendleMarketV2 (created by factory contract) -> _can't find each pool contract address created by factory_
+   - deposit / PendleMarketV2 -> done
+   - withdraw / PendleMarketV2 -> done
    - lock / VotingEscrowPendleMainChain -> done
    - unlock / VotingEscrowPendleMainChain -> done
    - vote / PendleVotingControllerUpg -> done
@@ -23,8 +23,6 @@
    - withdraw / MillinerV2 -> done
    - claim (+) / MillinerV2 -> done
 6. Lodestar
-   - deposit / _can't find contract_
-   - withdraw / _can't find contract_
    - lend / Unitroller -> done
    - borrow / Unitroller -> done
    - repay / Unitroller -> done
@@ -51,7 +49,7 @@
    - lock / Vester -> done
    - unlock / Vester -> done
 9. Rodeo
-   - deposit / PositionManager -> _can't find proper function_
+   - deposit / PositionManager -> done
    - withdraw / PositionManager -> done
    - lend / Pool (USDC) -> done
    - borrow / Pool (USDC) -> done
@@ -64,13 +62,13 @@
     - close / Smart Margin Account Factory -> _can't find how to build execute function parameters_
 11. Stargate
     - deposit / Router -> done
-    - withdraw -> _can't find proper function_
+    - withdraw / Router -> done
     - stake / Staking -> done
     - unstake / Staking -> done
     - claim / Staking -> done
     - harvest
     - vote
-12. Thena
+12. Thena (agreed to skip this)
     - deposit / GaugeFactory (created by factory contract) -> _can't find each pool contract address created by factory_
     - withdraw / GaugeFactory (created by factory contract) -> _can't find each pool contract address created by factory_
     - stake / PairFactory (created by factory contract) -> _can't find each pool contract address created by factory_

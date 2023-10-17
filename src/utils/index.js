@@ -172,6 +172,8 @@ export const getFunctionName = (protocol, action) => {
       if (action === "withdraw") return "withdrawExcessBalance";
       return action;
     case "pendle":
+      if (action === "deposit") return "mint";
+      if (action === "withdraw") return "burn";
       if (action === "lock") return "increaseLockPosition";
       if (action === "unlock") return "withdraw";
       return action;
@@ -201,6 +203,7 @@ export const getFunctionName = (protocol, action) => {
       return action;
     case "stargate":
       if (action === "deposit") return "addLiquidity";
+      if (action === "withdraw") return "redeemLocal";
       if (action === "stake") return "deposit";
       if (action === "unstake") return "withdraw";
       if (action === "claim") return "emergencyWithdraw";

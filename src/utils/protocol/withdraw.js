@@ -90,10 +90,17 @@ export const getWithdrawData = async (
       abi = getABIForProtocol(_protocolName, "vester");
       break;
     }
-    case "rocketpool":
-    case "pendle": {
+    case "rocketpool": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
+      params.push(_amount);
+      break;
+    }
+    case "pendle": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      abi = getABIForProtocol(_protocolName, "market");
+      params.push(accountAddress);
+      params.push(accountAddress);
       params.push(_amount);
       break;
     }
@@ -128,6 +135,15 @@ export const getWithdrawData = async (
       address = getProtocolAddressForChain(_protocolName, chainId, "farm");
       abi = getABIForProtocol(_protocolName, "farm");
       params.push(0 /* uint256 id */);
+      break;
+    }
+    case "stargate": {
+      const key = _token.address === NATIVE_TOKEN ? "routerETH" : "router";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
+      params.push(0 /* uint256 dstGasForCall */);
+      params.push(_amount);
+      params.push(accountAddress);
       break;
     }
     // case "uniswap": {

@@ -7,6 +7,8 @@ import lidoAbi from "./lido.abi.js";
 import gmxAbi from "./gmx.abi.js";
 import rocketpoolAbi from "./rocketpool.abi.js";
 import pendleAbi from "./pendle.abi.js";
+import hopL1BridgeAbi from "./hop-l1bridge.abi.js";
+import hopL2BridgeAbi from "./hop-l2bridge.abi.js";
 import jonesdaoAbi from "./jonesdao.abi.js";
 import lodestarStakingAbi from "./lodestar-staking.abi.js";
 import lodestarVotingAbi from "./lodestar-voting.abi.js";
@@ -46,4 +48,6 @@ export const abis = {
   uniswap: uniswapAbi,
   yieldyak: yieldYakAbi,
   "synapse-staking": synapsePoolAbi,
+  "hop-l1bridge": hopL1BridgeAbi,
+  "hop-l2bridge": hopL2BridgeAbi,
 };

@@ -1,10 +1,6 @@
 1. Lido
    - deposit / StakingRouter -> done
-     - depositCount {type: number} (non-zero) [required] parameter
-     - stakingModuleId {type: number} (currently 1 is only available value) [required] parameter, [discuss]
-     - "0x"
-   - withdraw -> done
-     - none
+   - withdraw -> not supported
 2. GMX
    - deposit / Vester -> done
    - withdraw / Vester -> done
@@ -84,3 +80,11 @@
     - claim / GaugeFactory (created by factory contract) -> _can't find each pool contract address created by factory_
     - harvest / PairFactory (created by factory contract) -> _can't find each pool contract address created by factory_
     - vote / VoterV3 -> done
+13. Balancer
+    - swap -> _can't be done due to lack of parameters from ai response_
+    - deposit / _can't find contract_
+    - withdraw / _can't find contract_
+    - stake / _can't find contract_
+    - unstake / _can't find contract_
+    - claim / _can't find contract_
+    - harvest / _can't find contract_

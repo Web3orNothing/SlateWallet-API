@@ -54,3 +54,9 @@
    - unstake / Epoch Time 1/3/6 Month Staking -> done
    - lock / Vester -> done
    - unlock / Vester -> done
+9. Rodeo
+   - deposit / PositionManager ->
+   - withdraw / PositionManager -> done
+   - lend / Pool (USDC) -> done
+   - borrow / Pool (USDC) -> done
+   - repay / Pool (USDC) -> done

@@ -92,8 +92,8 @@ export const getRepayData = async (
       break;
     }
     case "rodeo": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
+      address = getProtocolAddressForChain(_protocolName, chainId, "pool");
+      abi = getABIForProtocol(_protocolName, "pool");
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {

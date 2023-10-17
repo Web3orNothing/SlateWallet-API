@@ -71,6 +71,23 @@ export const getLendData = async (
       }
       break;
     }
+    case "rodeo": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "pool");
+      abi = getABIForProtocol(_protocolName, "pool");
+      params.push(_amount);
+      params.push(accountAddress);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          spender,
+          address
+        );
+      }
+      break;
+    }
     default: {
       return { error: "Protocol not supported" };
     }

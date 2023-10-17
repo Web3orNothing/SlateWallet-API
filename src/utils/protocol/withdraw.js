@@ -125,10 +125,9 @@ export const getWithdrawData = async (
       break;
     }
     case "rodeo": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      params.push(_amount);
-      params.push(accountAddress);
+      address = getProtocolAddressForChain(_protocolName, chainId, "farm");
+      abi = getABIForProtocol(_protocolName, "farm");
+      params.push(0 /* uint256 id */);
       break;
     }
     case "stargate": {

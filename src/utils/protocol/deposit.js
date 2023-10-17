@@ -183,6 +183,27 @@ export const getDepositData = async (
       }
       break;
     }
+    case "rodeo": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "farm");
+      abi = getABIForProtocol(_protocolName, "farm");
+      params.push(accountAddress);
+      params.push(ethers.constants.AddressZero /* address pol */);
+      params.push(0 /* uint256 str */);
+      params.push(_amount);
+      params.push(0 /* uint256 bor */);
+      params.push("0x" /* bytes dat */);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
     // case "uniswap": {
     //   address = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     //   abi = getABIForProtocol(_protocolName);

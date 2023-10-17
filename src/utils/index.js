@@ -191,6 +191,7 @@ export const getFunctionName = (protocol, action) => {
       if (action === "unlock") return "claim";
       return action;
     case "rodeo":
+      if (action === "lend") return "mint";
       if (action === "deposit") return "mint";
       if (action === "withdraw") return "burn";
       return action;

@@ -54,6 +54,12 @@ export const getUnlockData = async (
       abi = getABIForProtocol(_protocolName, "vester");
       break;
     }
+    case "thena": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "ve");
+      abi = getABIForProtocol(_protocolName, "ve");
+      params.push(0 /* uint _tokenId */);
+      break;
+    }
     default: {
       return { error: "Protocol not supported" };
     }

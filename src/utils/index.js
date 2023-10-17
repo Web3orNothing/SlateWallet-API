@@ -205,6 +205,10 @@ export const getFunctionName = (protocol, action) => {
       if (action === "unstake") return "withdraw";
       if (action === "claim") return "emergencyWithdraw";
       return action;
+    case "thena":
+      if (action === "lock") return "create_lock";
+      if (action === "unlock") return "withdraw";
+      return action;
     case "yieldyak":
       if (action === "swap") return "swapNoSplit";
       return action;

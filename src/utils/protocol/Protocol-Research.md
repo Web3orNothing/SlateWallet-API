@@ -74,3 +74,13 @@
     - claim / Staking -> done
     - harvest
     - vote
+12. Thena
+    - deposit / GaugeFactory (created by factory contract)
+    - withdraw / GaugeFactory (created by factory contract)
+    - stake / PairFactory (created by factory contract)
+    - unstake / PairFactory (created by factory contract)
+    - lock / veThena -> done
+    - unlock / veThena -> done
+    - claim / GaugeFactory (created by factory contract)
+    - harvest / PairFactory (created by factory contract)
+    - vote / VoterV3 -> done

@@ -28,6 +28,7 @@ import stargateRouterAbi from "./stargate-router.abi.js";
 import stargateRouterETHAbi from "./stargate-routerETH.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
+import thenaVeAbi from "./thena-ve.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
 import uniswapAbi from "../abis/uniswap.abi.js";
 import yieldYakAbi from "../abis/yield-yak.abi.js";
@@ -63,6 +64,7 @@ export const abis = {
   "stargate-routerETH": stargateRouterETHAbi,
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,
+  "thena-ve": thenaVeAbi,
   "thena-voting": thenaVotingAbi,
   uniswap: uniswapAbi,
   yieldyak: yieldYakAbi,

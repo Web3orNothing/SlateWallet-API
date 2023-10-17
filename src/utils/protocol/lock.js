@@ -83,6 +83,23 @@ export const getLockData = async (
       }
       break;
     }
+    case "thena": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "ve");
+      abi = getABIForProtocol(_protocolName, "ve");
+      params.push(_amount);
+      params.push(86400 /* uint _lock_duration */);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          spender,
+          address
+        );
+      }
+      break;
+    }
     default: {
       return { error: "Protocol not supported" };
     }

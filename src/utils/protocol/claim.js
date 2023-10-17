@@ -82,12 +82,6 @@ export const getClaimData = async (
       params.push(0 /* uint256 _pid */);
       break;
     }
-    case "thena": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
-      abi = getABIForProtocol(_protocolName, "voting");
-      params.push([] /* address[] _gauges */);
-      break;
-    }
     default: {
       return { error: "Protocol not supported" };
     }

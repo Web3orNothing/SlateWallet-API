@@ -44,8 +44,6 @@ export const getVoteData = async (
       break;
     }
     case "thena": {
-      if (action !== "vote") break;
-
       address = getProtocolAddressForChain(_protocolName, chainId, "voting");
       abi = getABIForProtocol(_protocolName, "voting");
       params.push(0 /* uint256 _tokenId */);

@@ -10,6 +10,7 @@ import {
   getTokenAmount,
 } from "../index.js";
 import {
+  getQuoteFromBungee,
   getQuoteFromHop,
   getQuoteFromLiFi,
   getQuoteFromSynapse,
@@ -60,6 +61,10 @@ export const getBridgeData = async (
 
   let getQuoteFunc;
   switch (_protocolName) {
+    case "bungee": {
+      getQuoteFunc = getQuoteFromBungee;
+      break;
+    }
     case "hop": {
       getQuoteFunc = getQuoteFromHop;
       break;

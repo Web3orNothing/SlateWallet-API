@@ -12,6 +12,60 @@ import {
 
 config();
 
+export const getQuoteFromBungee = async (
+  sourceChainId,
+  destChainId,
+  account,
+  sourceToken,
+  destToken,
+  amount
+) => {
+  try {
+    const queryParams = new URLSearchParams({
+      fromChainId: sourceChainId,
+      fromTokenAddress:
+        sourceToken.address === NATIVE_TOKEN
+          ? NATIVE_TOKEN2
+          : sourceToken.address,
+      toChainId: destChainId,
+      toTokenAddress:
+        destToken.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : destToken.address,
+      fromAmount: amount.toString(),
+      userAddress: account,
+      uniqueRoutesPerBridge: true,
+      sort: "output",
+      singleTxOnly: true,
+    });
+    const {
+      data: { success, result },
+    } = await axios.get(`https://api.socket.tech/v2/quote?${queryParams}`, {
+      headers: { "API-KEY": process.env.API_KEY_BUNGEE },
+    });
+    if (!success) return;
+    if (result.routes.length === 0) return;
+    const bestRoute = result.routes[result.routes.length - 1];
+
+    const { data } = await axios.post(
+      "https://api.socket.tech/v2/build-tx?",
+      { route: bestRoute },
+      {
+        headers: { "API-KEY": process.env.API_KEY_BUNGEE },
+      }
+    );
+    if (!data.success) return;
+    return {
+      amountOut: bestRoute.toAmount,
+      tx: {
+        to: data.result.txTarget,
+        value: data.result.value,
+        data: data.result.txData,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 export const getQuoteFromHop = async (
   sourceChainId,
   destChainId,
@@ -46,7 +100,7 @@ export const getQuoteFromHop = async (
       token: sourceToken.symbol,
       amount: amount.toString(),
     };
-    const url = apiBaseUrl + new URLSearchParams(bridgeParams).toString();
+    const url = apiUrl + new URLSearchParams(bridgeParams).toString();
     const { data: quote } = await axios.get(url, headers);
 
     const params = [];
@@ -221,10 +275,11 @@ export const getQuoteFromAxelar = async (
 };
 
 const bridgeRoutes = [
-  getQuoteFromHop,
-  getQuoteFromLiFi,
-  getQuoteFromSynapse,
-  getQuoteFromAxelar,
+  getQuoteFromBungee,
+  // getQuoteFromHop,
+  // getQuoteFromLiFi,
+  // getQuoteFromSynapse,
+  // getQuoteFromAxelar,
 ];
 
 export const getBestBridgeRoute = async (

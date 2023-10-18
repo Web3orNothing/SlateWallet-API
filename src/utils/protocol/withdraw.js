@@ -75,6 +75,15 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "dopex": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, "ssov");
+      const contract = new ethers.Contract(address, abi, provider);
+      const tokenId = await contract.tokenOfOwnerByIndex(address, 0);
+      params.push(tokenId);
+      params.push(address);
+      break;
+    }
     case "synapse": {
       address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
       abi = getABIForProtocol(_protocolName, "staking");

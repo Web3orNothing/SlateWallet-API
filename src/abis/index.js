@@ -2,6 +2,7 @@ import aaveAbi from "./aave.abi.js";
 import compoundRewardsAbi from "./compound-rewards.abi.js";
 import compoundUSDCAbi from "./compound-usdc.abi.js";
 import compoundWETHAbi from "./compound-weth.abi.js";
+import dopexSsovAbi from "./dopex-ssov.abi.js";
 import hopAbi from "./hop.abi.js";
 import lidoAbi from "./lido.abi.js";
 import gmxAbi from "./gmx.abi.js";
@@ -29,6 +30,7 @@ export const abis = {
   "compound-rewards": compoundRewardsAbi,
   "compound-usdc": compoundUSDCAbi,
   "compound-weth": compoundWETHAbi,
+  "dopex-ssov": dopexSsovAbi,
   hop: hopAbi,
   lido: lidoAbi,
   gmx: gmxAbi,

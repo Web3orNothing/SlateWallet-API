@@ -103,6 +103,14 @@ export const getDepositData = async (
       }
       break;
     }
+    case "dopex": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, "ssov");
+      params.push(0); // TODO: strike ID
+      params.push(_amount);
+      params.push(address);
+      break;
+    }
     case "lido": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);

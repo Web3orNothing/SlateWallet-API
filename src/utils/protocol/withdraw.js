@@ -75,6 +75,34 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "curve": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, poolName);
+      const pool = new ethers.Contract(address, abi, provider);
+      let count = 0;
+      let tokenIndex;
+      while (true) {
+        try {
+          const coin = await pool.coins(count);
+          if (
+            coin.toLowerCase() === NATIVE_TOKEN2 &&
+            _token.address === NATIVE_TOKEN
+          ) {
+            tokenIndex = count;
+          } else if (_token.address.toLowerCase() === coin.toLowerCase()) {
+            tokenIndex = count;
+          }
+          count++;
+        } catch {
+          break;
+        }
+      }
+
+      params.push(_amount);
+      params.push(tokenIndex);
+      params.push(0);
+      break;
+    }
     case "dopex": {
       address = getProtocolAddressForChain(_protocolName, chainId, poolName);
       abi = getABIForProtocol(_protocolName, "ssov");
@@ -85,7 +113,11 @@ export const getWithdrawData = async (
       break;
     }
     case "synapse": {
-      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
       abi = getABIForProtocol(_protocolName, "staking");
       const contract = new ethers.Contract(address, abi, provider);
       const tokenIdx = await contract.getTokenIndex(_token.address);

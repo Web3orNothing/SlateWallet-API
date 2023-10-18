@@ -174,6 +174,10 @@ export const getFunctionName = (protocol, action) => {
     case "compound":
       if (action === "deposit") return "supply";
       return action;
+    case "curve":
+      if (action === "deposit") return "add_liquidity";
+      if (action === "withdraw") return "remove_liquidity_one_coin";
+      return action;
     case "hop":
       if (action === "claim") return "getReward";
       return action;

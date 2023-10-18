@@ -11,7 +11,7 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { NATIVE_TOKEN } from "../../constants.js";
+import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 
 export const getDepositData = async (
   accountAddress,
@@ -101,6 +101,39 @@ export const getDepositData = async (
           address
         );
       }
+      break;
+    }
+    case "curve": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, poolName);
+      const pool = new ethers.Contract(address, abi, provider);
+      let count = 0;
+      let tokenIndex;
+      while (true) {
+        try {
+          const coin = await pool.coins(count);
+          if (
+            coin.toLowerCase() === NATIVE_TOKEN2 &&
+            _token.address === NATIVE_TOKEN
+          ) {
+            tokenIndex = count;
+          } else if (_token.address.toLowerCase() === coin.toLowerCase()) {
+            tokenIndex = count;
+          }
+          count++;
+        } catch {
+          break;
+        }
+      }
+      const amounts = new Array(count).fill(0);
+      amounts[tokenIndex] = _amount;
+
+      if (_token.address === NATIVE_TOKEN2) {
+        value = _amount;
+      }
+
+      params.push(amounts);
+      params.push(0);
       break;
     }
     case "dopex": {
@@ -260,7 +293,11 @@ export const getDepositData = async (
       break;
     }
     case "synapse": {
-      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
       abi = getABIForProtocol(_protocolName, "staking");
       const contract = new ethers.Contract(address, abi, provider);
       const tokenIdx = await contract.getTokenIndex(_token.address);
@@ -277,8 +314,7 @@ export const getDepositData = async (
       amounts[tokenIdx] = _amount;
 
       params.push(amounts);
-      params.push(0),
-      params.push(Math.floor(Date.now() / 1000) + 1200);
+      params.push(0), params.push(Math.floor(Date.now() / 1000) + 1200);
 
       approveTxs = await getApproveData(
         provider,

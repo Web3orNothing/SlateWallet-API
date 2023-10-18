@@ -2,6 +2,11 @@ import aaveAbi from "./aave.abi.js";
 import compoundRewardsAbi from "./compound-rewards.abi.js";
 import compoundUSDCAbi from "./compound-usdc.abi.js";
 import compoundWETHAbi from "./compound-weth.abi.js";
+import curve3poolAbi from "./curve-3pool.abi.js";
+import curveFraxusdcAbi from "./curve-fraxusdc.abi.js";
+import curveFraxusdpAbi from "./curve-fraxusdp.abi.js";
+import curveStethAbi from "./curve-steth.abi.js";
+import curveTricrypto2Abi from "./curve-tricrypto2.abi.js";
 import dopexSsovAbi from "./dopex-ssov.abi.js";
 import hopAbi from "./hop.abi.js";
 import lidoAbi from "./lido.abi.js";
@@ -24,6 +29,7 @@ import synapsePoolAbi from "./synapse-pool.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
 import uniswapAbi from "./uniswap.abi.js";
 import yieldYakAbi from "./yield-yak.abi.js";
+import curveFraxusdpAbi from "./curve-fraxusdp.abi.js";
 
 export const abis = {
   aave: aaveAbi,
@@ -31,6 +37,11 @@ export const abis = {
   "compound-usdc": compoundUSDCAbi,
   "compound-weth": compoundWETHAbi,
   "dopex-ssov": dopexSsovAbi,
+  "curve-3pool": curve3poolAbi,
+  "curve-fraxusdc": curveFraxusdcAbi,
+  "curve-fraxusdp": curveFraxusdpAbi,
+  "curve-steth": curveStethAbi,
+  "curve-tricrypto2": curveTricrypto2Abi,
   hop: hopAbi,
   lido: lidoAbi,
   gmx: gmxAbi,

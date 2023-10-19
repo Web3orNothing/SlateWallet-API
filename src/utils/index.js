@@ -85,34 +85,43 @@ export const getChainNameForCGC = (chainName) => {
   return chainNamesForCGC[chainName.toLowerCase()] || null;
 };
 
+// TODO: Need to handle lower vs upper case and slightly different names (ex. ethereum vs Ethereum, BSC vs BinanceSmartChain, Binance vs BinanceSmartChain)
+// Mapping of chain names to their respective chain IDs
+const chainNamesToIds = {
+  ethereum: 1,
+  optimism: 10,
+  cronos: 25,
+  binancesmartchain: 56,
+  ethclassic: 61,
+  gnosis: 100,
+  polygon: 137,
+  fantom: 250,
+  filecoin: 314,
+  moonbeam: 1284,
+  moonriver: 1285,
+  kava: 2222,
+  mantle: 5000,
+  canto: 7700,
+  base: 8453,
+  arbitrum: 42161,
+  celo: 42220,
+  avalanche: 43114,
+  linea: 59144,
+  // Add more chainName-chainId mappings here as needed
+};
+
 // Helper function to convert chainName to chainId
 export const getChainIdFromName = (chainName) => {
-  // TODO: Need to handle lower vs upper case and slightly different names (ex. ethereum vs Ethereum, BSC vs BinanceSmartChain, Binance vs BinanceSmartChain)
-  // Mapping of chain names to their respective chain IDs
-  const chainNamesToIds = {
-    ethereum: 1,
-    optimism: 10,
-    cronos: 25,
-    binancesmartchain: 56,
-    ethclassic: 61,
-    gnosis: 100,
-    polygon: 137,
-    fantom: 250,
-    filecoin: 314,
-    moonbeam: 1284,
-    moonriver: 1285,
-    kava: 2222,
-    mantle: 5000,
-    canto: 7700,
-    base: 8453,
-    arbitrum: 42161,
-    celo: 42220,
-    avalanche: 43114,
-    linea: 59144,
-    // Add more chainName-chainId mappings here as needed
-  };
-
   return chainNamesToIds[chainName.toLowerCase()] || null;
+};
+
+// Helper function to convert chainId to chainName
+export const getChainNameFromId = (chainId) => {
+  const chainNames = Object.keys(chainNamesToIds);
+  for (let i = 0; i < chainNames.length; i++) {
+    if (chainNamesToIds[chainNames[i]] === chainId) return chainNames[i];
+  }
+  return null;
 };
 
 export const getRpcUrlForChain = (chainId) => {
@@ -164,6 +173,10 @@ export const getFunctionName = (protocol, action) => {
       return action;
     case "compound":
       if (action === "deposit") return "supply";
+      return action;
+    case "curve":
+      if (action === "deposit") return "add_liquidity";
+      if (action === "withdraw") return "remove_liquidity_one_coin";
       return action;
     case "hop":
       if (action === "claim") return "getReward";

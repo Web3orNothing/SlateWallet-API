@@ -57,6 +57,7 @@ export const getSwapData = async (
     case "uniswap":
     case "llamazip":
     case "curve":
+    case "camelot":
     case "balancer": {
       let dexList;
       if (_protocolName === "sushiswap") {
@@ -67,6 +68,8 @@ export const getSwapData = async (
         dexList = ["Llamazip"];
       } else if (_protocolName === "curve") {
         dexList = ["Curve"];
+      } else if (_protocolName === "camelot") {
+        dexList = ["Camelot"];
       } else if (_protocolName === "balancer") {
         dexList = ["Balancer"];
       }

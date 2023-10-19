@@ -41,16 +41,6 @@ export const getWithdrawData = async (
     amount
   );
 
-  let _token1;
-  if (token1) {
-    _token1 = await getTokenAddressForChain(_token1, chainName);
-    if (!_token1) {
-      return {
-        error: "Token not found on the specified chain.",
-      };
-    }
-  }
-
   let address = null;
   let abi = [];
   const params = [];
@@ -249,5 +239,5 @@ export const getWithdrawData = async (
     params,
     "0"
   );
-  return { transactions: data };
+  return { transactions: [data] };
 };

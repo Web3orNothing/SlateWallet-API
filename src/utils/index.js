@@ -305,7 +305,7 @@ export const getApproveData = async (
   const txs = [];
   if (allowance.lt(amount)) {
     const symbol = await token.symbol();
-    if (symbol === "USDT") {
+    if (symbol === "USDT" && !allowance.eq(0)) {
       const data = token.interface.encodeFunctionData("approve", [spender, 0]);
       txs.push({
         to: tokenAddress,

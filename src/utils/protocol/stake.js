@@ -68,10 +68,47 @@ export const getStakeData = async (
       }
       break;
     }
+    case "gmx": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "staked" + token.toUpperCase() + "Tracker"
+      );
+      abi = getABIForProtocol(_protocolName, "reward-tracker");
+      params.push(_token.address);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
     case "lodestar": {
       address = getProtocolAddressForChain(_protocolName, chainId, "staking");
       abi = getABIForProtocol(_protocolName, "staking");
-      params.push(accountAddress);
+      params.push(_amount);
+      params.push(86400 /* uint256 lockTime */);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "staking-1");
+      abi = getABIForProtocol(_protocolName, "staking");
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {
@@ -101,9 +138,11 @@ export const getStakeData = async (
       }
       break;
     }
-    case "plutus": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "staking");
-      abi = getABIForProtocol(_protocolName);
+    case "stargate": {
+      const key = true /* based on param */ ? "staking" : "staking-time";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
+      params.push(0 /* uint256 _poolId */);
       params.push(_amount);
 
       if (_token.address !== NATIVE_TOKEN) {

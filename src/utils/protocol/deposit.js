@@ -147,132 +147,52 @@ export const getDepositData = async (
     case "lido": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _maxDepositsCount */);
-      params.push(0 /* uint256 _stakingModuleId */);
-      params.push("0x0" /* bytes _depositCalldata */);
+      params.push(1);
+      params.push(1); // TODO: monitor available stake modules
+      params.push("0x");
       break;
     }
     case "gmx": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      // TODO: Build transaction
-      /*
-       // Get execution fee and minimum USD value for amount of  token
-      const executionFee = await positionRouter.minExecutionFee();
-      const usdMin = await vault.tokenToUsdMin(Token, Amount);
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase() + "Vester"
+      );
+      abi = getABIForProtocol(_protocolName, "vester");
+      params.push(_amount);
 
-      // Populate transaction data
-      if (action == "long" || action == "short") {
-        const isApprovedPlugin = await router.approvedPlugins(
-          account,
-          addresses[network].positionRouter
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
         );
-        const allowance = await token.allowance(
-          account,
-          addresses[network].router
-        );
-
-        // If position router is not approved yet
-        if (!isApprovedPlugin) {
-          // Add position router to approved plugin list
-          transactions.push(
-            await router.populateTransaction.approvePlugin(
-              addresses[network].positionRouter
-            )
-          );
-        }
-
-        // Set allowance if allowance is not enough
-        if (allowance.lt(Amount)) {
-          // If allowance is not zero, reset it to 0
-          if (!allowance.isZero()) {
-            transactions.push(
-              await token.populateTransaction.approve(
-                addresses[network].router,
-                0
-              )
-            );
-          }
-          // Approve router to spend amount of  token
-          transactions.push(
-            await token.populateTransaction.approve(
-              addresses[network].router,
-              Amount
-            )
-          );
-        }
-
-        const sizeDelta = usdMin.mul(leverageMultiplier);
-
-        if (action == "long") {
-          // Get transaction data for creation of long position
-          const priceMax = await vault.getMaxPrice(Token);
-          transactions.push({
-            ...(await positionRouter.populateTransaction.createIncreasePosition(
-              [Token],
-              outputToken,
-              Amount,
-              0, // Minimum out when swap
-              sizeDelta, // USD value of the change in position size
-              true, // Whether to long or short
-              priceMax, // Acceptable price
-              executionFee, // Execution fee
-              constants.HashZero, // Referral code
-              constants.AddressZero // An optional callback contract
-            )),
-            value: executionFee.toNumber(),
-          });
-        } else {
-          // Get transaction data for creation of short position
-          const priceMin = await vault.getMinPrice(Token);
-          transactions.push({
-            ...(await positionRouter.populateTransaction.createIncreasePosition(
-              [Token],
-              outputToken,
-              Amount,
-              0, // Minimum out when swap
-              sizeDelta, // USD value of the change in position size
-              false, // Whether to long or short
-              priceMin, // Acceptable price
-              executionFee, // Execution fee
-              constants.HashZero, // Referral code
-              constants.AddressZero // An optional callback contract
-            )),
-            value: executionFee.toNumber(),
-          });
-        }
-      } else {
-        // Determine whether it's long or short
-        const isLong = !(await vault.stableTokens(Token));
-        const acceptablePrice = isLong
-          ? await vault.getMinPrice(Token)
-          : await vault.getMaxPrice(Token);
-        const sizeDelta = usdMin.mul(leverageMultiplier);
-
-        // Get transaction data for position close
-        transactions.push({
-          ...(await positionRouter.populateTransaction.createDecreasePosition(
-            [Token],
-            outputToken,
-            usdMin, // The amount of collateral in USD value to withdraw
-            sizeDelta, // The USD value of the change in position size
-            isLong, // Whether the position is a long or short
-            receiver, // The address to receive the withdrawn tokens
-            acceptablePrice, // Acceptable price
-            0, // Minimum out when swap
-            executionFee, // Execution fee
-            false, // Whether withdraw ETH when if WETH will be withdrawn
-            constants.AddressZero // // An optional callback contract
-          )),
-          value: executionFee.toNumber(),
-        });
-      } 
-*/
+      }
       break;
     }
     case "rocketpool": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
+      break;
+    }
+    case "pendle": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      abi = getABIForProtocol(_protocolName, "market");
+      params.push(accountAddress);
+      params.push(_amount);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
       break;
     }
     case "jonesdao": {
@@ -286,7 +206,7 @@ export const getDepositData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -325,21 +245,64 @@ export const getDepositData = async (
       );
       break;
     }
-    case "dolomite": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      /* build operation and execute */
-      break;
-    }
     case "plutus": {
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        "masterchef"
+        token.toLowerCase()
       );
-      abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid */);
+      if (address) {
+        abi = getABIForProtocol(_protocolName, token.toLowerCase());
+      } else {
+        address = getProtocolAddressForChain(
+          _protocolName,
+          chainId,
+          "masterchef"
+        );
+        abi = getABIForProtocol(_protocolName, "masterchef");
+        params.push(0 /* uint256 _pid */);
+      }
       params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "rodeo": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "farm");
+      abi = getABIForProtocol(_protocolName, "farm");
+      params.push(accountAddress);
+      params.push(ethers.constants.AddressZero /* address pol */);
+      params.push(0 /* uint256 str */);
+      params.push(_amount);
+      params.push(0 /* uint256 bor */);
+      params.push("0x" /* bytes dat */);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "stargate": {
+      const key = _token.address === NATIVE_TOKEN ? "routerETH" : "router";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
+      params.push(0 /* uint256 _poolId */);
+      params.push(_amount);
+      params.push(accountAddress);
 
       if (_token.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
@@ -372,7 +335,7 @@ export const getDepositData = async (
     //       provider,
     //       isToken0Eth ? _token1.address : _token.address,
     //       isToken0Eth ? _amount1 : _amount,
-    //       spender,
+    //       accountAddress,
     //       address
     //     );
     //   } else {
@@ -389,14 +352,14 @@ export const getDepositData = async (
     //       provider,
     //       _token.address,
     //       _amount,
-    //       spender,
+    //       accountAddress,
     //       address
     //     );
     //     const approveTx2 = await getApproveData(
     //       provider,
     //       _token1.address,
     //       _amount1,
-    //       spender,
+    //       accountAddress,
     //       address
     //     );
     //     approveTxs = [...approveTx1, ...approveTx2];

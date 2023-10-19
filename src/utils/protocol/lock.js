@@ -49,8 +49,8 @@ export const getLockData = async (
 
   switch (_protocolName) {
     case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
+      address = getProtocolAddressForChain(_protocolName, chainId, "ve");
+      abi = getABIForProtocol(_protocolName, "ve");
       params.push(_amount);
       params.push(
         Math.floor(Date.now() / 1000) + 86400 /* uint128 newExpiry */
@@ -61,7 +61,40 @@ export const getLockData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "plutus": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "vester");
+      abi = getABIForProtocol(_protocolName, "vester");
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "thena": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "ve");
+      abi = getABIForProtocol(_protocolName, "ve");
+      params.push(_amount);
+      params.push(86400 /* uint _lock_duration */);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
           address
         );
       }

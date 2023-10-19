@@ -68,6 +68,38 @@ export const getLendData = async (
       }
       break;
     }
+    case "lodestar": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "unitroller"
+      );
+      abi = getABIForProtocol(_protocolName, "unitroller");
+      params.push(_token.address);
+      params.push(accountAddress);
+      params.push(_amount);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    case "rodeo": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "pool");
+      abi = getABIForProtocol(_protocolName, "pool");
+      params.push(_amount);
+      params.push(accountAddress);
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
   }
 
   if (!address) {

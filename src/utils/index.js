@@ -185,19 +185,46 @@ export const getFunctionName = (protocol, action) => {
       if (action === "withdraw") return "withdrawExcessBalance";
       return action;
     case "pendle":
+      if (action === "deposit") return "mint";
+      if (action === "withdraw") return "burn";
       if (action === "lock") return "increaseLockPosition";
+      if (action === "unlock") return "withdraw";
+      return action;
+    case "jonesdao":
+      if (action === "claim") return "harvest";
       return action;
     case "lodestar":
       if (action === "stake") return "stakeLODE";
       if (action === "unstake") return "unstakeLODE";
+      if (action === "claim") return "claimRewards";
+      if (action === "lend") return "mintAllowed";
+      if (action === "borrow") return "borrowAllowed";
+      if (action === "repay") return "repayBorrowAllowed";
+      return action;
+    case "plutus":
+      if (action === "lock") return "deposit";
+      if (action === "unlock") return "claim";
       return action;
     case "rodeo":
+      if (action === "lend") return "mint";
       if (action === "deposit") return "mint";
       if (action === "withdraw") return "burn";
       return action;
     case "kwenta":
       if (action === "long" || action === "short" || action === "close")
         return "execute";
+      return action;
+    case "stargate":
+      if (action === "deposit") return "addLiquidity";
+      if (action === "withdraw") return "redeemLocal";
+      if (action === "stake") return "deposit";
+      if (action === "unstake") return "withdraw";
+      if (action === "claim") return "emergencyWithdraw";
+      return action;
+    case "thena":
+      if (action === "lock") return "create_lock";
+      if (action === "unlock") return "withdraw";
+      return action;
     case "yieldyak":
       if (action === "swap") return "swapNoSplit";
       return action;

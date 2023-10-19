@@ -117,7 +117,7 @@ export const getSwapData = async (
     case "synapse": {
       const data = await getSwapQuoteFromSynapse(
         chainId,
-        spender,
+        accountAddress,
         {
           address: _inputToken.address,
           symbol: inputToken,
@@ -139,7 +139,7 @@ export const getSwapData = async (
             provider,
             _inputToken.address,
             _inputAmount,
-            spender,
+            accountAddress,
             tx.to
           );
           transactions.push(...approveTxs);
@@ -170,7 +170,7 @@ export const getSwapData = async (
       else if (_protocolName === "openocean") swapFunc = getQuoteFromOpenOcean;
       const data = await swapFunc(
         chainId,
-        spender,
+        accountAddress,
         {
           address: _inputToken.address,
           symbol: inputToken,
@@ -191,7 +191,7 @@ export const getSwapData = async (
             provider,
             _inputToken.address,
             _inputAmount,
-            spender,
+            accountAddress,
             tx.to
           );
           transactions.push(...approveTxs);

@@ -132,15 +132,27 @@ export default {
   },
   lido: {
     1: {
-      default: "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+      default: "0xFdDf38947aFB03C621C71b06C9C70bce73f12999",
     },
   },
   gmx: {
     42161: {
-      default: "0xb87a436B93fFE9D75c5cFA7bAcFff96430b09868",
+      positionRouter: "0xb87a436B93fFE9D75c5cFA7bAcFff96430b09868",
+      gmxVester: "0x199070DDfd1CFb69173aa2F7e20906F26B363004",
+      glpVester: "0xA75287d2f8b217273E7FCD7E86eF07D33972042E",
+      stakedGMXTracker: "0x908C4D94D34924765f1eDc22A1DD098397c59dD4",
+      bonusGMXTracker: "0x4d268a7d4C16ceB5a606c173Bd974984343fea13",
+      feeGMXTracker: "0xd2D1162512F927a7e282Ef43a362659E4F2a728F",
+      stakedGLPTracker: "0x1aDDD80E6039594eE970E5872D247bf0414C8903",
+      feeGLPTracker: "0x4e971a87900b931fF39d1Aad67697F49835400b6",
     },
     43114: {
-      default: "0xffF6D276Bc37c61A23f06410Dce4A400f66420f8",
+      positionRouter: "0xffF6D276Bc37c61A23f06410Dce4A400f66420f8",
+      stakedGmxTracker: "0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342",
+      bonusGmxTracker: "0x908C4D94D34924765f1eDc22A1DD098397c59dD4",
+      feeGmxTracker: "0x4d268a7d4C16ceB5a606c173Bd974984343fea13",
+      stakedGlpTracker: "0x9e295B5B976a184B14aD8cd72413aD846C299660",
+      feeGlpTracker: "0xd2D1162512F927a7e282Ef43a362659E4F2a728F",
     },
   },
   rocketpool: {
@@ -150,16 +162,17 @@ export default {
   },
   pendle: {
     1: {
-      default: "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
+      ve: "0x4f30A9D41B80ecC5B94306AB4364951AE3170210",
+      voting: "0x44087E105137a5095c008AaB6a6530182821F2F0",
     },
     42161: {
-      default: "0x3209E9412cca80B18338f2a56ADA59c484c39644",
+      ve: "0x3209E9412cca80B18338f2a56ADA59c484c39644",
     },
     10: {
-      default: "0xd5C47D2383Fddc19596489280C0A33AC42b2bB18",
+      ve: "0xd5C47D2383Fddc19596489280C0A33AC42b2bB18",
     },
     56: {
-      default: "0x8A09574b0401A856d89d1b583eE22E8cb0C5530B",
+      ve: "0x8A09574b0401A856d89d1b583eE22E8cb0C5530B",
     },
   },
   jonesdao: {
@@ -171,6 +184,7 @@ export default {
     42161: {
       staking: "0x8ab1774A6FC5eE51559964e13ECD54155340c116",
       voting: "0xFf4eF7844fAFF2bb20a8ba5E479b0a67d8642146",
+      unitroller: "0xa86DD95c210dd186Fa7639F93E4177E97d057576",
     },
   },
   dolomite: {
@@ -188,15 +202,20 @@ export default {
   },
   plutus: {
     42161: {
+      plvGLP: "0x4E5Cf54FdE5E1237e80E87fcbA555d829e1307CE",
+      plsSPA: "0x73e7c78E8a85C074733920f185d1c78163b555C8",
+      plsJONES: "0x23B87748b615096d1A0F48870daee203A720723D",
       "staking-1": "0x27Aaa9D562237BF8E024F9b21DE177e20ae50c05",
       "staking-3": "0xE59DADf5F7a9decB8337402Ccdf06abE5c0B2B3E",
       "staking-6": "0xBEB981021ed9c85AA51d96C0c2edA10ee4404A2e",
       masterchef: "0x5593473e318F0314Eb2518239c474e183c4cBED5",
+      vester: "0x581a7921c006a3a2e93bcca72abd87e50d049cd7",
     },
   },
   rodeo: {
     42161: {
-      usdc: "0x0032F5E1520a66C6E572e96A11fBF54aea26f9bE",
+      farm: "0x5e4d7F61cC608485A2E4F105713D26D58a9D0cF6",
+      pool: "0x0032F5E1520a66C6E572e96A11fBF54aea26f9bE",
     },
   },
   kwenta: {
@@ -207,35 +226,50 @@ export default {
   },
   stargate: {
     1: {
+      router: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
+      routerETH: "0x150f94B44927F078737562f0fcF3C95c01Cc2376",
       staking: "0xB0D502E938ed5f4df2E681fE6E419ff29631d62b",
       "staking-time": "0x1c3000b8f475A958b87c73a5cc5780Ab763122FC",
     },
     56: {
+      router: "0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8",
       staking: "0x3052A0F6ab15b4AE1df39962d5DdEFacA86DaB47",
       "staking-time": "0x2c6dcEd426D265045737Ff55C2D746C11b2F457a",
     },
     43114: {
+      router: "0x45A01E4e04F14f7A4a6702c74187c5F6222033cd",
       staking: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
     },
     137: {
+      router: "0x45A01E4e04F14f7A4a6702c74187c5F6222033cd",
       staking: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
     },
     42161: {
+      router: "0x53Bf833A5d6c4ddA888F69c22C88C9f356a41614",
+      routerETH: "0xbf22f0f184bCcbeA268dF387a49fF5238dD23E40",
       "staking-time": "0x9774558534036Ff2E236331546691b4eB70594b1",
     },
     10: {
+      router: "0xB0D502E938ed5f4df2E681fE6E419ff29631d62b",
+      routerETH: "0xB49c4e680174E331CB0A7fF3Ab58afC9738d5F8b",
       "staking-time": "0x4DeA9e918c6289a52cd469cAC652727B7b412Cd2",
     },
     250: {
+      router: "0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6",
       staking: "0x224D8Fd7aB6AD4c6eb4611Ce56EF35Dec2277F03",
     },
     8453: {
+      router: "0x45f1A95A4D3f3836523F5c83673c797f4d4d263B",
+      routerETH: "0x50B6EbC2103BFEc165949CC946d739d5650d7ae4",
       "staking-time": "0x06Eb48763f117c7Be887296CDcdfad2E4092739C",
     },
     59144: {
+      router: "0x2F6F07CDcf3588944Bf4C42aC74ff24bF56e7590",
+      routerETH: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
       "staking-time": "0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8",
     },
     2222: {
+      router: "0x2F6F07CDcf3588944Bf4C42aC74ff24bF56e7590",
       "staking-time": "0x35F78Adf283Fe87732AbC9747d9f6630dF33276C",
     },
   },
@@ -279,6 +313,7 @@ export default {
   },
   thena: {
     56: {
+      ve: "0xfBBF371C9B0B994EebFcC977CEf603F7f31c070D",
       voting: "0x3A1D0952809F4948d15EBCe8d345962A282C4fCb",
     },
   },

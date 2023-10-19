@@ -10,23 +10,36 @@ import curveTricrypto2Abi from "./curve-tricrypto2.abi.js";
 import dopexSsovAbi from "./dopex-ssov.abi.js";
 import hopAbi from "./hop.abi.js";
 import lidoAbi from "./lido.abi.js";
-import gmxAbi from "./gmx.abi.js";
+import gmxVesterAbi from "./gmx-vester.abi.js";
+import gmxRewardTrackerAbi from "./gmx-reward-tracker.abi.js";
+import gmxPositionRouterAbi from "./gmx-position-router.abi.js";
 import rocketpoolAbi from "./rocketpool.abi.js";
-import pendleAbi from "./pendle.abi.js";
+import pendleMarketAbi from "./pendle-market.abi.js";
+import pendleVeAbi from "./pendle-ve.abi.js";
+import pendleVotingAbi from "./pendle-voting.abi.js";
 import hopL1BridgeAbi from "./hop-l1bridge.abi.js";
 import hopL2BridgeAbi from "./hop-l2bridge.abi.js";
 import jonesdaoAbi from "./jonesdao.abi.js";
+import lodestarUnitrollerAbi from "./lodestar-unitroller.abi.js";
 import lodestarStakingAbi from "./lodestar-staking.abi.js";
 import lodestarVotingAbi from "./lodestar-voting.abi.js";
 import dolomiteAbi from "./dolomite.abi.js";
 import dolomiteAdminAbi from "./dolomite-admin.abi.js";
-import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
+import plutusPlvGlpAbi from "./plutus-plvglp.abi.js";
+import plutusPlsSpaAbi from "./plutus-plsspa.abi.js";
+import plutusPlsJonesAbi from "./plutus-plsjones.abi.js";
 import plutusStakingAbi from "./plutus-staking.abi.js";
-import rodeoAbi from "./rodeo.abi.js";
+import plutusVesterAbi from "./plutus-vester.abi.js";
+import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
+import rodeoPoolAbi from "./rodeo-pool.abi.js";
+import rodeoFarmAbi from "./rodeo-farm.abi.js";
+import stargateRouterAbi from "./stargate-router.abi.js";
+import stargateRouterETHAbi from "./stargate-routerETH.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
-import synapsePoolAbi from "./synapse-pool.abi.js";
+import thenaVeAbi from "./thena-ve.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
+import synapsePoolAbi from "./synapse-pool.abi.js";
 import uniswapAbi from "./uniswap.abi.js";
 import yieldYakAbi from "./yield-yak.abi.js";
 
@@ -43,19 +56,32 @@ export const abis = {
   "curve-tricrypto2": curveTricrypto2Abi,
   hop: hopAbi,
   lido: lidoAbi,
-  gmx: gmxAbi,
+  "gmx-vester": gmxVesterAbi,
+  "gmx-reward-tracker": gmxRewardTrackerAbi,
+  "gmx-position-router": gmxPositionRouterAbi,
   rocketpool: rocketpoolAbi,
-  pendle: pendleAbi,
+  "pendle-market": pendleMarketAbi,
+  "pendle-ve": pendleVeAbi,
+  "pendle-voting": pendleVotingAbi,
   jonesdao: jonesdaoAbi,
+  "lodestar-unitroller": lodestarUnitrollerAbi,
   "lodestar-staking": lodestarStakingAbi,
   "lodestar-voting": lodestarVotingAbi,
   dolomite: dolomiteAbi,
   "dolomite-admin": dolomiteAdminAbi,
+  "plutus-plvGLP": plutusPlvGlpAbi,
+  "plutus-plsSPA": plutusPlsSpaAbi,
+  "plutus-plsJONES": plutusPlsJonesAbi,
   "plutus-masterchef": plutusMasterchefAbi,
   "plutus-staking": plutusStakingAbi,
-  rodeo: rodeoAbi,
+  "plutus-vester": plutusVesterAbi,
+  "rodeo-pool": rodeoPoolAbi,
+  "rodeo-farm": rodeoFarmAbi,
+  "stargate-router": stargateRouterAbi,
+  "stargate-routerETH": stargateRouterETHAbi,
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,
+  "thena-ve": thenaVeAbi,
   "thena-voting": thenaVotingAbi,
   uniswap: uniswapAbi,
   yieldyak: yieldYakAbi,

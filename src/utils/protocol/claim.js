@@ -49,6 +49,21 @@ export const getClaimData = async (
       abi = getABIForProtocol(_protocolName);
       break;
     }
+    case "gmx": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        "staked" + token.toUpperCase() + "Tracker"
+      );
+      abi = getABIForProtocol(_protocolName, "reward-tracker");
+      break;
+    }
+    case "jonesdao": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(0 /* uint256 _pid */);
+      break;
+    }
     case "lodestar": {
       address = getProtocolAddressForChain(_protocolName, chainId, "staking");
       abi = getABIForProtocol(_protocolName, "staking");
@@ -60,15 +75,10 @@ export const getClaimData = async (
       params.push(_amount);
       break;
     }
-    case "thena": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "voting");
-      abi = getABIForProtocol(_protocolName, "voting");
-      params.push([] /* address[] _gauges */);
-      break;
-    }
-    case "jonesdao": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
+    case "stargate": {
+      const key = true /* based on param */ ? "staking" : "staking-time";
+      address = getProtocolAddressForChain(_protocolName, chainId, key);
+      abi = getABIForProtocol(_protocolName, key);
       params.push(0 /* uint256 _pid */);
       break;
     }

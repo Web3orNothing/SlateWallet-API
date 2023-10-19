@@ -135,28 +135,26 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
-    case "rocketpool":
-    case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      params.push(_amount);
-      break;
-    }
-    case "rodeo": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      params.push(_amount);
-      params.push(accountAddress);
-      break;
-    }
-    case "plutus": {
+    case "gmx": {
       address = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        "masterchef"
+        token.toLowerCase() + "Vester"
       );
+      abi = getABIForProtocol(_protocolName, "vester");
+      break;
+    }
+    case "rocketpool": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-      params.push(0 /* uint256 _pid */);
+      params.push(_amount);
+      break;
+    }
+    case "pendle": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      abi = getABIForProtocol(_protocolName, "market");
+      params.push(accountAddress);
+      params.push(accountAddress);
       params.push(_amount);
       break;
     }
@@ -167,14 +165,39 @@ export const getWithdrawData = async (
       params.push(_amount);
       break;
     }
+    case "plutus": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
+      if (address) {
+        abi = getABIForProtocol(_protocolName, token.toLowerCase());
+      } else {
+        address = getProtocolAddressForChain(
+          _protocolName,
+          chainId,
+          "masterchef"
+        );
+        abi = getABIForProtocol(_protocolName, "masterchef");
+        params.push(0 /* uint256 _pid */);
+      }
+      params.push(_amount);
+      break;
+    }
+    case "rodeo": {
+      address = getProtocolAddressForChain(_protocolName, chainId, "farm");
+      abi = getABIForProtocol(_protocolName, "farm");
+      params.push(0 /* uint256 id */);
+      break;
+    }
     case "stargate": {
-      const key = true /* based on param */ ? "staking" : "staking-time";
+      const key = _token.address === NATIVE_TOKEN ? "routerETH" : "router";
       address = getProtocolAddressForChain(_protocolName, chainId, key);
       abi = getABIForProtocol(_protocolName, key);
-
-      params.push(accountAddress);
-      params.push(0 /* uint256 _pid */);
+      params.push(0 /* uint256 dstGasForCall */);
       params.push(_amount);
+      params.push(accountAddress);
       break;
     }
     // case "uniswap": {
@@ -212,7 +235,7 @@ export const getWithdrawData = async (
     //     provider,
     //     lpTokenAddress,
     //     _amount,
-    //     spender,
+    //     accountAddress,
     //     address
     //   );
     //   params.push(address);

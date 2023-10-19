@@ -48,6 +48,28 @@ export const getLendData = async (
   let abi = [];
   const params = [];
 
+  switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(_token.address);
+      params.push(_amount);
+      params.push(accountAddress);
+      params.push(0);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+  }
+
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };
   }
@@ -63,5 +85,5 @@ export const getLendData = async (
     params,
     "0"
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

@@ -68,5 +68,5 @@ export const getVoteData = async (
     params,
     "0"
   );
-  return { transactions: data };
+  return { transactions: [data] };
 };

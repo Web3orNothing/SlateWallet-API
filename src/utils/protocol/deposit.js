@@ -425,5 +425,5 @@ export const getDepositData = async (
     params,
     value.toString()
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

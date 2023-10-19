@@ -29,7 +29,6 @@ import synapsePoolAbi from "./synapse-pool.abi.js";
 import thenaVotingAbi from "./thena-voting.abi.js";
 import uniswapAbi from "./uniswap.abi.js";
 import yieldYakAbi from "./yield-yak.abi.js";
-import curveFraxusdpAbi from "./curve-fraxusdp.abi.js";
 
 export const abis = {
   aave: aaveAbi,

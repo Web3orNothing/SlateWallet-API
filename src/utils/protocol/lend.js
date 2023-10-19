@@ -49,6 +49,25 @@ export const getLendData = async (
   const params = [];
 
   switch (_protocolName) {
+    case "aave": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      params.push(_token.address);
+      params.push(_amount);
+      params.push(accountAddress);
+      params.push(0);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
     case "lodestar": {
       address = getProtocolAddressForChain(
         _protocolName,
@@ -65,7 +84,7 @@ export const getLendData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -76,16 +95,6 @@ export const getLendData = async (
       abi = getABIForProtocol(_protocolName, "pool");
       params.push(_amount);
       params.push(accountAddress);
-
-      if (_token.address !== NATIVE_TOKEN) {
-        approveTxs = await getApproveData(
-          provider,
-          _token.address,
-          _amount,
-          spender,
-          address
-        );
-      }
       break;
     }
     default: {
@@ -108,5 +117,5 @@ export const getLendData = async (
     params,
     "0"
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

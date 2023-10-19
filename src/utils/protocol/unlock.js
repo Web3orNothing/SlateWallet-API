@@ -80,5 +80,5 @@ export const getUnlockData = async (
     params,
     "0"
   );
-  return { transactions: data };
+  return { transactions: [data] };
 };

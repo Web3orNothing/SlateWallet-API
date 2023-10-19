@@ -41,16 +41,6 @@ export const getWithdrawData = async (
     amount
   );
 
-  let _token1;
-  if (token1) {
-    _token1 = await getTokenAddressForChain(_token1, chainName);
-    if (!_token1) {
-      return {
-        error: "Token not found on the specified chain.",
-      };
-    }
-  }
-
   let address = null;
   let abi = [];
   const params = [];
@@ -73,6 +63,70 @@ export const getWithdrawData = async (
       abi = getABIForProtocol(_protocolName, token.toLowerCase());
       params.push(_token.address);
       params.push(_amount);
+      break;
+    }
+    case "curve": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, poolName);
+      const pool = new ethers.Contract(address, abi, provider);
+      let count = 0;
+      let tokenIndex;
+      while (true) {
+        try {
+          const coin = await pool.coins(count);
+          if (
+            coin.toLowerCase() === NATIVE_TOKEN2 &&
+            _token.address === NATIVE_TOKEN
+          ) {
+            tokenIndex = count;
+          } else if (_token.address.toLowerCase() === coin.toLowerCase()) {
+            tokenIndex = count;
+          }
+          count++;
+        } catch {
+          break;
+        }
+      }
+
+      params.push(_amount);
+      params.push(tokenIndex);
+      params.push(0);
+      break;
+    }
+    case "dopex": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, "ssov");
+      const contract = new ethers.Contract(address, abi, provider);
+      const tokenId = await contract.tokenOfOwnerByIndex(address, 0);
+      params.push(tokenId);
+      params.push(address);
+      break;
+    }
+    case "synapse": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
+      abi = getABIForProtocol(_protocolName, "staking");
+      const contract = new ethers.Contract(address, abi, provider);
+      const tokenIdx = await contract.getTokenIndex(_token.address);
+      let count = tokenIdx + 1;
+      while (true) {
+        try {
+          await contract.getToken(count);
+          count++;
+        } catch {
+          break;
+        }
+      }
+      let amounts = new Array(count).fill(0);
+      amounts[tokenIdx] = _amount;
+
+      params.push(_amount);
+      params.push(tokenIdx);
+      params.push(0);
+      params.push(Math.floor(Date.now() / 1000) + 1200);
       break;
     }
     case "hop": {
@@ -181,7 +235,7 @@ export const getWithdrawData = async (
     //     provider,
     //     lpTokenAddress,
     //     _amount,
-    //     spender,
+    //     accountAddress,
     //     address
     //   );
     //   params.push(address);
@@ -208,5 +262,5 @@ export const getWithdrawData = async (
     params,
     "0"
   );
-  return { transactions: data };
+  return { transactions: [data] };
 };

@@ -94,5 +94,5 @@ export const getBorrowData = async (
     params,
     "0"
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

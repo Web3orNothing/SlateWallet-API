@@ -62,7 +62,7 @@ export const getRepayData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -85,7 +85,7 @@ export const getRepayData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -101,7 +101,7 @@ export const getRepayData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -127,5 +127,5 @@ export const getRepayData = async (
     params,
     "0"
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

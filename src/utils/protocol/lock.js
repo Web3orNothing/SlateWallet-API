@@ -61,7 +61,7 @@ export const getLockData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -77,7 +77,7 @@ export const getLockData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -94,7 +94,7 @@ export const getLockData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
@@ -120,5 +120,5 @@ export const getLockData = async (
     params,
     "0"
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

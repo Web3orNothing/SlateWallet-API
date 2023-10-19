@@ -57,6 +57,7 @@ export const getSwapData = async (
     case "uniswap":
     case "llamazip":
     case "curve":
+    case "camelot":
     case "balancer": {
       let dexList;
       if (_protocolName === "sushiswap") {
@@ -67,6 +68,8 @@ export const getSwapData = async (
         dexList = ["Llamazip"];
       } else if (_protocolName === "curve") {
         dexList = ["Curve"];
+      } else if (_protocolName === "camelot") {
+        dexList = ["Camelot"];
       } else if (_protocolName === "balancer") {
         dexList = ["Balancer"];
       }
@@ -114,7 +117,7 @@ export const getSwapData = async (
     case "synapse": {
       const data = await getSwapQuoteFromSynapse(
         chainId,
-        spender,
+        accountAddress,
         {
           address: _inputToken.address,
           symbol: inputToken,
@@ -136,7 +139,7 @@ export const getSwapData = async (
             provider,
             _inputToken.address,
             _inputAmount,
-            spender,
+            accountAddress,
             tx.to
           );
           transactions.push(...approveTxs);
@@ -167,7 +170,7 @@ export const getSwapData = async (
       else if (_protocolName === "openocean") swapFunc = getQuoteFromOpenOcean;
       const data = await swapFunc(
         chainId,
-        spender,
+        accountAddress,
         {
           address: _inputToken.address,
           symbol: inputToken,
@@ -188,7 +191,7 @@ export const getSwapData = async (
             provider,
             _inputToken.address,
             _inputAmount,
-            spender,
+            accountAddress,
             tx.to
           );
           transactions.push(...approveTxs);

@@ -11,7 +11,7 @@ import {
   getTokenAmount,
 } from "../index.js";
 
-import { NATIVE_TOKEN } from "../../constants.js";
+import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 
 export const getDepositData = async (
   accountAddress,
@@ -103,6 +103,47 @@ export const getDepositData = async (
       }
       break;
     }
+    case "curve": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, poolName);
+      const pool = new ethers.Contract(address, abi, provider);
+      let count = 0;
+      let tokenIndex;
+      while (true) {
+        try {
+          const coin = await pool.coins(count);
+          if (
+            coin.toLowerCase() === NATIVE_TOKEN2 &&
+            _token.address === NATIVE_TOKEN
+          ) {
+            tokenIndex = count;
+          } else if (_token.address.toLowerCase() === coin.toLowerCase()) {
+            tokenIndex = count;
+          }
+          count++;
+        } catch {
+          break;
+        }
+      }
+      const amounts = new Array(count).fill(0);
+      amounts[tokenIndex] = _amount;
+
+      if (_token.address === NATIVE_TOKEN2) {
+        value = _amount;
+      }
+
+      params.push(amounts);
+      params.push(0);
+      break;
+    }
+    case "dopex": {
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
+      abi = getABIForProtocol(_protocolName, "ssov");
+      params.push(0); // TODO: strike ID
+      params.push(_amount);
+      params.push(address);
+      break;
+    }
     case "lido": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
@@ -165,10 +206,43 @@ export const getDepositData = async (
           provider,
           _token.address,
           _amount,
-          spender,
+          accountAddress,
           address
         );
       }
+      break;
+    }
+    case "synapse": {
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
+      abi = getABIForProtocol(_protocolName, "staking");
+      const contract = new ethers.Contract(address, abi, provider);
+      const tokenIdx = await contract.getTokenIndex(_token.address);
+      let count = tokenIdx + 1;
+      while (true) {
+        try {
+          await contract.getToken(count);
+          count++;
+        } catch {
+          break;
+        }
+      }
+      let amounts = new Array(count).fill(0);
+      amounts[tokenIdx] = _amount;
+
+      params.push(amounts);
+      params.push(0), params.push(Math.floor(Date.now() / 1000) + 1200);
+
+      approveTxs = await getApproveData(
+        provider,
+        _token.address,
+        _amount,
+        accountAddress,
+        address
+      );
       break;
     }
     case "plutus": {
@@ -261,7 +335,7 @@ export const getDepositData = async (
     //       provider,
     //       isToken0Eth ? _token1.address : _token.address,
     //       isToken0Eth ? _amount1 : _amount,
-    //       spender,
+    //       accountAddress,
     //       address
     //     );
     //   } else {
@@ -278,14 +352,14 @@ export const getDepositData = async (
     //       provider,
     //       _token.address,
     //       _amount,
-    //       spender,
+    //       accountAddress,
     //       address
     //     );
     //     const approveTx2 = await getApproveData(
     //       provider,
     //       _token1.address,
     //       _amount1,
-    //       spender,
+    //       accountAddress,
     //       address
     //     );
     //     approveTxs = [...approveTx1, ...approveTx2];
@@ -314,5 +388,5 @@ export const getDepositData = async (
     params,
     value.toString()
   );
-  return { transactions: [...approveTxs, ...data] };
+  return { transactions: [...approveTxs, data] };
 };

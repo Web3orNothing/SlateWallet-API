@@ -632,35 +632,35 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         case "swap": {
           const { message, transactions } = await getSwapTx(body, true);
           if (message)
-            return { success: false, transactionsList: null, calls: null };
+            return { success: false, message, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "bridge": {
           const { message, transactions } = await getBridgeTx(body, true);
           if (message)
-            return { success: false, transactionsList: null, calls: null };
+            return { success: false, message, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "protocol": {
           const { message, transactions } = await getProtocolTx(body);
           if (message)
-            return { success: false, transactionsList: null, calls: null };
+            return { success: false, message, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "yield": {
           const { message, transactions } = await getYieldTx(body);
           if (message)
-            return { success: false, transactionsList: null, calls: null };
+            return { success: false, message, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
         case "transfer": {
           const { message, transactions } = await getTransferTx(body, true);
           if (message)
-            return { success: false, transactionsList: null, calls: null };
+            return { success: false, message, transactionsList: null, calls: null };
           txs = transactions;
           break;
         }
@@ -690,14 +690,14 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       const length = res.simulation_results.length;
       for (let j = 0; j < length; j++) {
         if (!res.simulation_results[j].transaction.status)
-          return { success: false, transactionsList: null, calls: null };
+          return { success: false, message: res.simulation_results[j].transaction.error_message, transactionsList: null, calls: null };
       }
 
       if (!token) continue;
 
       let _token = await getTokenAddressForChain(token, chainName);
       if (!_token)
-        return { success: false, transactionsList: null, calls: null };
+        return { success: false, message: "Token not found on given chain", transactionsList: null, calls: null };
       _token = _token.address.toLowerCase();
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
@@ -795,7 +795,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);
-      return { success: false, transactionsList: null, calls: null };
+      return { success: false, message: err.message, transactionsList: null, calls: null };
     }
   }
   return { success: true, transactionsList, calls };

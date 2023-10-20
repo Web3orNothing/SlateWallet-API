@@ -181,6 +181,9 @@ export const getFunctionName = (protocol, action) => {
     case "hop":
       if (action === "claim") return "getReward";
       return action;
+    case "lido":
+      if (action === "stake") return "deposit";
+      return action;
     case "rocketpool":
       if (action === "withdraw") return "withdrawExcessBalance";
       return action;

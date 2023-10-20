@@ -68,6 +68,16 @@ export const getStakeData = async (
       }
       break;
     }
+    case "lido": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+      if (+amount < 32) return { error: "Too less amount" };
+
+      params.push(Math.floor(+amount < 32));
+      params.push(1); // TODO: monitor available stake modules
+      params.push("0x");
+      break;
+    }
     case "gmx": {
       address = getProtocolAddressForChain(
         _protocolName,

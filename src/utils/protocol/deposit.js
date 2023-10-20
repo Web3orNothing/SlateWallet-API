@@ -163,6 +163,8 @@ export const getDepositData = async (
     case "rocketpool": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
+      if (_token.address !== NATIVE_TOKEN)
+        return { error: "Token not supported" };
       break;
     }
     case "pendle": {

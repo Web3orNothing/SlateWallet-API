@@ -60,17 +60,17 @@ export const getCloseData = async (
     );
     const positionRouterAbi = getABIForProtocol(
       _protocolName,
-      "positionRouter"
+      "position-router"
     );
     const vaultAbi = getABIForProtocol(_protocolName, "vault");
-    const positionRouter = new Contract(
+    const positionRouter = new ethers.Contract(
       positionRouterAddress,
       positionRouterAbi,
       provider
     );
-    const vault = new Contract(vaultAddress, vaultAbi, provider);
+    const vault = new ethers.Contract(vaultAddress, vaultAbi, provider);
     const executionFee = await positionRouter.minExecutionFee();
-    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _amount);
+    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _inputAmount);
 
     const isLong = !(await vault.stableTokens(_inputToken.address));
     const acceptablePrice = isLong

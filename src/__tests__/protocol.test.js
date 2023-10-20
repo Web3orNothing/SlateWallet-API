@@ -16,6 +16,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
     });
   });
 
@@ -33,6 +34,23 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
+
+    it("GMX", async () => {
+      const res = await request(app).post("/deposit").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
     });
   });
 
@@ -50,6 +68,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
     });
   });
 
@@ -67,6 +86,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
     });
   });
 
@@ -84,6 +104,23 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("status");
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("GMX", async () => {
+      const res = await request(app).post("/withdraw").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
     });
   });
 
@@ -114,6 +151,95 @@ describe("Test Protocol Integration", () => {
       expect(res.body.status).toEqual("error");
       expect(res.body).toHaveProperty("message");
       expect(res.body.message).toEqual("Too less amount");
+    });
+
+    it("GMX", async () => {
+      const res = await request(app).post("/stake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        token: "GMX",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
+  });
+
+  describe("Unstake", () => {
+    it("GMX", async () => {
+      const res = await request(app).post("/unstake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        token: "GMX",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+  });
+
+  describe("Long", () => {
+    it("GMX", async () => {
+      const res = await request(app).post("/long").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        inputToken: "WETH",
+        inputAmount: "0.1",
+        outputToken: "USDT",
+        leverageMultiplier: 4,
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(3);
+    });
+  });
+
+  describe("Short", () => {
+    it("GMX", async () => {
+      const res = await request(app).post("/short").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        inputToken: "USDT",
+        inputAmount: "100",
+        outputToken: "WETH",
+        leverageMultiplier: 4,
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(3);
+    });
+  });
+
+  describe.skip("Close", () => {
+    it("GMX", async () => {
+      const res = await request(app).post("/close").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "GMX",
+        chainName: "Arbitrum",
+        inputToken: "WETH",
+        inputAmount: "0.1",
+        outputToken: "USDT",
+        leverageMultiplier: 4,
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
     });
   });
 });

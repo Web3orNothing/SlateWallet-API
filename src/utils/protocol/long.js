@@ -71,17 +71,17 @@ export const getLongData = async (
     const vaultAbi = getABIForProtocol(_protocolName, "vault");
     const positionRouterAbi = getABIForProtocol(
       _protocolName,
-      "positionRouter"
+      "position-router"
     );
-    const token = new Contract(_inputToken.address, ERC20_ABI, provider);
-    const router = new Contract(routerAddress, routerAbi, provider);
-    const vault = new Contract(vaultAddress, vaultAbi, provider);
-    const positionRouter = new Contract(
+    const token = new ethers.Contract(_inputToken.address, ERC20_ABI, provider);
+    const router = new ethers.Contract(routerAddress, routerAbi, provider);
+    const vault = new ethers.Contract(vaultAddress, vaultAbi, provider);
+    const positionRouter = new ethers.Contract(
       positionRouterAddress,
       positionRouterAbi,
       provider
     );
-    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _amount);
+    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _inputAmount);
     const executionFee = await positionRouter.minExecutionFee();
 
     const isApprovedPlugin = await router.approvedPlugins(
@@ -101,7 +101,7 @@ export const getLongData = async (
       );
     }
     const allowance = await token.allowance(accountAddress, routerAddress);
-    if (allowance.lt(_amount) && _inputToken.address !== NATIVE_TOKEN) {
+    if (allowance.lt(_inputAmount) && _inputToken.address !== NATIVE_TOKEN) {
       if (!allowance.isZero()) {
         transactions.push(
           await getFunctionData(
@@ -118,7 +118,7 @@ export const getLongData = async (
         ...(await getApproveData(
           provider,
           _inputToken.address,
-          _amount,
+          _inputAmount,
           accountAddress,
           routerAddress
         ))
@@ -135,7 +135,7 @@ export const getLongData = async (
         [
           [_inputToken.address],
           _outputToken.address,
-          _amount,
+          _inputAmount,
           0,
           sizeDelta,
           true,
@@ -164,7 +164,7 @@ export const getLongData = async (
         approveTxs = await getApproveData(
           provider,
           _token.address,
-          _amount,
+          _inputAmount,
           accountAddress,
           address
         );

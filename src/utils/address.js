@@ -245,7 +245,6 @@ export default {
   stargate: {
     1: {
       router: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
-      routerETH: "0x150f94B44927F078737562f0fcF3C95c01Cc2376",
       staking: "0xB0D502E938ed5f4df2E681fE6E419ff29631d62b",
       "staking-time": "0x1c3000b8f475A958b87c73a5cc5780Ab763122FC",
     },
@@ -264,12 +263,10 @@ export default {
     },
     42161: {
       router: "0x53Bf833A5d6c4ddA888F69c22C88C9f356a41614",
-      routerETH: "0xbf22f0f184bCcbeA268dF387a49fF5238dD23E40",
       "staking-time": "0x9774558534036Ff2E236331546691b4eB70594b1",
     },
     10: {
       router: "0xB0D502E938ed5f4df2E681fE6E419ff29631d62b",
-      routerETH: "0xB49c4e680174E331CB0A7fF3Ab58afC9738d5F8b",
       "staking-time": "0x4DeA9e918c6289a52cd469cAC652727B7b412Cd2",
     },
     250: {
@@ -278,12 +275,10 @@ export default {
     },
     8453: {
       router: "0x45f1A95A4D3f3836523F5c83673c797f4d4d263B",
-      routerETH: "0x50B6EbC2103BFEc165949CC946d739d5650d7ae4",
       "staking-time": "0x06Eb48763f117c7Be887296CDcdfad2E4092739C",
     },
     59144: {
       router: "0x2F6F07CDcf3588944Bf4C42aC74ff24bF56e7590",
-      routerETH: "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
       "staking-time": "0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8",
     },
     2222: {

@@ -66,7 +66,7 @@
     - stake / Staking -> done
     - unstake / Staking -> done
     - claim / Staking -> done
-    - harvest
+    - harvest / Staking -> done
     - vote
 12. Thena (agreed to skip this)
     - deposit / GaugeFactory (created by factory contract) -> _can't find each pool contract address created by factory_

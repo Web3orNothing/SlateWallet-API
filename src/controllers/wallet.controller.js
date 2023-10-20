@@ -480,6 +480,7 @@ const simulate = async (req, res) => {
     const { calls, conditionId, accountAddress, connectedChainName } = req.body;
     const {
       success,
+      message,
       transactionsList,
       calls: updatedCalls,
     } = await simulateCalls(calls, accountAddress, connectedChainName);
@@ -515,12 +516,12 @@ const simulate = async (req, res) => {
     } else {
       res
         .status(httpStatus.BAD_REQUEST)
-        .json({ status: "error", message: "Simulation failed" });
+        .json({ status: "error", message: `Simulation failed: ${message}` });
     }
-  } catch {
+  } catch (err) {
     res
       .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Simulation failed" });
+      .json({ status: "error", message: `Simulation failed: ${err.message}` });
   }
 };
 

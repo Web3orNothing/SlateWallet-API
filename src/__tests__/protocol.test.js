@@ -130,6 +130,22 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
     });
+
+    it("Plutus", async () => {
+      const res = await request(app).post("/deposit").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Plutus",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Lend", () => {
@@ -264,6 +280,22 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(1);
     });
+
+    it("Plutus", async () => {
+      let res = await request(app).post("/withdraw").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Plutus",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
   });
 
   describe("Stake", () => {
@@ -339,6 +371,21 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
     });
+
+    it("Plutus", async () => {
+      const res = await request(app).post("/stake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Plutus",
+        chainName: "Arbitrum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Unstake", () => {
@@ -361,6 +408,21 @@ describe("Test Protocol Integration", () => {
       const res = await request(app).post("/unstake").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Lodestar",
+        chainName: "Arbitrum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("Plutus", async () => {
+      const res = await request(app).post("/unstake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Plutus",
         chainName: "Arbitrum",
         token: "USDT",
         amount: "100",
@@ -426,6 +488,21 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
     });
+
+    it("Plutus", async () => {
+      const res = await request(app).post("/lock").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Plutus",
+        chainName: "Arbitrum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Unlock", () => {
@@ -434,6 +511,21 @@ describe("Test Protocol Integration", () => {
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Pendle",
         chainName: "Ethereum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("Plutus", async () => {
+      const res = await request(app).post("/unlock").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Plutus",
+        chainName: "Arbitrum",
         token: "USDT",
         amount: "100",
       });

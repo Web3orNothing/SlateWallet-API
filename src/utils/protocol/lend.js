@@ -95,6 +95,16 @@ export const getLendData = async (
       abi = getABIForProtocol(_protocolName, "pool");
       params.push(_amount);
       params.push(accountAddress);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
       break;
     }
     default: {

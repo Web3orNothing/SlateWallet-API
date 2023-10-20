@@ -34,6 +34,22 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(1);
     });
+
+    it("Rodeo", async () => {
+      const res = await request(app).post("/borrow").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Rodeo",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
   });
 
   describe("Deposit", () => {
@@ -146,6 +162,22 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
     });
+
+    it("Rodeo", async () => {
+      const res = await request(app).post("/deposit").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Rodeo",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Lend", () => {
@@ -180,6 +212,22 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
     });
+
+    it("Rodeo", async () => {
+      const res = await request(app).post("/lend").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Rodeo",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Repay", () => {
@@ -203,6 +251,22 @@ describe("Test Protocol Integration", () => {
       const res = await request(app).post("/repay").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Lodestar",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
+
+    it("Rodeo", async () => {
+      const res = await request(app).post("/repay").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Rodeo",
         chainName: "Arbitrum",
         poolName: null,
         token: "USDT",
@@ -285,6 +349,22 @@ describe("Test Protocol Integration", () => {
       let res = await request(app).post("/withdraw").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Plutus",
+        chainName: "Arbitrum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("Rodeo", async () => {
+      let res = await request(app).post("/withdraw").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Rodeo",
         chainName: "Arbitrum",
         poolName: null,
         token: "USDT",

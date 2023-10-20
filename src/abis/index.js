@@ -35,6 +35,8 @@ import plutusVesterAbi from "./plutus-vester.abi.js";
 import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
 import rodeoPoolAbi from "./rodeo-pool.abi.js";
 import rodeoFarmAbi from "./rodeo-farm.abi.js";
+import kwentaStakingAbi from "./kwenta-staking.abi.js";
+import kwentaMarginAbi from "./kwenta-margin.abi.js";
 import stargateRouterAbi from "./stargate-router.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
@@ -80,6 +82,8 @@ export const abis = {
   "plutus-vester": plutusVesterAbi,
   "rodeo-pool": rodeoPoolAbi,
   "rodeo-farm": rodeoFarmAbi,
+  "kwenta-staking": kwentaStakingAbi,
+  "kwenta-margin": kwentaMarginAbi,
   "stargate-router": stargateRouterAbi,
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,

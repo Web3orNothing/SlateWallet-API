@@ -127,7 +127,7 @@ export const getChainNameFromId = (chainId) => {
 export const getRpcUrlForChain = (chainId) => {
   const chainIdsToRpcUrls = {
     1: "https://rpc.mevblocker.io",
-    10: "https://endpoints.omniatech.io/v1/op/mainnet/public",
+    10: "https://optimism.publicnode.com",
     25: "https://cronos-evm.publicnode.com",
     56: "https://bsc-rpc.gateway.pokt.network",
     61: "https://etc.rivet.link",

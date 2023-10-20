@@ -82,6 +82,22 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("message");
       expect(res.body.message).toEqual("Token not supported");
     });
+
+    it("Pendle", async () => {
+      let res = await request(app).post("/deposit").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Pendle",
+        chainName: "Ethereum",
+        poolName: null,
+        token: "stETH",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Lend", () => {
@@ -160,6 +176,22 @@ describe("Test Protocol Integration", () => {
         chainName: "Ethereum",
         poolName: null,
         token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("Pendle", async () => {
+      let res = await request(app).post("/withdraw").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Pendle",
+        chainName: "Ethereum",
+        poolName: null,
+        token: "stETH",
         amount: "100",
       });
       expect(res.statusCode).toEqual(200);
@@ -267,6 +299,56 @@ describe("Test Protocol Integration", () => {
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(3);
+    });
+  });
+
+  describe("Lock", () => {
+    it("Pendle", async () => {
+      const res = await request(app).post("/lock").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Pendle",
+        chainName: "Ethereum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
+  });
+
+  describe("Unlock", () => {
+    it("Pendle", async () => {
+      const res = await request(app).post("/unlock").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Pendle",
+        chainName: "Ethereum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+  });
+
+  describe("Vote", () => {
+    it("Pendle", async () => {
+      const res = await request(app).post("/vote").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Pendle",
+        chainName: "Ethereum",
+        poolName: null,
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
     });
   });
 

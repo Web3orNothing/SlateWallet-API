@@ -330,13 +330,28 @@ export const getApproveData = async (
   owner,
   spender
 ) => {
-  const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-  const allowance = await token.allowance(owner, spender);
-  const txs = [];
-  if (allowance.lt(amount)) {
-    const symbol = await token.symbol();
-    if (symbol === "USDT" && !allowance.eq(0)) {
-      const data = token.interface.encodeFunctionData("approve", [spender, 0]);
+  try {
+    const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+    const allowance = await token.allowance(owner, spender);
+    const txs = [];
+    if (allowance.lt(amount)) {
+      const symbol = await token.symbol();
+      if (symbol === "USDT" && !allowance.eq(0)) {
+        const data = token.interface.encodeFunctionData("approve", [
+          spender,
+          0,
+        ]);
+        txs.push({
+          to: tokenAddress,
+          value: "0",
+          data,
+          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
+        });
+      }
+      const data = token.interface.encodeFunctionData("approve", [
+        spender,
+        amount,
+      ]);
       txs.push({
         to: tokenAddress,
         value: "0",
@@ -344,18 +359,11 @@ export const getApproveData = async (
         ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
       });
     }
-    const data = token.interface.encodeFunctionData("approve", [
-      spender,
-      amount,
-    ]);
-    txs.push({
-      to: tokenAddress,
-      value: "0",
-      data,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-    });
+    return txs;
+  } catch (err) {
+    console.log("Approve failed", err);
+    return [];
   }
-  return txs;
 };
 
 export const getTokenAddressForChain = async (symbol, chainName) => {

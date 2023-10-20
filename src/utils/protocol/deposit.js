@@ -168,7 +168,11 @@ export const getDepositData = async (
       break;
     }
     case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase() + "Market"
+      );
       abi = getABIForProtocol(_protocolName, "market");
       params.push(accountAddress);
       params.push(_amount);

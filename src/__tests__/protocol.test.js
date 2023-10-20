@@ -466,6 +466,21 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
     });
+
+    it("Kwenta", async () => {
+      const res = await request(app).post("/stake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Kwenta",
+        chainName: "Optimism",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(2);
+    });
   });
 
   describe("Unstake", () => {
@@ -504,6 +519,21 @@ describe("Test Protocol Integration", () => {
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Plutus",
         chainName: "Arbitrum",
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("Kwenta", async () => {
+      const res = await request(app).post("/unstake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Kwenta",
+        chainName: "Optimism",
         token: "USDT",
         amount: "100",
       });

@@ -137,6 +137,8 @@ export default {
   },
   gmx: {
     42161: {
+      router: "0xaBBc5F99639c9B6bCb58544ddf04EFA6802F4064",
+      vault: "0x489ee077994B6658eAfA855C308275EAd8097C4A",
       positionRouter: "0xb87a436B93fFE9D75c5cFA7bAcFff96430b09868",
       gmxVester: "0x199070DDfd1CFb69173aa2F7e20906F26B363004",
       glpVester: "0xA75287d2f8b217273E7FCD7E86eF07D33972042E",
@@ -147,6 +149,8 @@ export default {
       feeGLPTracker: "0x4e971a87900b931fF39d1Aad67697F49835400b6",
     },
     43114: {
+      router: "0x5F719c2F1095F7B9fc68a68e35B51194f4b6abe8",
+      vault: "0x9ab2De34A33fB459b538c43f251eB825645e8595",
       positionRouter: "0xffF6D276Bc37c61A23f06410Dce4A400f66420f8",
       stakedGmxTracker: "0x2bD10f8E93B3669b6d42E74eEedC65dd1B0a1342",
       bonusGmxTracker: "0x908C4D94D34924765f1eDc22A1DD098397c59dD4",

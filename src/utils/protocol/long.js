@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { constants, ethers } from "ethers";
 import {
   getChainIdFromName,
   getRpcUrlForChain,
@@ -10,6 +10,7 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
+import ERC20_ABI from "../../abis/erc20.abi.js";
 
 import { NATIVE_TOKEN } from "../../constants.js";
 
@@ -49,10 +50,131 @@ export const getLongData = async (
     inputAmount
   );
 
+  if (_protocolName === "gmx") {
+    const transactions = [];
+    const routerAddress = getProtocolAddressForChain(
+      _protocolName,
+      chainId,
+      "router"
+    );
+    const vaultAddress = getProtocolAddressForChain(
+      _protocolName,
+      chainId,
+      "vault"
+    );
+    const positionRouterAddress = getProtocolAddressForChain(
+      _protocolName,
+      chainId,
+      "positionRouter"
+    );
+    const routerAbi = getABIForProtocol(_protocolName, "router");
+    const vaultAbi = getABIForProtocol(_protocolName, "vault");
+    const positionRouterAbi = getABIForProtocol(
+      _protocolName,
+      "positionRouter"
+    );
+    const token = new Contract(_inputToken.address, ERC20_ABI, provider);
+    const router = new Contract(routerAddress, routerAbi, provider);
+    const vault = new Contract(vaultAddress, vaultAbi, provider);
+    const positionRouter = new Contract(
+      positionRouterAddress,
+      positionRouterAbi,
+      provider
+    );
+    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _amount);
+    const executionFee = await positionRouter.minExecutionFee();
+
+    const isApprovedPlugin = await router.approvedPlugins(
+      accountAddress,
+      positionRouterAddress
+    );
+    if (!isApprovedPlugin) {
+      transactions.push(
+        await getFunctionData(
+          routerAddress,
+          routerAbi,
+          provider,
+          "approvePlugin",
+          [positionRouterAddress],
+          "0"
+        )
+      );
+    }
+    const allowance = await token.allowance(accountAddress, routerAddress);
+    if (allowance.lt(_amount) && _inputToken.address !== NATIVE_TOKEN) {
+      if (!allowance.isZero()) {
+        transactions.push(
+          await getFunctionData(
+            _inputToken.address,
+            ERC20_ABI,
+            provider,
+            "approve",
+            [routerAddress, 0],
+            "0"
+          )
+        );
+      }
+      transactions.push(
+        ...(await getApproveData(
+          provider,
+          _inputToken.address,
+          _amount,
+          accountAddress,
+          routerAddress
+        ))
+      );
+    }
+    const sizeDelta = usdMin.mul(leverageMultiplier);
+    const priceMax = await vault.getMaxPrice(_inputToken.address);
+    transactions.push(
+      await getFunctionData(
+        positionRouterAddress,
+        positionRouterAbi,
+        provider,
+        "createIncreasePosition",
+        [
+          [_inputToken.address],
+          _outputToken.address,
+          _amount,
+          0,
+          sizeDelta,
+          true,
+          priceMax,
+          executionFee,
+          constants.HashZero,
+          constants.AddressZero,
+        ],
+        executionFee.toString()
+      )
+    );
+    return { transactions };
+  }
+
   let approveTxs = [];
   let address = null;
   let abi = [];
   const params = [];
+
+  switch (_protocolName) {
+    case "kwenta": {
+      address = getProtocolAddressForChain(_protocolName, chainId);
+      abi = getABIForProtocol(_protocolName);
+
+      if (_token.address !== NATIVE_TOKEN) {
+        approveTxs = await getApproveData(
+          provider,
+          _token.address,
+          _amount,
+          accountAddress,
+          address
+        );
+      }
+      break;
+    }
+    default: {
+      return { error: "Protocol not supported" };
+    }
+  }
 
   if (!address) {
     return { error: "Protocol address not found on the specified chain." };
@@ -71,116 +193,3 @@ export const getLongData = async (
   );
   return { transactions: [...approveTxs, data] };
 };
-
-/*
-  // Get execution fee and minimum USD value for amount of  token
-const executionFee = await positionRouter.minExecutionFee();
-const usdMin = await vault.tokenToUsdMin(Token, Amount);
-
-// Populate transaction data
-if (action == "long" || action == "short") {
-  const isApprovedPlugin = await router.approvedPlugins(
-    account,
-    addresses[network].positionRouter
-  );
-  const allowance = await token.allowance(
-    account,
-    addresses[network].router
-  );
-
-  // If position router is not approved yet
-  if (!isApprovedPlugin) {
-    // Add position router to approved plugin list
-    transactions.push(
-      await router.populateTransaction.approvePlugin(
-        addresses[network].positionRouter
-      )
-    );
-  }
-
-  // Set allowance if allowance is not enough
-  if (allowance.lt(Amount)) {
-    // If allowance is not zero, reset it to 0
-    if (!allowance.isZero()) {
-      transactions.push(
-        await token.populateTransaction.approve(
-          addresses[network].router,
-          0
-        )
-      );
-    }
-    // Approve router to spend amount of  token
-    transactions.push(
-      await token.populateTransaction.approve(
-        addresses[network].router,
-        Amount
-      )
-    );
-  }
-
-  const sizeDelta = usdMin.mul(leverageMultiplier);
-
-  if (action == "long") {
-    // Get transaction data for creation of long position
-    const priceMax = await vault.getMaxPrice(Token);
-    transactions.push({
-      ...(await positionRouter.populateTransaction.createIncreasePosition(
-        [Token],
-        outputToken,
-        Amount,
-        0, // Minimum out when swap
-        sizeDelta, // USD value of the change in position size
-        true, // Whether to long or short
-        priceMax, // Acceptable price
-        executionFee, // Execution fee
-        constants.HashZero, // Referral code
-        constants.AddressZero // An optional callback contract
-      )),
-      value: executionFee.toNumber(),
-    });
-  } else {
-    // Get transaction data for creation of short position
-    const priceMin = await vault.getMinPrice(Token);
-    transactions.push({
-      ...(await positionRouter.populateTransaction.createIncreasePosition(
-        [Token],
-        outputToken,
-        Amount,
-        0, // Minimum out when swap
-        sizeDelta, // USD value of the change in position size
-        false, // Whether to long or short
-        priceMin, // Acceptable price
-        executionFee, // Execution fee
-        constants.HashZero, // Referral code
-        constants.AddressZero // An optional callback contract
-      )),
-      value: executionFee.toNumber(),
-    });
-  }
-} else {
-  // Determine whether it's long or short
-  const isLong = !(await vault.stableTokens(Token));
-  const acceptablePrice = isLong
-    ? await vault.getMinPrice(Token)
-    : await vault.getMaxPrice(Token);
-  const sizeDelta = usdMin.mul(leverageMultiplier);
-
-  // Get transaction data for position close
-  transactions.push({
-    ...(await positionRouter.populateTransaction.createDecreasePosition(
-      [Token],
-      outputToken,
-      usdMin, // The amount of collateral in USD value to withdraw
-      sizeDelta, // The USD value of the change in position size
-      isLong, // Whether the position is a long or short
-      receiver, // The address to receive the withdrawn tokens
-      acceptablePrice, // Acceptable price
-      0, // Minimum out when swap
-      executionFee, // Execution fee
-      false, // Whether withdraw ETH when if WETH will be withdrawn
-      constants.AddressZero // // An optional callback contract
-    )),
-    value: executionFee.toNumber(),
-  });
-} 
-*/

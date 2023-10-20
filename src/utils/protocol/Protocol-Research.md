@@ -6,9 +6,9 @@
    - withdraw / Vester -> done
    - stake / RewardTracker -> done [discuss - fee? staked? bonus?]
    - unstake / RewardTracker -> done
-   - long / PositionRouter -> _skipped for external getters, can be done in further updates_
-   - short / PositionRouter -> _skipped for external getters, can be done in further updates_
-   - close / PositionRouter -> _skipped for external getters, can be done in further updates_
+   - long / PositionRouter -> done
+   - short / PositionRouter -> done
+   - close / PositionRouter -> done
 3. Rocket Pool
    - deposit / Deposit -> done
    - withdraw / Deposit -> done

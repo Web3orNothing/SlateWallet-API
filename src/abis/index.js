@@ -10,6 +10,8 @@ import curveTricrypto2Abi from "./curve-tricrypto2.abi.js";
 import dopexSsovAbi from "./dopex-ssov.abi.js";
 import hopAbi from "./hop.abi.js";
 import lidoAbi from "./lido.abi.js";
+import gmxRouterAbi from "./gmx-router.abi.js";
+import gmxVaultAbi from "./gmx-vault.abi.js";
 import gmxVesterAbi from "./gmx-vester.abi.js";
 import gmxRewardTrackerAbi from "./gmx-reward-tracker.abi.js";
 import gmxPositionRouterAbi from "./gmx-position-router.abi.js";
@@ -56,6 +58,8 @@ export const abis = {
   "curve-tricrypto2": curveTricrypto2Abi,
   hop: hopAbi,
   lido: lidoAbi,
+  "gmx-router": gmxRouterAbi,
+  "gmx-vault": gmxVaultAbi,
   "gmx-vester": gmxVesterAbi,
   "gmx-reward-tracker": gmxRewardTrackerAbi,
   "gmx-position-router": gmxPositionRouterAbi,

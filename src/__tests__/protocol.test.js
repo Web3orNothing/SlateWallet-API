@@ -87,33 +87,33 @@ describe("Test Protocol Integration", () => {
     });
   });
 
-  describe('Stake', () => {
-    it('Lido', async () => {
-      let res = await request(app).post('/stake').send({
-        accountAddress: '0xD6216fC19DB775Df9774a6E33526131dA7D19a2c',
-        protocolName: 'Lido',
-        chainName: 'Ethereum',
-        token: 'ETH',
-        amount: '32',
+  describe("Stake", () => {
+    it("Lido", async () => {
+      let res = await request(app).post("/stake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Lido",
+        chainName: "Ethereum",
+        token: "ETH",
+        amount: "32",
       });
       expect(res.statusCode).toEqual(200);
-      expect(res.body).toHaveProperty('status');
-      expect(res.body.status).toEqual('success');
-      expect(res.body).toHaveProperty('transactions');
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(1);
 
-      res = await request(app).post('/stake').send({
-        accountAddress: '0xD6216fC19DB775Df9774a6E33526131dA7D19a2c',
-        protocolName: 'Lido',
-        chainName: 'Ethereum',
-        token: 'ETH',
-        amount: '30',
+      res = await request(app).post("/stake").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Lido",
+        chainName: "Ethereum",
+        token: "ETH",
+        amount: "30",
       });
       expect(res.statusCode).toEqual(400);
-      expect(res.body).toHaveProperty('status');
-      expect(res.body.status).toEqual('error');
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("error");
+      expect(res.body).toHaveProperty("message");
       expect(res.body.message).toEqual("Too less amount");
-    })
-  })
+    });
+  });
 });

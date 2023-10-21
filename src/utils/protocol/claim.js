@@ -37,7 +37,7 @@ export const getClaimData = async (
       const comet = getProtocolAddressForChain(
         _protocolName,
         chainId,
-        token.toLowerCase()
+        poolName
       );
       params.push(comet);
       params.push(accountAddress);
@@ -45,7 +45,7 @@ export const getClaimData = async (
       break;
     }
     case "hop": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
+      address = getProtocolAddressForChain(_protocolName, chainId, poolName);
       abi = getABIForProtocol(_protocolName);
       break;
     }

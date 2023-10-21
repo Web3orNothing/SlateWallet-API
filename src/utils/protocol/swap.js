@@ -17,7 +17,7 @@ import {
   getQuoteFromKyber,
   getQuoteFromSynapse as getSwapQuoteFromSynapse,
 } from "../swap.js";
-import yieldYakWrapRouterAbi from "../abis/yield-yak-wrap-router.abi.js";
+import yieldYakWrapRouterAbi from "../../abis/yield-yak-wrap-router.abi.js";
 
 import { NATIVE_TOKEN } from "../../constants.js";
 
@@ -26,8 +26,9 @@ export const getSwapData = async (
   protocolName,
   chainName,
   poolName,
-  token,
-  amount
+  inputToken,
+  inputAmount,
+  outputToken
 ) => {
   const _protocolName = protocolName.toLowerCase();
 
@@ -36,8 +37,13 @@ export const getSwapData = async (
     throw new Error("Invalid chain name");
   }
 
-  const _token = await getTokenAddressForChain(token, chainName);
-  if (!_token) {
+  const _inputToken = await getTokenAddressForChain(inputToken, chainName);
+  if (!_inputToken) {
+    return { error: "Token not found on the specified chain." };
+  }
+
+  const _outputToken = await getTokenAddressForChain(outputToken, chainName);
+  if (!_outputToken) {
     return { error: "Token not found on the specified chain." };
   }
 
@@ -45,7 +51,7 @@ export const getSwapData = async (
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
 
   const { amount: _amount } = await getTokenAmount(
-    _token.address,
+    _inputToken.address,
     provider,
     accountAddress,
     amount
@@ -77,8 +83,8 @@ export const getSwapData = async (
         chainId,
         accountAddress,
         {
-          address: _token.address,
-          symbol: token,
+          address: _inputToken.address,
+          symbol: inputToken,
           decimals,
         },
         {
@@ -93,10 +99,10 @@ export const getSwapData = async (
       if (data) {
         const { tx } = data;
         const transactions = [];
-        if (_token.address !== NATIVE_TOKEN) {
+        if (_inputToken.address !== NATIVE_TOKEN) {
           const approveTxs = await getApproveData(
             provider,
-            _token.address,
+            _inputToken.address,
             _amount,
             accountAddress,
             tx.to
@@ -243,10 +249,10 @@ export const getSwapData = async (
 
       let approveTxs;
       let value = ethers.constants.Zero;
-      if (_token.address !== NATIVE_TOKEN) {
+      if (_inputToken.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _token.address,
+          _inputToken.address,
           _amount,
           accountAddress,
           address

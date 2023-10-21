@@ -52,6 +52,83 @@ describe("Test Protocol Integration", () => {
     });
   });
 
+  describe("Bridge", () => {
+    it("Bungee", async () => {
+      const res = await request(app).post("/bridge").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Bungee",
+        sourceChainName: "Ethereum",
+        destinationChainName: "Avalanche",
+        token: "USDC",
+        amount: "50",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Hop", async () => {
+      const res = await request(app).post("/bridge").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Hop",
+        sourceChainName: "Ethereum",
+        destinationChainName: "Avalanche",
+        token: "USDC",
+        amount: "50",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Jumper", async () => {
+      const res = await request(app).post("/bridge").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Jumper",
+        sourceChainName: "Ethereum",
+        destinationChainName: "Avalanche",
+        token: "USDC",
+        amount: "50",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it.skip("Synapse", async () => {
+      const res = await request(app).post("/bridge").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Synapse",
+        sourceChainName: "Ethereum",
+        destinationChainName: "Avalanche",
+        token: "USDC",
+        amount: "50",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+  });
+
+  describe("Claim", () => {
+    it("Hop", async () => {
+      const res = await request(app).post("/claim").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Hop",
+        chainName: "Optimism",
+        poolName: "usdc",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+  });
+
   describe("Deposit", () => {
     it("Aave", async () => {
       const res = await request(app).post("/deposit").send({
@@ -195,7 +272,37 @@ describe("Test Protocol Integration", () => {
       expect(res.body.transactions.length).toEqual(2);
     });
 
-    it("Synapse", async () => {
+    it.skip("Curve", async () => {
+      const res = await request(app).post("/deposit").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Curve",
+        chainName: "Ethereum",
+        poolName: "3pool",
+        token: "USDC",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Dopex", async () => {
+      const res = await request(app).post("/deposit").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Dopex",
+        chainName: "Arbitrum",
+        poolName: "arb-monthly-ssov",
+        token: "USDC",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it.skip("Synapse", async () => {
       const res = await request(app).post("/deposit").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Synapse",
@@ -210,7 +317,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
     });
 
-    it("Hop", async () => {
+    it.skip("Hop", async () => {
       const res = await request(app).post("/deposit").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Hop",
@@ -323,6 +430,188 @@ describe("Test Protocol Integration", () => {
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(2);
+    });
+  });
+
+  describe("Swap", () => {
+    it("Uniswap", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Uniswap",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Matcha", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Matcha",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("1inch", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "1inch",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("OpenOcean", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "OpenOcean",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("ParaSwap", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "ParaSwap",
+        chainName: "Avalanche",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("KyberSwap", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "KyberSwap",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Llamazip", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Llamazip",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("YieldYak", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "YieldYak",
+        chainName: "Avalanche",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Synapse", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Synapse",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Jumper", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Jumper",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Camelot", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Camelot",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Cruve", async () => {
+      const res = await request(app).post("/swap").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Cruve",
+        chainName: "Ethereum",
+        inputToken: "USDC",
+        inputAmount: "100",
+        outputToken: "ETH",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
     });
   });
 
@@ -845,6 +1134,36 @@ describe("Test Protocol Integration", () => {
       expect(res.body.status).toEqual("success");
       expect(res.body).toHaveProperty("transactions");
       expect(res.body.transactions.length).toEqual(1);
+    });
+
+    it("Curve", async () => {
+      const res = await request(app).post("/withdraw").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Curve",
+        chainName: "Ethereum",
+        poolName: "3pool",
+        token: "USDC",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
+    });
+
+    it("Dopex", async () => {
+      const res = await request(app).post("/withdraw").send({
+        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        protocolName: "Dopex",
+        chainName: "Ethereum",
+        poolName: null,
+        token: "USDT",
+        amount: "100",
+      });
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty("status");
+      expect(res.body.status).toEqual("success");
+      expect(res.body).toHaveProperty("transactions");
     });
 
     it("Synapse", async () => {

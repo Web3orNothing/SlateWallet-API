@@ -6,9 +6,9 @@
    - withdraw / Vester -> done
    - stake / RewardTracker -> done [discuss - fee? staked? bonus?]
    - unstake / RewardTracker -> done
-   - long / PositionRouter -> _skipped for external getters, can be done in further updates_
-   - short / PositionRouter -> _skipped for external getters, can be done in further updates_
-   - close / PositionRouter -> _skipped for external getters, can be done in further updates_
+   - long / PositionRouter -> done
+   - short / PositionRouter -> done
+   - close / PositionRouter -> done
 3. Rocket Pool
    - deposit / Deposit -> done
    - withdraw / Deposit -> done
@@ -66,7 +66,7 @@
     - stake / Staking -> done
     - unstake / Staking -> done
     - claim / Staking -> done
-    - harvest
+    - harvest / Staking -> done
     - vote
 12. Thena (agreed to skip this)
     - deposit / GaugeFactory (created by factory contract) -> _can't find each pool contract address created by factory_

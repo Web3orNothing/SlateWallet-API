@@ -3,18 +3,14 @@ import {
   getChainIdFromName,
   getRpcUrlForChain,
   getTokenAddressForChain,
-  getApproveData,
   getProtocolAddressForChain,
   getFunctionData,
   getABIForProtocol,
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
-import ERC20_ABI from "../../abis/erc20.abi.js";
 
-import { NATIVE_TOKEN } from "../../constants.js";
-
-export const getShortData = async (
+export const getCloseData = async (
   accountAddress,
   protocolName,
   chainName,
@@ -52,96 +48,52 @@ export const getShortData = async (
 
   if (_protocolName === "gmx") {
     const transactions = [];
-    const routerAddress = getProtocolAddressForChain(
+    const positionRouterAddress = getProtocolAddressForChain(
       _protocolName,
       chainId,
-      "router"
+      "positionRouter"
     );
     const vaultAddress = getProtocolAddressForChain(
       _protocolName,
       chainId,
       "vault"
     );
-    const positionRouterAddress = getProtocolAddressForChain(
-      _protocolName,
-      chainId,
-      "positionRouter"
-    );
-    const routerAbi = getABIForProtocol(_protocolName, "router");
-    const vaultAbi = getABIForProtocol(_protocolName, "vault");
     const positionRouterAbi = getABIForProtocol(
       _protocolName,
       "position-router"
     );
-    const token = new ethers.Contract(_inputToken.address, ERC20_ABI, provider);
-    const router = new ethers.Contract(routerAddress, routerAbi, provider);
-    const vault = new ethers.Contract(vaultAddress, vaultAbi, provider);
+    const vaultAbi = getABIForProtocol(_protocolName, "vault");
     const positionRouter = new ethers.Contract(
       positionRouterAddress,
       positionRouterAbi,
       provider
     );
-    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _inputAmount);
+    const vault = new ethers.Contract(vaultAddress, vaultAbi, provider);
     const executionFee = await positionRouter.minExecutionFee();
+    const usdMin = await vault.tokenToUsdMin(_inputToken.address, _inputAmount);
 
-    const isApprovedPlugin = await router.approvedPlugins(
-      accountAddress,
-      positionRouterAddress
-    );
-    if (!isApprovedPlugin) {
-      transactions.push(
-        await getFunctionData(
-          routerAddress,
-          routerAbi,
-          provider,
-          "approvePlugin",
-          [positionRouterAddress],
-          "0"
-        )
-      );
-    }
-    const allowance = await token.allowance(accountAddress, routerAddress);
-    if (allowance.lt(_inputAmount) && _inputToken.address !== NATIVE_TOKEN) {
-      if (!allowance.isZero()) {
-        transactions.push(
-          await getFunctionData(
-            _inputToken.address,
-            ERC20_ABI,
-            provider,
-            "approve",
-            [routerAddress, 0],
-            "0"
-          )
-        );
-      }
-      transactions.push(
-        ...(await getApproveData(
-          provider,
-          _inputToken.address,
-          _inputAmount,
-          accountAddress,
-          routerAddress
-        ))
-      );
-    }
+    const isLong = !(await vault.stableTokens(_inputToken.address));
+    const acceptablePrice = isLong
+      ? await vault.getMinPrice(_inputToken.address)
+      : await vault.getMaxPrice(_inputToken.address);
     const sizeDelta = usdMin.mul(leverageMultiplier);
-    const priceMin = await vault.getMinPrice(_inputToken.address);
     transactions.push(
       await getFunctionData(
         positionRouterAddress,
         positionRouterAbi,
         provider,
-        "createIncreasePosition",
+        "createDecreasePosition",
         [
           [_inputToken.address],
           _outputToken.address,
-          _inputAmount,
-          0,
+          usdMin,
           sizeDelta,
-          false,
-          priceMin,
+          isLong,
+          accountAddress,
+          acceptablePrice,
+          0,
           executionFee,
-          constants.HashZero,
+          false,
           constants.AddressZero,
         ],
         executionFee.toString()
@@ -159,16 +111,6 @@ export const getShortData = async (
     case "kwenta": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
-
-      if (_token.address !== NATIVE_TOKEN) {
-        approveTxs = await getApproveData(
-          provider,
-          _token.address,
-          _inputAmount,
-          accountAddress,
-          address
-        );
-      }
       break;
     }
     default: {

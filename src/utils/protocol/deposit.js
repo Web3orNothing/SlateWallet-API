@@ -144,20 +144,8 @@ export const getDepositData = async (
       params.push(address);
       break;
     }
-    case "lido": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
-      abi = getABIForProtocol(_protocolName);
-      params.push(1);
-      params.push(1); // TODO: monitor available stake modules
-      params.push("0x");
-      break;
-    }
     case "gmx": {
-      address = getProtocolAddressForChain(
-        _protocolName,
-        chainId,
-        token.toLowerCase() + "Vester"
-      );
+      address = getProtocolAddressForChain(_protocolName, chainId, "gmxVester");
       abi = getABIForProtocol(_protocolName, "vester");
       params.push(_amount);
 
@@ -175,10 +163,16 @@ export const getDepositData = async (
     case "rocketpool": {
       address = getProtocolAddressForChain(_protocolName, chainId);
       abi = getABIForProtocol(_protocolName);
+      if (_token.address !== NATIVE_TOKEN)
+        return { error: "Token not supported" };
       break;
     }
     case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase() + "Market"
+      );
       abi = getABIForProtocol(_protocolName, "market");
       params.push(accountAddress);
       params.push(_amount);
@@ -297,9 +291,8 @@ export const getDepositData = async (
       break;
     }
     case "stargate": {
-      const key = _token.address === NATIVE_TOKEN ? "routerETH" : "router";
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
+      address = getProtocolAddressForChain(_protocolName, chainId, "router");
+      abi = getABIForProtocol(_protocolName, "router");
       params.push(0 /* uint256 _poolId */);
       params.push(_amount);
       params.push(accountAddress);

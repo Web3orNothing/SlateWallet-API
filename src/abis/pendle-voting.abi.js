@@ -2,8 +2,8 @@ export default [
   {
     inputs: [
       {
-        internalType: "contract IERC20",
-        name: "_pendle",
+        internalType: "address",
+        name: "_vePendle",
         type: "address",
       },
       {
@@ -22,29 +22,12 @@ export default [
   },
   {
     inputs: [],
-    name: "ArrayEmpty",
+    name: "ArrayLengthMismatch",
     type: "error",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "chainId",
-        type: "uint256",
-      },
-    ],
-    name: "ChainNotSupported",
-    type: "error",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "expiry",
-        type: "uint256",
-      },
-    ],
-    name: "ExpiryInThePast",
+    inputs: [],
+    name: "ArrayOutOfBounds",
     type: "error",
   },
   {
@@ -75,69 +58,128 @@ export default [
     type: "error",
   },
   {
-    inputs: [],
-    name: "VEExceededMaxLockTime",
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "wTime",
+        type: "uint256",
+      },
+    ],
+    name: "VCEpochNotFinalized",
     type: "error",
   },
   {
-    inputs: [],
-    name: "VEInsufficientLockTime",
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "totalWeight",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxWeight",
+        type: "uint256",
+      },
+    ],
+    name: "VCExceededMaxWeight",
     type: "error",
   },
   {
-    inputs: [],
-    name: "VENotAllowedReduceExpiry",
+    inputs: [
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "VCInactivePool",
     type: "error",
   },
   {
-    inputs: [],
-    name: "VEPositionNotExpired",
+    inputs: [
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "VCPoolAlreadyActive",
     type: "error",
   },
   {
-    inputs: [],
-    name: "VEZeroAmountLocked",
+    inputs: [
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "VCPoolAlreadyAddAndRemoved",
     type: "error",
   },
   {
-    inputs: [],
-    name: "VEZeroPosition",
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "VCZeroVePendle",
     type: "error",
   },
   {
-    inputs: [],
-    name: "ZeroAddress",
+    inputs: [
+      {
+        internalType: "uint128",
+        name: "bias",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "slope",
+        type: "uint128",
+      },
+    ],
+    name: "VEZeroSlope",
     type: "error",
   },
   {
     anonymous: false,
     inputs: [
       {
-        components: [
-          {
-            internalType: "uint128",
-            name: "bias",
-            type: "uint128",
-          },
-          {
-            internalType: "uint128",
-            name: "slope",
-            type: "uint128",
-          },
-        ],
+        indexed: true,
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "AddPool",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
-        internalType: "struct VeBalance",
-        name: "newTotalSupply",
-        type: "tuple",
+        internalType: "address",
+        name: "previousAdmin",
+        type: "address",
       },
       {
         indexed: false,
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "address",
+        name: "newAdmin",
+        type: "address",
       },
     ],
-    name: "BroadcastTotalSupply",
+    name: "AdminChanged",
     type: "event",
   },
   {
@@ -146,17 +188,36 @@ export default [
       {
         indexed: true,
         internalType: "address",
-        name: "user",
+        name: "beacon",
         type: "address",
+      },
+    ],
+    name: "BeaconUpgraded",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+      {
+        indexed: true,
+        internalType: "uint128",
+        name: "wTime",
+        type: "uint128",
       },
       {
         indexed: false,
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "uint128",
+        name: "totalPendlePerSec",
+        type: "uint128",
       },
     ],
-    name: "BroadcastUserPosition",
+    name: "BroadcastResults",
     type: "event",
   },
   {
@@ -170,31 +231,6 @@ export default [
       },
     ],
     name: "Initialized",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint128",
-        name: "amount",
-        type: "uint128",
-      },
-      {
-        indexed: false,
-        internalType: "uint128",
-        name: "expiry",
-        type: "uint128",
-      },
-    ],
-    name: "NewLockPosition",
     type: "event",
   },
   {
@@ -222,22 +258,122 @@ export default [
       {
         indexed: true,
         internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "bias",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "slope",
+            type: "uint128",
+          },
+        ],
+        indexed: false,
+        internalType: "struct VeBalance",
+        name: "vote",
+        type: "tuple",
+      },
+    ],
+    name: "PoolVoteChange",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "RemovePool",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newPendlePerSec",
+        type: "uint256",
+      },
+    ],
+    name: "SetPendlePerSec",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "implementation",
+        type: "address",
+      },
+    ],
+    name: "Upgraded",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
         name: "user",
         type: "address",
       },
       {
+        indexed: true,
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+      {
         indexed: false,
-        internalType: "uint128",
-        name: "amount",
-        type: "uint128",
+        internalType: "uint64",
+        name: "weight",
+        type: "uint64",
+      },
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "bias",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "slope",
+            type: "uint128",
+          },
+        ],
+        indexed: false,
+        internalType: "struct VeBalance",
+        name: "vote",
+        type: "tuple",
       },
     ],
-    name: "Withdraw",
+    name: "Vote",
     type: "event",
   },
   {
     inputs: [],
-    name: "MAX_LOCK_TIME",
+    name: "GOVERNANCE_PENDLE_VOTE",
     outputs: [
       {
         internalType: "uint128",
@@ -250,7 +386,7 @@ export default [
   },
   {
     inputs: [],
-    name: "MIN_LOCK_TIME",
+    name: "MAX_LOCK_TIME",
     outputs: [
       {
         internalType: "uint128",
@@ -293,6 +429,37 @@ export default [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "addPool",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "applyPoolSlopeChanges",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "approxDstExecutionGas",
     outputs: [
@@ -308,12 +475,26 @@ export default [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
       },
     ],
-    name: "balanceOf",
+    name: "broadcastResults",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "claimOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "deployedWTime",
     outputs: [
       {
         internalType: "uint128",
@@ -325,14 +506,31 @@ export default [
     type: "function",
   },
   {
+    inputs: [],
+    name: "finalizeEpoch",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+      {
+        internalType: "uint128",
+        name: "wTime",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "forcedPendlePerSec",
+        type: "uint128",
       },
     ],
-    name: "broadcastTotalSupply",
+    name: "forceBroadcastResults",
     outputs: [],
     stateMutability: "payable",
     type: "function",
@@ -340,26 +538,33 @@ export default [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
       },
     ],
-    name: "broadcastUserPosition",
-    outputs: [],
-    stateMutability: "payable",
+    name: "getActiveChainPools",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
     inputs: [],
-    name: "claimOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
+    name: "getAllActivePools",
+    outputs: [
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -383,16 +588,45 @@ export default [
   {
     inputs: [
       {
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "uint256",
+        name: "start",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "end",
+        type: "uint256",
       },
     ],
-    name: "getBroadcastPositionFee",
+    name: "getAllRemovedPools",
     outputs: [
       {
         internalType: "uint256",
-        name: "fee",
+        name: "lengthOfRemovedPools",
+        type: "uint256",
+      },
+      {
+        internalType: "address[]",
+        name: "arr",
+        type: "address[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+    ],
+    name: "getBroadcastResultFee",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
         type: "uint256",
       },
     ],
@@ -402,17 +636,73 @@ export default [
   {
     inputs: [
       {
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+      {
+        internalType: "uint128[]",
+        name: "wTimes",
+        type: "uint128[]",
       },
     ],
-    name: "getBroadcastSupplyFee",
+    name: "getPoolData",
     outputs: [
       {
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
+        internalType: "uint64",
+        name: "chainId",
+        type: "uint64",
+      },
+      {
+        internalType: "uint128",
+        name: "lastSlopeChangeAppliedAt",
+        type: "uint128",
+      },
+      {
+        components: [
+          {
+            internalType: "uint128",
+            name: "bias",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "slope",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct VeBalance",
+        name: "totalVote",
+        type: "tuple",
+      },
+      {
+        internalType: "uint128[]",
+        name: "slopeChanges",
+        type: "uint128[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+      {
+        internalType: "uint128",
+        name: "wTime",
+        type: "uint128",
+      },
+    ],
+    name: "getPoolTotalVoteAt",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "",
+        type: "uint128",
       },
     ],
     stateMutability: "view",
@@ -426,12 +716,70 @@ export default [
         type: "address",
       },
       {
+        internalType: "address[]",
+        name: "pools",
+        type: "address[]",
+      },
+    ],
+    name: "getUserData",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "totalVotedWeight",
+        type: "uint64",
+      },
+      {
+        components: [
+          {
+            internalType: "uint64",
+            name: "weight",
+            type: "uint64",
+          },
+          {
+            components: [
+              {
+                internalType: "uint128",
+                name: "bias",
+                type: "uint128",
+              },
+              {
+                internalType: "uint128",
+                name: "slope",
+                type: "uint128",
+              },
+            ],
+            internalType: "struct VeBalance",
+            name: "vote",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct VotingControllerStorageUpg.UserPoolData[]",
+        name: "voteForPools",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+      {
         internalType: "uint256",
         name: "index",
         type: "uint256",
       },
     ],
-    name: "getUserHistoryAt",
+    name: "getUserPoolHistoryAt",
     outputs: [
       {
         components: [
@@ -473,8 +821,13 @@ export default [
         name: "user",
         type: "address",
       },
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
     ],
-    name: "getUserHistoryLength",
+    name: "getUserPoolHistoryLength",
     outputs: [
       {
         internalType: "uint256",
@@ -488,67 +841,90 @@ export default [
   {
     inputs: [
       {
-        internalType: "uint128",
-        name: "additionalAmountToLock",
-        type: "uint128",
+        internalType: "address",
+        name: "user",
+        type: "address",
       },
       {
-        internalType: "uint128",
-        name: "newExpiry",
-        type: "uint128",
+        internalType: "address",
+        name: "pool",
+        type: "address",
       },
     ],
-    name: "increaseLockPosition",
+    name: "getUserPoolVote",
     outputs: [
       {
-        internalType: "uint128",
-        name: "newVeBalance",
-        type: "uint128",
+        components: [
+          {
+            internalType: "uint64",
+            name: "weight",
+            type: "uint64",
+          },
+          {
+            components: [
+              {
+                internalType: "uint128",
+                name: "bias",
+                type: "uint128",
+              },
+              {
+                internalType: "uint128",
+                name: "slope",
+                type: "uint128",
+              },
+            ],
+            internalType: "struct VeBalance",
+            name: "vote",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct VotingControllerStorageUpg.UserPoolData",
+        name: "",
+        type: "tuple",
       },
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
     inputs: [
       {
         internalType: "uint128",
-        name: "additionalAmountToLock",
+        name: "wTime",
         type: "uint128",
       },
       {
-        internalType: "uint128",
-        name: "newExpiry",
-        type: "uint128",
-      },
-      {
-        internalType: "uint256[]",
-        name: "chainIds",
-        type: "uint256[]",
+        internalType: "address[]",
+        name: "pools",
+        type: "address[]",
       },
     ],
-    name: "increaseLockPositionAndBroadcast",
+    name: "getWeekData",
     outputs: [
       {
+        internalType: "bool",
+        name: "isEpochFinalized",
+        type: "bool",
+      },
+      {
         internalType: "uint128",
-        name: "newVeBalance",
+        name: "totalVotes",
         type: "uint128",
       },
+      {
+        internalType: "uint128[]",
+        name: "poolVotes",
+        type: "uint128[]",
+      },
     ],
-    stateMutability: "payable",
+    stateMutability: "view",
     type: "function",
   },
   {
     inputs: [],
-    name: "lastSlopeChangeAppliedAt",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -579,19 +955,6 @@ export default [
   },
   {
     inputs: [],
-    name: "pendle",
-    outputs: [
-      {
-        internalType: "contract IERC20",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "pendleMsgSendEndpoint",
     outputs: [
       {
@@ -604,27 +967,42 @@ export default [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "positionData",
+    inputs: [],
+    name: "pendlePerSec",
     outputs: [
       {
         internalType: "uint128",
-        name: "amount",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "expiry",
+        name: "",
         type: "uint128",
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "proxiableUUID",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "pool",
+        type: "address",
+      },
+    ],
+    name: "removePool",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -644,88 +1022,13 @@ export default [
     inputs: [
       {
         internalType: "uint128",
-        name: "",
+        name: "newPendlePerSec",
         type: "uint128",
       },
     ],
-    name: "slopeChanges",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-    ],
-    name: "totalSupplyAndBalanceCurrent",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
+    name: "setPendlePerSec",
+    outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    name: "totalSupplyAt",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalSupplyCurrent",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalSupplyStored",
-    outputs: [
-      {
-        internalType: "uint128",
-        name: "",
-        type: "uint128",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
@@ -752,15 +1055,64 @@ export default [
     type: "function",
   },
   {
-    inputs: [],
-    name: "withdraw",
-    outputs: [
+    inputs: [
       {
-        internalType: "uint128",
-        name: "amount",
-        type: "uint128",
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
       },
     ],
+    name: "upgradeTo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
+      },
+      {
+        internalType: "bytes",
+        name: "data",
+        type: "bytes",
+      },
+    ],
+    name: "upgradeToAndCall",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "vePendle",
+    outputs: [
+      {
+        internalType: "contract IPVeToken",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address[]",
+        name: "pools",
+        type: "address[]",
+      },
+      {
+        internalType: "uint64[]",
+        name: "weights",
+        type: "uint64[]",
+      },
+    ],
+    name: "vote",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },

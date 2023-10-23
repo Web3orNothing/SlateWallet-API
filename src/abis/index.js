@@ -10,6 +10,8 @@ import curveTricrypto2Abi from "./curve-tricrypto2.abi.js";
 import dopexSsovAbi from "./dopex-ssov.abi.js";
 import hopAbi from "./hop.abi.js";
 import lidoAbi from "./lido.abi.js";
+import gmxRouterAbi from "./gmx-router.abi.js";
+import gmxVaultAbi from "./gmx-vault.abi.js";
 import gmxVesterAbi from "./gmx-vester.abi.js";
 import gmxRewardTrackerAbi from "./gmx-reward-tracker.abi.js";
 import gmxPositionRouterAbi from "./gmx-position-router.abi.js";
@@ -33,8 +35,9 @@ import plutusVesterAbi from "./plutus-vester.abi.js";
 import plutusMasterchefAbi from "./plutus-masterchef.abi.js";
 import rodeoPoolAbi from "./rodeo-pool.abi.js";
 import rodeoFarmAbi from "./rodeo-farm.abi.js";
+import kwentaStakingAbi from "./kwenta-staking.abi.js";
+import kwentaMarginAbi from "./kwenta-margin.abi.js";
 import stargateRouterAbi from "./stargate-router.abi.js";
-import stargateRouterETHAbi from "./stargate-routerETH.abi.js";
 import stargateStakingAbi from "./stargate-staking.abi.js";
 import stargateStakingTimeAbi from "./stargate-staking-time.abi.js";
 import thenaVeAbi from "./thena-ve.abi.js";
@@ -56,6 +59,8 @@ export const abis = {
   "curve-tricrypto2": curveTricrypto2Abi,
   hop: hopAbi,
   lido: lidoAbi,
+  "gmx-router": gmxRouterAbi,
+  "gmx-vault": gmxVaultAbi,
   "gmx-vester": gmxVesterAbi,
   "gmx-reward-tracker": gmxRewardTrackerAbi,
   "gmx-position-router": gmxPositionRouterAbi,
@@ -77,8 +82,9 @@ export const abis = {
   "plutus-vester": plutusVesterAbi,
   "rodeo-pool": rodeoPoolAbi,
   "rodeo-farm": rodeoFarmAbi,
+  "kwenta-staking": kwentaStakingAbi,
+  "kwenta-margin": kwentaMarginAbi,
   "stargate-router": stargateRouterAbi,
-  "stargate-routerETH": stargateRouterETHAbi,
   "stargate-staking": stargateStakingAbi,
   "stargate-staking-time": stargateStakingTimeAbi,
   "thena-ve": thenaVeAbi,

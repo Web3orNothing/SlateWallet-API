@@ -11,6 +11,8 @@ import {
 } from "../index.js";
 // import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
 
+import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
+
 export const getWithdrawData = async (
   accountAddress,
   protocolName,
@@ -136,11 +138,7 @@ export const getWithdrawData = async (
       break;
     }
     case "gmx": {
-      address = getProtocolAddressForChain(
-        _protocolName,
-        chainId,
-        token.toLowerCase() + "Vester"
-      );
+      address = getProtocolAddressForChain(_protocolName, chainId, "gmxVester");
       abi = getABIForProtocol(_protocolName, "vester");
       break;
     }
@@ -151,7 +149,11 @@ export const getWithdrawData = async (
       break;
     }
     case "pendle": {
-      address = getProtocolAddressForChain(_protocolName, chainId, "market");
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase() + "Market"
+      );
       abi = getABIForProtocol(_protocolName, "market");
       params.push(accountAddress);
       params.push(accountAddress);
@@ -192,12 +194,19 @@ export const getWithdrawData = async (
       break;
     }
     case "stargate": {
-      const key = _token.address === NATIVE_TOKEN ? "routerETH" : "router";
-      address = getProtocolAddressForChain(_protocolName, chainId, key);
-      abi = getABIForProtocol(_protocolName, key);
-      params.push(0 /* uint256 dstGasForCall */);
-      params.push(_amount);
-      params.push(accountAddress);
+      address = getProtocolAddressForChain(_protocolName, chainId, "router");
+      abi = getABIForProtocol(_protocolName, "router");
+      params.push(chainId /* uint16 _dstChainId */);
+      params.push(0 /* uint256 _srcPoolId */);
+      params.push(0 /* uint256 _dstPoolId */);
+      params.push(accountAddress /* address _refundAddress */);
+      params.push(_amount /* uint256 _amountLP */);
+      params.push(accountAddress /* bytes _to */);
+      params.push([
+        0 /* uint256 dstGasForCall */,
+        _amount /* uint256 dstNativeAmount */,
+        accountAddress /* bytes dstNativeAddr */,
+      ]);
       break;
     }
     // case "uniswap": {

@@ -143,6 +143,12 @@ export const getDepositData = async (
       params.push(address);
       break;
     }
+    case "hop": {
+      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      abi = getABIForProtocol(_protocolName);
+      params.push(_amount);
+      break;
+    }
     case "gmx": {
       address = getProtocolAddressForChain(_protocolName, chainId, "gmxVester");
       abi = getABIForProtocol(_protocolName, "vester");

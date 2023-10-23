@@ -17,7 +17,8 @@ import {
   getQuoteFrom1inch,
   getQuoteFromOpenOcean,
   getQuoteFromKyber,
-  getQuoteFromSynapse as getSwapQuoteFromSynapse,
+  getQuoteFromLiFi,
+  getQuoteFromSynapse,
 } from "../swap.js";
 import yieldYakRouterAbi from "../../abis/yield-yak-router.abi.js";
 
@@ -123,59 +124,21 @@ export const getSwapData = async (
         return { error: "No swap route found" };
       }
     }
-    case "synapse": {
-      const data = await getSwapQuoteFromSynapse(
-        chainId,
-        accountAddress,
-        {
-          address: _inputToken.address,
-          symbol: inputToken,
-          decimals,
-        },
-        {
-          address: _outputToken.address,
-          symbol: outputToken,
-        },
-        _amount,
-        gasPrice,
-        1
-      );
-      if (data) {
-        const { tx } = data;
-        const transactions = [];
-        if (_inputToken.address !== NATIVE_TOKEN) {
-          const approveTxs = await getApproveData(
-            provider,
-            _inputToken.address,
-            _amount,
-            accountAddress,
-            tx.to
-          );
-          transactions.push(...approveTxs);
-        }
-        transactions.push({
-          to: tx.to,
-          value: tx.value,
-          data: tx.data,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-        });
-        return { transactions };
-      } else {
-        return {
-          error: "No swap route found",
-        };
-      }
-    }
     case "matcha":
+    case "synapse":
     case "1inch":
     case "paraswap":
     case "kyberswap":
+    case "lifi":
+    case "jumper":
     case "openocean": {
       let swapFunc;
       if (_protocolName === "matcha") swapFunc = getQuoteFrom0x;
+      else if (_protocolName === "synapse") swapFunc = getQuoteFromSynapse;
       else if (_protocolName === "1inch") swapFunc = getQuoteFrom1inch;
       else if (_protocolName === "paraswap") swapFunc = getQuoteFromParaSwap;
       else if (_protocolName === "kyberswap") swapFunc = getQuoteFromKyber;
+      else if (_protocolName === "lifi" || _protocolName === "jumper") swapFunc = getQuoteFromLiFi;
       else if (_protocolName === "openocean") swapFunc = getQuoteFromOpenOcean;
       const data = await swapFunc(
         chainId,

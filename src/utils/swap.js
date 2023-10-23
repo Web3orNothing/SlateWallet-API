@@ -85,6 +85,47 @@ export const getQuoteFrom1inch = async (
   } catch {}
 };
 
+export const getQuoteFromLiFi = async (
+  chainId,
+  account,
+  tokenIn,
+  tokenOut,
+  amount,
+  _,
+  slippage = 1
+) => {
+  const {
+    data: { chains },
+  } = await axios.get("https://li.quest/v1/chains");
+  const chain = chains.find((c) => c.id === chainId);
+  if (!chain) return;
+
+  const chainKey = chain.key;
+
+  try {
+    const {
+      data: { estimate, transactionRequest },
+    } = await axios.get("https://li.quest/v1/quote", {
+      params: {
+        fromChain: chainKey,
+        toChain: chainKey,
+        fromToken: tokenIn.symbol,
+        toToken: tokenOut.symbol,
+        fromAmount: amount.toString(),
+        fromAddress: account,
+      },
+    });
+    return {
+      amountOut: estimate.toAmount,
+      tx: {
+        to: transactionRequest.to,
+        value: BigNumber.from(transactionRequest.value).toString(),
+        data: transactionRequest.data,
+      },
+    };
+  } catch (err) {console.log("===>", err)}
+}
+
 export const getQuoteFromSynapse = async (
   chainId,
   account,

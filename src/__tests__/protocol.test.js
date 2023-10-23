@@ -317,11 +317,11 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
     });
 
-    it.skip("Hop", async () => {
+    it("Hop", async () => {
       const res = await request(app).post("/deposit").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Hop",
-        chainName: "Ethereum",
+        chainName: "Arbitrum",
         poolName: null,
         token: "USDT",
         amount: "100",
@@ -569,7 +569,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
     });
 
-    it.skip("Jumper", async () => {
+    it("Jumper", async () => {
       const res = await request(app).post("/swap").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Jumper",

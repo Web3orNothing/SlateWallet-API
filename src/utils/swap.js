@@ -19,8 +19,10 @@ export const getQuoteFromOpenOcean = async (
   const baseUrl = "https://open-api.openocean.finance/v3";
   try {
     const queryParams = new URLSearchParams({
-      inTokenAddress: tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
-      outTokenAddress: tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
+      inTokenAddress:
+        tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
+      outTokenAddress:
+        tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
       amount: amount.toString(),
       gasPrice: utils.formatUnits(gasPrice, "9"),
       slippage,
@@ -102,7 +104,7 @@ export const getQuoteFromSynapse = async (
     chain: chainId,
     fromToken: tokenIn.symbol,
     toToken: tokenOut.symbol,
-    amount: utils.formatUnits(amount, tokenIn.decimals),
+    amount: parseFloat(utils.formatUnits(amount, tokenIn.decimals)),
   };
   const url =
     apiBaseUrl + "/swap?" + new URLSearchParams(swapParams).toString();
@@ -205,8 +207,10 @@ export const getQuoteFrom0x = async (
 
   try {
     const queryParams = new URLSearchParams({
-      sellToken: tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
-      buyToken: tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
+      sellToken:
+        tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
+      buyToken:
+        tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
       sellAmount: amount.toString(),
       slippagePercentage: slippage,
       gasPrice: gasPrice.toString(),

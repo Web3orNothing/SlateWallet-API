@@ -19,7 +19,7 @@ import {
   getQuoteFromKyber,
   getQuoteFromSynapse as getSwapQuoteFromSynapse,
 } from "../swap.js";
-import yieldYakWrapRouterAbi from "../../abis/yield-yak-wrap-router.abi.js";
+import yieldYakRouterAbi from "../../abis/yield-yak-router.abi.js";
 
 import { NATIVE_TOKEN } from "../../constants.js";
 
@@ -136,7 +136,7 @@ export const getSwapData = async (
           address: _outputToken.address,
           symbol: outputToken,
         },
-        inputAmount,
+        _amount,
         gasPrice,
         1
       );
@@ -226,17 +226,16 @@ export const getSwapData = async (
         };
       }
       const abi = getABIForProtocol(_protocolName);
-      const yieldYakWrapRouter = new ethers.Contract(
-        "0x44f4737C3Bb4E5C1401AE421Bd34F135E0BB8394",
-        yieldYakWrapRouterAbi,
+      const yieldYakRouter = new ethers.Contract(
+        address,
+        yieldYakRouterAbi,
         provider
       );
-      const queryRes = await yieldYakWrapRouter.findBestPathAndWrap(
+      const queryRes = await yieldYakRouter.findBestPath(
         _amount,
         _inputToken.address,
         _outputToken.address,
-        3,
-        gasPrice
+        2
       );
       params.push({
         amountIn: queryRes.amounts[0],

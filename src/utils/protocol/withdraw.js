@@ -12,8 +12,6 @@ import {
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 // import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
 
-import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
-
 export const getWithdrawData = async (
   accountAddress,
   protocolName,

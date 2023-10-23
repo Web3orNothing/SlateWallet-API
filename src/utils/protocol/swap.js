@@ -5,6 +5,8 @@ import {
   getFunctionData,
   getFunctionName,
   getRpcUrlForChain,
+  getProtocolAddressForChain,
+  getABIForProtocol,
   getTokenAddressForChain,
   getApproveData,
   getTokenAmount,
@@ -49,12 +51,13 @@ export const getSwapData = async (
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount } = await getTokenAmount(
+  const { amount: _amount, decimals } = await getTokenAmount(
     _inputToken.address,
     provider,
     accountAddress,
-    amount
+    inputAmount
   );
 
   const params = [];
@@ -91,7 +94,7 @@ export const getSwapData = async (
           address: _outputToken.address,
           symbol: outputToken,
         },
-        amount,
+        _amount,
         gasPrice,
         1,
         dexList
@@ -144,7 +147,7 @@ export const getSwapData = async (
           const approveTxs = await getApproveData(
             provider,
             _inputToken.address,
-            _inputAmount,
+            _amount,
             accountAddress,
             tx.to
           );
@@ -186,7 +189,7 @@ export const getSwapData = async (
           address: _outputToken.address,
           symbol: outputToken,
         },
-        inputAmount,
+        _amount,
         gasPrice
       );
       if (data) {
@@ -196,7 +199,7 @@ export const getSwapData = async (
           const approveTxs = await getApproveData(
             provider,
             _inputToken.address,
-            _inputAmount,
+            _amount,
             accountAddress,
             tx.to
           );
@@ -216,24 +219,23 @@ export const getSwapData = async (
       }
     }
     case "yieldyak": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
+      const address = getProtocolAddressForChain(_protocolName, chainId);
       if (!address) {
         return {
           error: "Protocol address not found on the specified chain.",
         };
       }
-      abi = getABIForProtocol(_protocolName);
+      const abi = getABIForProtocol(_protocolName);
       const yieldYakWrapRouter = new ethers.Contract(
         "0x44f4737C3Bb4E5C1401AE421Bd34F135E0BB8394",
         yieldYakWrapRouterAbi,
         provider
       );
-      const gasPrice = await provider.getGasPrice();
       const queryRes = await yieldYakWrapRouter.findBestPathAndWrap(
-        _inputAmount,
+        _amount,
         _inputToken.address,
         _outputToken.address,
-        2,
+        3,
         gasPrice
       );
       params.push({

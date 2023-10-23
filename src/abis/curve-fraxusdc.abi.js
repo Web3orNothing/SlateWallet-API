@@ -130,7 +130,6 @@ export default [
     name: "A",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 10058,
   },
   {
     stateMutability: "view",
@@ -138,7 +137,6 @@ export default [
     name: "A_precise",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 10058,
   },
   {
     stateMutability: "view",
@@ -146,7 +144,6 @@ export default [
     name: "get_virtual_price",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 804988,
   },
   {
     stateMutability: "view",
@@ -157,7 +154,6 @@ export default [
       { name: "_is_deposit", type: "bool" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 1593467,
   },
   {
     stateMutability: "nonpayable",
@@ -168,7 +164,6 @@ export default [
       { name: "_min_mint_amount", type: "uint256" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 2546841,
   },
   {
     stateMutability: "view",
@@ -180,7 +175,6 @@ export default [
       { name: "_dx", type: "uint256" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 1149036,
   },
   {
     stateMutability: "nonpayable",
@@ -193,7 +187,6 @@ export default [
       { name: "_min_dy", type: "uint256" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 1307513,
   },
   {
     stateMutability: "nonpayable",
@@ -204,7 +197,6 @@ export default [
       { name: "_min_amounts", type: "uint256[2]" },
     ],
     outputs: [{ name: "", type: "uint256[2]" }],
-    gas: 169716,
   },
   {
     stateMutability: "nonpayable",
@@ -215,7 +207,6 @@ export default [
       { name: "_max_burn_amount", type: "uint256" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 2546560,
   },
   {
     stateMutability: "view",
@@ -226,7 +217,6 @@ export default [
       { name: "i", type: "int128" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 989,
   },
   {
     stateMutability: "nonpayable",
@@ -238,7 +228,6 @@ export default [
       { name: "_min_amount", type: "uint256" },
     ],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 1620521,
   },
   {
     stateMutability: "nonpayable",
@@ -249,7 +238,6 @@ export default [
       { name: "_future_time", type: "uint256" },
     ],
     outputs: [],
-    gas: 158394,
   },
   {
     stateMutability: "nonpayable",
@@ -257,7 +245,6 @@ export default [
     name: "stop_ramp_A",
     inputs: [],
     outputs: [],
-    gas: 154617,
   },
   {
     stateMutability: "nonpayable",
@@ -268,7 +255,6 @@ export default [
       { name: "_new_admin_fee", type: "uint256" },
     ],
     outputs: [],
-    gas: 113298,
   },
   {
     stateMutability: "nonpayable",
@@ -276,7 +262,6 @@ export default [
     name: "apply_new_fee",
     inputs: [],
     outputs: [],
-    gas: 103621,
   },
   {
     stateMutability: "nonpayable",
@@ -284,7 +269,6 @@ export default [
     name: "revert_new_parameters",
     inputs: [],
     outputs: [],
-    gas: 22901,
   },
   {
     stateMutability: "nonpayable",
@@ -292,7 +276,6 @@ export default [
     name: "commit_transfer_ownership",
     inputs: [{ name: "_owner", type: "address" }],
     outputs: [],
-    gas: 78536,
   },
   {
     stateMutability: "nonpayable",
@@ -300,7 +283,6 @@ export default [
     name: "apply_transfer_ownership",
     inputs: [],
     outputs: [],
-    gas: 66804,
   },
   {
     stateMutability: "nonpayable",
@@ -308,7 +290,6 @@ export default [
     name: "revert_transfer_ownership",
     inputs: [],
     outputs: [],
-    gas: 22991,
   },
   {
     stateMutability: "view",
@@ -316,7 +297,6 @@ export default [
     name: "admin_balances",
     inputs: [{ name: "i", type: "uint256" }],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 7769,
   },
   {
     stateMutability: "nonpayable",
@@ -324,7 +304,6 @@ export default [
     name: "withdraw_admin_fees",
     inputs: [],
     outputs: [],
-    gas: 31496,
   },
   {
     stateMutability: "nonpayable",
@@ -332,7 +311,6 @@ export default [
     name: "donate_admin_fees",
     inputs: [],
     outputs: [],
-    gas: 82442,
   },
   {
     stateMutability: "nonpayable",
@@ -340,7 +318,6 @@ export default [
     name: "kill_me",
     inputs: [],
     outputs: [],
-    gas: 40304,
   },
   {
     stateMutability: "nonpayable",
@@ -348,7 +325,6 @@ export default [
     name: "unkill_me",
     inputs: [],
     outputs: [],
-    gas: 23141,
   },
   {
     stateMutability: "view",
@@ -356,7 +332,6 @@ export default [
     name: "coins",
     inputs: [{ name: "arg0", type: "uint256" }],
     outputs: [{ name: "", type: "address" }],
-    gas: 3225,
   },
   {
     stateMutability: "view",
@@ -364,7 +339,6 @@ export default [
     name: "balances",
     inputs: [{ name: "arg0", type: "uint256" }],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3255,
   },
   {
     stateMutability: "view",
@@ -372,7 +346,6 @@ export default [
     name: "fee",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3240,
   },
   {
     stateMutability: "view",
@@ -380,7 +353,6 @@ export default [
     name: "admin_fee",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3270,
   },
   {
     stateMutability: "view",
@@ -388,7 +360,6 @@ export default [
     name: "owner",
     inputs: [],
     outputs: [{ name: "", type: "address" }],
-    gas: 3300,
   },
   {
     stateMutability: "view",
@@ -396,7 +367,6 @@ export default [
     name: "lp_token",
     inputs: [],
     outputs: [{ name: "", type: "address" }],
-    gas: 3330,
   },
   {
     stateMutability: "view",
@@ -404,7 +374,6 @@ export default [
     name: "initial_A",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3360,
   },
   {
     stateMutability: "view",
@@ -412,7 +381,6 @@ export default [
     name: "future_A",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3390,
   },
   {
     stateMutability: "view",
@@ -420,7 +388,6 @@ export default [
     name: "initial_A_time",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3420,
   },
   {
     stateMutability: "view",
@@ -428,7 +395,6 @@ export default [
     name: "future_A_time",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3450,
   },
   {
     stateMutability: "view",
@@ -436,7 +402,6 @@ export default [
     name: "admin_actions_deadline",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3480,
   },
   {
     stateMutability: "view",
@@ -444,7 +409,6 @@ export default [
     name: "transfer_ownership_deadline",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3510,
   },
   {
     stateMutability: "view",
@@ -452,7 +416,6 @@ export default [
     name: "future_fee",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3540,
   },
   {
     stateMutability: "view",
@@ -460,7 +423,6 @@ export default [
     name: "future_admin_fee",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
-    gas: 3570,
   },
   {
     stateMutability: "view",
@@ -468,6 +430,5 @@ export default [
     name: "future_owner",
     inputs: [],
     outputs: [{ name: "", type: "address" }],
-    gas: 3600,
   },
 ];

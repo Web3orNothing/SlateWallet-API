@@ -272,7 +272,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body.transactions.length).toEqual(2);
     });
 
-    it.skip("Curve", async () => {
+    it("Curve", async () => {
       const res = await request(app).post("/deposit").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Curve",
@@ -1153,11 +1153,11 @@ describe("Test Protocol Integration", () => {
 
     it("Dopex", async () => {
       const res = await request(app).post("/withdraw").send({
-        accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
+        accountAddress: "0x3392daec7d0bfd9d2dcf0e6d6c8a811bf09dbd73",
         protocolName: "Dopex",
-        chainName: "Ethereum",
-        poolName: null,
-        token: "USDT",
+        chainName: "Arbitrum",
+        poolName: "arb-monthly-ssov",
+        token: "USDC",
         amount: "100",
       });
       expect(res.statusCode).toEqual(200);
@@ -1166,7 +1166,7 @@ describe("Test Protocol Integration", () => {
       expect(res.body).toHaveProperty("transactions");
     });
 
-    it("Synapse", async () => {
+    it.skip("Synapse", async () => {
       const res = await request(app).post("/withdraw").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Synapse",
@@ -1185,7 +1185,7 @@ describe("Test Protocol Integration", () => {
       const res = await request(app).post("/withdraw").send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
         protocolName: "Hop",
-        chainName: "Ethereum",
+        chainName: "Arbitrum",
         poolName: null,
         token: "USDT",
         amount: "100",

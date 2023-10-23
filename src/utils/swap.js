@@ -11,7 +11,6 @@ export const getQuoteFromOpenOcean = async (
   chainId,
   account,
   tokenIn,
-  _,
   tokenOut,
   amount,
   gasPrice,
@@ -20,13 +19,13 @@ export const getQuoteFromOpenOcean = async (
   const baseUrl = "https://open-api.openocean.finance/v3";
   try {
     const queryParams = new URLSearchParams({
-      inTokenAddress: tokenIn.address,
-      outTokenAddress: tokenOut.address,
+      inTokenAddress: tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
+      outTokenAddress: tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
       amount: amount.toString(),
       gasPrice: utils.formatUnits(gasPrice, "9"),
       slippage,
       account,
-    });
+    }).toString();
     const {
       data: { data },
     } = await axios.get(`${baseUrl}/${chainId}/swap_quote?${queryParams}`);
@@ -206,12 +205,12 @@ export const getQuoteFrom0x = async (
 
   try {
     const queryParams = new URLSearchParams({
-      sellToken: tokenIn.address,
-      buyToken: tokenOut.address,
+      sellToken: tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
+      buyToken: tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
       sellAmount: amount.toString(),
       slippagePercentage: slippage,
       gasPrice: gasPrice.toString(),
-    });
+    }).toString();
     const { data } = await axios.get(`${baseURL}swap/v1/quote?${queryParams}`, {
       headers: { "0x-api-key": process.env.API_KEY_0X },
     });
@@ -321,7 +320,6 @@ export const getQuoteFromKyber = async (
       },
       { headers: { "x-client-id": "spice-finance" } }
     );
-    _data.data.desc.minReturnAmount = _data.data.desc.minReturnAmount / 2;
     return {
       amountOut: _data.amountOut,
       tx: {

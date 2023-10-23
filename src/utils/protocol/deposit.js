@@ -10,7 +10,6 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
-
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 
 export const getDepositData = async (

@@ -5,6 +5,8 @@ import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
 import { getBestSwapRoute } from "./swap.js";
 import { getBestBridgeRoute } from "./bridge.js";
+import { getSwapData } from "./protocol/swap.js";
+import { getBridgeData } from "./protocol/bridge.js";
 import { getDepositData } from "./protocol/deposit.js";
 import { getWithdrawData } from "./protocol/withdraw.js";
 import { getClaimData } from "./protocol/claim.js";
@@ -143,7 +145,7 @@ export const getRpcUrlForChain = (chainId) => {
     8453: "https://mainnet.base.org",
     42161: "https://arbitrum.llamarpc.com",
     42220: "https://1rpc.io/celo",
-    43114: "https://endpoints.omniatech.io/v1/avax/mainnet/public",
+    43114: "https://api.avax.network/ext/bc/C/rpc",
     59144: "https://rpc.linea.build",
     // Add more chainId-rpcUrl mappings here as needed
   };
@@ -180,6 +182,7 @@ export const getFunctionName = (protocol, action) => {
       return action;
     case "hop":
       if (action === "claim") return "getReward";
+      if (action === "deposit") return "stake";
       return action;
     case "lido":
       if (action === "stake") return "deposit";
@@ -460,13 +463,12 @@ export const getFunctionData = async (
   params,
   value
 ) => {
-  const contract = new ethers.Contract(address, abi, provider);
+  const contract = new ethers.Contract(address, abi);
   const data = contract.interface.encodeFunctionData(funcName, params);
   const transactionDetails = {
     to: address,
     value,
     data,
-    ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
   };
   return transactionDetails;
 };
@@ -643,35 +645,60 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         case "swap": {
           const { message, transactions } = await getSwapTx(body, true);
           if (message)
-            return { success: false, message, transactionsList: null, calls: null };
+            return {
+              success: false,
+              message,
+              transactionsList: null,
+              calls: null,
+            };
           txs = transactions;
           break;
         }
         case "bridge": {
           const { message, transactions } = await getBridgeTx(body, true);
           if (message)
-            return { success: false, message, transactionsList: null, calls: null };
+            return {
+              success: false,
+              message,
+              transactionsList: null,
+              calls: null,
+            };
           txs = transactions;
           break;
         }
         case "protocol": {
           const { message, transactions } = await getProtocolTx(body);
           if (message)
-            return { success: false, message, transactionsList: null, calls: null };
+            return {
+              success: false,
+              message,
+              transactionsList: null,
+              calls: null,
+            };
           txs = transactions;
           break;
         }
         case "yield": {
           const { message, transactions } = await getYieldTx(body);
           if (message)
-            return { success: false, message, transactionsList: null, calls: null };
+            return {
+              success: false,
+              message,
+              transactionsList: null,
+              calls: null,
+            };
           txs = transactions;
           break;
         }
         case "transfer": {
           const { message, transactions } = await getTransferTx(body, true);
           if (message)
-            return { success: false, message, transactionsList: null, calls: null };
+            return {
+              success: false,
+              message,
+              transactionsList: null,
+              calls: null,
+            };
           txs = transactions;
           break;
         }
@@ -701,14 +728,24 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       const length = res.simulation_results.length;
       for (let j = 0; j < length; j++) {
         if (!res.simulation_results[j].transaction.status)
-          return { success: false, message: res.simulation_results[j].transaction.error_message, transactionsList: null, calls: null };
+          return {
+            success: false,
+            message: res.simulation_results[j].transaction.error_message,
+            transactionsList: null,
+            calls: null,
+          };
       }
 
       if (!token) continue;
 
       let _token = await getTokenAddressForChain(token, chainName);
       if (!_token)
-        return { success: false, message: "Token not found on given chain", transactionsList: null, calls: null };
+        return {
+          success: false,
+          message: "Token not found on given chain",
+          transactionsList: null,
+          calls: null,
+        };
       _token = _token.address.toLowerCase();
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
@@ -806,7 +843,12 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);
-      return { success: false, message: err.message, transactionsList: null, calls: null };
+      return {
+        success: false,
+        message: err.message,
+        transactionsList: null,
+        calls: null,
+      };
     }
   }
   return { success: true, transactionsList, calls };
@@ -848,8 +890,31 @@ const getTokenProxy = (chainId) => {
 
 export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
   try {
-    const { accountAddress, chainName, inputAmount, inputToken, outputToken } =
-      data;
+    const {
+      accountAddress,
+      protocolName,
+      poolName,
+      chainName,
+      inputAmount,
+      inputToken,
+      outputToken,
+    } = data;
+    if (protocolName) {
+      const { transactions, error } = await getSwapData(
+        accountAddress,
+        protocolName,
+        chainName,
+        poolName,
+        inputToken,
+        inputAmount,
+        outputToken
+      );
+      if (error) {
+        return { status: "error", message: error };
+      } else {
+        return { status: "success", transactions };
+      }
+    }
     const chainId = getChainIdFromName(chainName);
     if (!chainId) {
       throw new Error("Invalid chain name: " + chainName);
@@ -945,11 +1010,27 @@ export const getBridgeTx = async (data, ignoreBalanceCheck = false) => {
   try {
     const {
       accountAddress,
+      protocolName,
       sourceChainName,
       destinationChainName,
       token,
       amount,
     } = data;
+    if (protocolName) {
+      const { transactions, error } = await getBridgeData(
+        accountAddress,
+        protocolName,
+        sourceChainName,
+        destinationChainName,
+        token,
+        amount
+      );
+      if (error) {
+        return { status: "error", message: error };
+      } else {
+        return { status: "success", transactions };
+      }
+    }
     const sourceChainId = getChainIdFromName(sourceChainName);
     if (!sourceChainId) {
       throw new Error("Invalid chain name: " + sourceChainName);

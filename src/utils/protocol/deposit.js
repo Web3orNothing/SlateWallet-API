@@ -10,7 +10,6 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
-
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 
 export const getDepositData = async (
@@ -142,6 +141,12 @@ export const getDepositData = async (
       params.push(0); // TODO: strike ID
       params.push(_amount);
       params.push(address);
+      break;
+    }
+    case "hop": {
+      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      abi = getABIForProtocol(_protocolName);
+      params.push(_amount);
       break;
     }
     case "gmx": {

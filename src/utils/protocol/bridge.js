@@ -52,7 +52,7 @@ export const getBridgeData = async (
   const rpcUrl = getRpcUrlForChain(sourceChainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, sourceChainId);
 
-  const { amount: _amount } = await getTokenAmount(
+  const { amount: _amount, decimals } = await getTokenAmount(
     _sourceToken.address,
     provider,
     accountAddress,

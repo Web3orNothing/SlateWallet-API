@@ -5,6 +5,8 @@ import {
   getFunctionData,
   getFunctionName,
   getRpcUrlForChain,
+  getProtocolAddressForChain,
+  getABIForProtocol,
   getTokenAddressForChain,
   getApproveData,
   getTokenAmount,
@@ -15,9 +17,10 @@ import {
   getQuoteFrom1inch,
   getQuoteFromOpenOcean,
   getQuoteFromKyber,
-  getQuoteFromSynapse as getSwapQuoteFromSynapse,
+  getQuoteFromLiFi,
+  getQuoteFromSynapse,
 } from "../swap.js";
-import yieldYakWrapRouterAbi from "../abis/yield-yak-wrap-router.abi.js";
+import yieldYakRouterAbi from "../../abis/yield-yak-router.abi.js";
 
 import { NATIVE_TOKEN } from "../../constants.js";
 
@@ -26,8 +29,9 @@ export const getSwapData = async (
   protocolName,
   chainName,
   poolName,
-  token,
-  amount
+  inputToken,
+  inputAmount,
+  outputToken
 ) => {
   const _protocolName = protocolName.toLowerCase();
 
@@ -36,19 +40,25 @@ export const getSwapData = async (
     throw new Error("Invalid chain name");
   }
 
-  const _token = await getTokenAddressForChain(token, chainName);
-  if (!_token) {
+  const _inputToken = await getTokenAddressForChain(inputToken, chainName);
+  if (!_inputToken) {
+    return { error: "Token not found on the specified chain." };
+  }
+
+  const _outputToken = await getTokenAddressForChain(outputToken, chainName);
+  if (!_outputToken) {
     return { error: "Token not found on the specified chain." };
   }
 
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+  const gasPrice = await provider.getGasPrice();
 
-  const { amount: _amount } = await getTokenAmount(
-    _token.address,
+  const { amount: _amount, decimals } = await getTokenAmount(
+    _inputToken.address,
     provider,
     accountAddress,
-    amount
+    inputAmount
   );
 
   const params = [];
@@ -77,15 +87,15 @@ export const getSwapData = async (
         chainId,
         accountAddress,
         {
-          address: _token.address,
-          symbol: token,
+          address: _inputToken.address,
+          symbol: inputToken,
           decimals,
         },
         {
           address: _outputToken.address,
           symbol: outputToken,
         },
-        amount,
+        _amount,
         gasPrice,
         1,
         dexList
@@ -93,10 +103,10 @@ export const getSwapData = async (
       if (data) {
         const { tx } = data;
         const transactions = [];
-        if (_token.address !== NATIVE_TOKEN) {
+        if (_inputToken.address !== NATIVE_TOKEN) {
           const approveTxs = await getApproveData(
             provider,
-            _token.address,
+            _inputToken.address,
             _amount,
             accountAddress,
             tx.to
@@ -114,59 +124,21 @@ export const getSwapData = async (
         return { error: "No swap route found" };
       }
     }
-    case "synapse": {
-      const data = await getSwapQuoteFromSynapse(
-        chainId,
-        accountAddress,
-        {
-          address: _inputToken.address,
-          symbol: inputToken,
-          decimals,
-        },
-        {
-          address: _outputToken.address,
-          symbol: outputToken,
-        },
-        inputAmount,
-        gasPrice,
-        1
-      );
-      if (data) {
-        const { tx } = data;
-        const transactions = [];
-        if (_inputToken.address !== NATIVE_TOKEN) {
-          const approveTxs = await getApproveData(
-            provider,
-            _inputToken.address,
-            _inputAmount,
-            accountAddress,
-            tx.to
-          );
-          transactions.push(...approveTxs);
-        }
-        transactions.push({
-          to: tx.to,
-          value: tx.value,
-          data: tx.data,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-        });
-        return { transactions };
-      } else {
-        return {
-          error: "No swap route found",
-        };
-      }
-    }
     case "matcha":
+    case "synapse":
     case "1inch":
     case "paraswap":
     case "kyberswap":
+    case "lifi":
+    case "jumper":
     case "openocean": {
       let swapFunc;
       if (_protocolName === "matcha") swapFunc = getQuoteFrom0x;
+      else if (_protocolName === "synapse") swapFunc = getQuoteFromSynapse;
       else if (_protocolName === "1inch") swapFunc = getQuoteFrom1inch;
       else if (_protocolName === "paraswap") swapFunc = getQuoteFromParaSwap;
       else if (_protocolName === "kyberswap") swapFunc = getQuoteFromKyber;
+      else if (_protocolName === "lifi" || _protocolName === "jumper") swapFunc = getQuoteFromLiFi;
       else if (_protocolName === "openocean") swapFunc = getQuoteFromOpenOcean;
       const data = await swapFunc(
         chainId,
@@ -180,7 +152,7 @@ export const getSwapData = async (
           address: _outputToken.address,
           symbol: outputToken,
         },
-        inputAmount,
+        _amount,
         gasPrice
       );
       if (data) {
@@ -190,7 +162,7 @@ export const getSwapData = async (
           const approveTxs = await getApproveData(
             provider,
             _inputToken.address,
-            _inputAmount,
+            _amount,
             accountAddress,
             tx.to
           );
@@ -210,25 +182,23 @@ export const getSwapData = async (
       }
     }
     case "yieldyak": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
+      const address = getProtocolAddressForChain(_protocolName, chainId);
       if (!address) {
         return {
           error: "Protocol address not found on the specified chain.",
         };
       }
-      abi = getABIForProtocol(_protocolName);
-      const yieldYakWrapRouter = new ethers.Contract(
-        "0x44f4737C3Bb4E5C1401AE421Bd34F135E0BB8394",
-        yieldYakWrapRouterAbi,
+      const abi = getABIForProtocol(_protocolName);
+      const yieldYakRouter = new ethers.Contract(
+        address,
+        yieldYakRouterAbi,
         provider
       );
-      const gasPrice = await provider.getGasPrice();
-      const queryRes = await yieldYakWrapRouter.findBestPathAndWrap(
-        _inputAmount,
+      const queryRes = await yieldYakRouter.findBestPath(
+        _amount,
         _inputToken.address,
         _outputToken.address,
-        2,
-        gasPrice
+        2
       );
       params.push({
         amountIn: queryRes.amounts[0],
@@ -243,10 +213,10 @@ export const getSwapData = async (
 
       let approveTxs;
       let value = ethers.constants.Zero;
-      if (_token.address !== NATIVE_TOKEN) {
+      if (_inputToken.address !== NATIVE_TOKEN) {
         approveTxs = await getApproveData(
           provider,
-          _token.address,
+          _inputToken.address,
           _amount,
           accountAddress,
           address

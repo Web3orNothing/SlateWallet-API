@@ -9,6 +9,7 @@ import {
   getFunctionName,
   getTokenAmount,
 } from "../index.js";
+import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 // import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
 
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
@@ -99,7 +100,7 @@ export const getWithdrawData = async (
       address = getProtocolAddressForChain(_protocolName, chainId, poolName);
       abi = getABIForProtocol(_protocolName, "ssov");
       const contract = new ethers.Contract(address, abi, provider);
-      const tokenId = await contract.tokenOfOwnerByIndex(address, 0);
+      const tokenId = await contract.tokenOfOwnerByIndex(accountAddress, 0);
       params.push(tokenId);
       params.push(address);
       break;
@@ -132,7 +133,7 @@ export const getWithdrawData = async (
       break;
     }
     case "hop": {
-      address = getProtocolAddressForChain(_protocolName, chainId);
+      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
       abi = getABIForProtocol(_protocolName);
       params.push(_amount);
       break;

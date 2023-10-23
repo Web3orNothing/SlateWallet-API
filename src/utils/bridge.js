@@ -5,7 +5,8 @@ import { config } from "dotenv";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import {
   getABIForProtocol,
-  getChainIdFromName,
+  getRpcUrlForChain,
+  getChainNameFromId,
   getFunctionData,
   getProtocolAddressForChain,
 } from "./index.js";

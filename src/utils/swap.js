@@ -23,7 +23,7 @@ export const getQuoteFromOpenOcean = async (
         tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
       outTokenAddress:
         tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
-      amount: amount.toString(),
+      amount: utils.formatUnits(amount, tokenIn.decimals),
       gasPrice: utils.formatUnits(gasPrice, "9"),
       slippage,
       account,

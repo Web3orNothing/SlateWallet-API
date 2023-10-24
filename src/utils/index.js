@@ -163,7 +163,75 @@ export const getProtocolAddressForChain = (
   protocol,
   chainId,
   key = "default"
-) => ProtocolAddresses[protocol][chainId][key] || null;
+) => {
+  if (ProtocolAddresses[protocol]) {
+    if (ProtocolAddresses[protocol][chainId]) {
+      return ProtocolAddresses[protocol][chainId][key] || null;
+    }
+  }
+  return null;
+};
+
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
+
+export const getProtocolAddresses = (protocol) => {
+  const key = protocol.toLowerCase();
+  const chains = Object.keys(ProtocolAddresses[key] || {});
+  const addresses = {};
+  chains.map((chain) => {
+    addresses[chain] = Object.values(ProtocolAddresses[key][chain]).filter(
+      onlyUnique
+    );
+  });
+  return addresses;
+};
+
+export const getProtocolEntities = (protocol) => {
+  let poolNames;
+  switch (protocol.toLowerCase()) {
+    case "curve":
+      poolNames = {
+        1: ["3pool", "steth", "fraxusdc", "tricrypto2", "fraxusdp"],
+      };
+      break;
+    case "dopex":
+      poolNames = {
+        42161: [
+          "arb-monthly-ssov",
+          "rpdx-monthly-ssov",
+          "dpx-monthly-ssov",
+          "steth-monthly-ssov",
+          "steth-weekly-ssov",
+        ],
+      };
+      break;
+    default:
+      poolNames = {};
+  }
+  const pools = {};
+  const poolChains = Object.keys(poolNames);
+  poolChains.map((chain) => {
+    poolNames[chain].map((poolName) => {
+      pools[chain] = pools[chain] || {};
+      pools[chain][poolName] =
+        ProtocolAddresses[protocol.toLowerCase()][chain][poolName];
+    });
+  });
+  return {
+    name: protocol,
+    addresses: getProtocolAddresses(protocol),
+    pools,
+  };
+};
+
+export const getChainEntities = async (chainName) => {
+  return {
+    name: chainName,
+    tokens: await getTokensForChain(chainName),
+  };
+};
 
 export const getABIForProtocol = (protocol, key) =>
   abis[`${protocol}${!key ? "" : `-${key}`}`];
@@ -268,18 +336,7 @@ export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
 
 // Helper function to get tokens on a chain
 export const getTokensForChain = async (chainId) => {
-  try {
-    const response = await axios.get(
-      `https://account.metafi.codefi.network/networks/${chainId}/tokens`,
-      {
-        headers: metamaskApiHeaders,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching tokens:", error);
-    throw new Error("Failed to fetch tokens for the given chainId.");
-  }
+  return []; // TODO: complete this
 };
 
 const getBalanceSlotForToken = (chainId, token) => {

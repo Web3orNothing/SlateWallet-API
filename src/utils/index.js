@@ -925,6 +925,7 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
     }
 
     // Step 2: Get best swap route
+    // might need to mutiply gasPrice by 1.1 or something to avoid failure due to gas spike later
     const gasPrice = await provider.getGasPrice();
     const { tx, source } = await getBestSwapRoute(
       chainId,

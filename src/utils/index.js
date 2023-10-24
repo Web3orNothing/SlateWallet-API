@@ -52,39 +52,47 @@ export const getChainNameForCMC = (chainName) => {
   return chainNamesForCMC[chainName.toLowerCase()] || null;
 };
 
-export const getChainNameForCGC = (chainName) => {
-  const chainNamesForCGC = {
-    ethereum: "ethereum",
-    optimism: "optimistic-ethereum",
-    cronos: "cronos",
-    binancesmartchain: "binance-smart-chain",
-    gnosis: "gnosis",
-    polygon: "polygon-pos",
-    fantom: "fantom",
-    filecoin: "filecoin",
-    moonbeam: "moonbeam",
-    moonriver: "Moonriver",
-    kava: "kava",
-    base: "base",
-    arbitrum: "arbitrum-one",
-    avalanche: "avalanche",
-    harmony: "harmony-shard-0",
-    aurora: "aurora",
-    metis: "metis-andromeda",
-    sora: "sora",
-    syscoin: "syscoin",
-    cardano: "milkomeda-cardano",
-    energi: "energi",
-    cosmos: "cosmos",
-    astar: "astar",
-    velas: "velas",
-    hydra: "hydra",
-    near: "near-protocol",
-    zksync: "zksync",
-    // Add more chainName-platform on CGC mappings here as needed
-  };
+const chainNamesForCGC = {
+  ethereum: "ethereum",
+  optimism: "optimistic-ethereum",
+  cronos: "cronos",
+  binancesmartchain: "binance-smart-chain",
+  gnosis: "gnosis",
+  polygon: "polygon-pos",
+  fantom: "fantom",
+  filecoin: "filecoin",
+  moonbeam: "moonbeam",
+  moonriver: "Moonriver",
+  kava: "kava",
+  base: "base",
+  arbitrum: "arbitrum-one",
+  avalanche: "avalanche",
+  harmony: "harmony-shard-0",
+  aurora: "aurora",
+  metis: "metis-andromeda",
+  sora: "sora",
+  syscoin: "syscoin",
+  cardano: "milkomeda-cardano",
+  energi: "energi",
+  cosmos: "cosmos",
+  astar: "astar",
+  velas: "velas",
+  hydra: "hydra",
+  near: "near-protocol",
+  zksync: "zksync",
+  // Add more chainName-platform on CGC mappings here as needed
+};
 
+export const getChainNameForCGC = (chainName) => {
   return chainNamesForCGC[chainName.toLowerCase()] || null;
+};
+
+export const getChainNameFromCGC = (cgcChainName) => {
+  const chainNames = Object.keys(chainNamesForCGC);
+  for (let i = 0; i < chainNames.length; i++) {
+    if (chainNamesForCGC[chainNames[i]] === cgcChainName) return chainNames[i];
+  }
+  return null;
 };
 
 // TODO: Need to handle lower vs upper case and slightly different names (ex. ethereum vs Ethereum, BSC vs BinanceSmartChain, Binance vs BinanceSmartChain)

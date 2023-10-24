@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BigNumber, Contract, ethers, utils } from "ethers";
+import Sequelize from "sequelize";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
@@ -21,6 +22,8 @@ import { getLockData } from "./protocol/lock.js";
 import { getUnlockData } from "./protocol/unlock.js";
 import { getVoteData } from "./protocol/vote.js";
 import { abis } from "../abis/index.js";
+import { sequelize } from "../db/index.js";
+import tokenModel from "../db/token.model.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -237,7 +240,7 @@ export const getProtocolEntities = (protocol) => {
 export const getChainEntities = async (chainName) => {
   return {
     name: chainName,
-    tokens: await getTokensForChain(chainName),
+    tokens: await getTokensForChain(getChainIdFromName(chainName)),
   };
 };
 
@@ -344,7 +347,14 @@ export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
 
 // Helper function to get tokens on a chain
 export const getTokensForChain = async (chainId) => {
-  return []; // TODO: complete this
+  const Token = await tokenModel(sequelize, Sequelize);
+  const tokens = await Token.findAll({
+    where: {
+      chainId,
+    },
+    raw: true,
+  });
+  return tokens.map(({ name, symbol, address }) => ({ name, symbol, address }));
 };
 
 const getBalanceSlotForToken = (chainId, token) => {

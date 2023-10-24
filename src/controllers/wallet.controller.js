@@ -543,6 +543,7 @@ const verifiedEntities = async (req, res) => {
       "short",
       "stake",
       "swap",
+      "transfer",
       "unlock",
       "unstake",
       "vote",

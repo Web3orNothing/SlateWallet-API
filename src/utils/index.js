@@ -239,33 +239,6 @@ export const getFunctionName = (protocol, action) => {
   }
 };
 
-export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
-  let maxFeePerGas = null;
-  let maxPriorityFeePerGas = null;
-  let gasPrice = await provider.getGasPrice();
-
-  const [block, eth_maxPriorityFeePerGas] = await Promise.all([
-    await provider.getBlock("latest"),
-    await provider.send("eth_maxPriorityFeePerGas", []),
-  ]);
-
-  if (block && block.baseFeePerGas) {
-    maxPriorityFeePerGas = BigNumber.from(eth_maxPriorityFeePerGas);
-    if (maxPriorityFeePerGas) {
-      maxFeePerGas = block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas);
-    }
-  }
-  maxFeePerGas = parseInt(maxFeePerGas.toString());
-  maxPriorityFeePerGas = parseInt(maxPriorityFeePerGas.toString());
-  gasPrice = parseInt(gasPrice.toString());
-
-  return {
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-    gasPrice: Math.floor(gasPrice * 1.05),
-  };
-};
-
 // Helper function to get tokens on a chain
 export const getTokensForChain = async (chainId) => {
   try {
@@ -348,7 +321,6 @@ export const getApproveData = async (
           to: tokenAddress,
           value: "0",
           data,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
         });
       }
       const data = token.interface.encodeFunctionData("approve", [
@@ -359,7 +331,6 @@ export const getApproveData = async (
         to: tokenAddress,
         value: "0",
         data,
-        ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
       });
     }
     return txs;
@@ -997,7 +968,6 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
       to: tx.to,
       value: tx.value,
       data: tx.data,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
     return { status: "success", transactions };
   } catch (err) {
@@ -1120,7 +1090,6 @@ export const getBridgeTx = async (data, ignoreBalanceCheck = false) => {
       to: result.to,
       value: result.value,
       data: result.data,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
     return { status: "success", transactions };
@@ -1502,7 +1471,6 @@ export const getTransferTx = async (data, ignoreBalanceCheck = false) => {
       to,
       value: value.toString(),
       data: txData,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
 
     return { status: "success", transactions: [transactionDetails] };

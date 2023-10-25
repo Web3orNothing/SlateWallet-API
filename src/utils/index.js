@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BigNumber, Contract, ethers, utils } from "ethers";
+import Sequelize from "sequelize";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
@@ -21,6 +22,8 @@ import { getLockData } from "./protocol/lock.js";
 import { getUnlockData } from "./protocol/unlock.js";
 import { getVoteData } from "./protocol/vote.js";
 import { abis } from "../abis/index.js";
+import { sequelize } from "../db/index.js";
+import tokenModel from "../db/token.model.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -52,39 +55,47 @@ export const getChainNameForCMC = (chainName) => {
   return chainNamesForCMC[chainName.toLowerCase()] || null;
 };
 
-export const getChainNameForCGC = (chainName) => {
-  const chainNamesForCGC = {
-    ethereum: "ethereum",
-    optimism: "optimistic-ethereum",
-    cronos: "cronos",
-    binancesmartchain: "binance-smart-chain",
-    gnosis: "gnosis",
-    polygon: "polygon-pos",
-    fantom: "fantom",
-    filecoin: "filecoin",
-    moonbeam: "moonbeam",
-    moonriver: "Moonriver",
-    kava: "kava",
-    base: "base",
-    arbitrum: "arbitrum-one",
-    avalanche: "avalanche",
-    harmony: "harmony-shard-0",
-    aurora: "aurora",
-    metis: "metis-andromeda",
-    sora: "sora",
-    syscoin: "syscoin",
-    cardano: "milkomeda-cardano",
-    energi: "energi",
-    cosmos: "cosmos",
-    astar: "astar",
-    velas: "velas",
-    hydra: "hydra",
-    near: "near-protocol",
-    zksync: "zksync",
-    // Add more chainName-platform on CGC mappings here as needed
-  };
+const chainNamesForCGC = {
+  ethereum: "ethereum",
+  optimism: "optimistic-ethereum",
+  cronos: "cronos",
+  binancesmartchain: "binance-smart-chain",
+  gnosis: "gnosis",
+  polygon: "polygon-pos",
+  fantom: "fantom",
+  filecoin: "filecoin",
+  moonbeam: "moonbeam",
+  moonriver: "Moonriver",
+  kava: "kava",
+  base: "base",
+  arbitrum: "arbitrum-one",
+  avalanche: "avalanche",
+  harmony: "harmony-shard-0",
+  aurora: "aurora",
+  metis: "metis-andromeda",
+  sora: "sora",
+  syscoin: "syscoin",
+  cardano: "milkomeda-cardano",
+  energi: "energi",
+  cosmos: "cosmos",
+  astar: "astar",
+  velas: "velas",
+  hydra: "hydra",
+  near: "near-protocol",
+  zksync: "zksync",
+  // Add more chainName-platform on CGC mappings here as needed
+};
 
+export const getChainNameForCGC = (chainName) => {
   return chainNamesForCGC[chainName.toLowerCase()] || null;
+};
+
+export const getChainNameFromCGC = (cgcChainName) => {
+  const chainNames = Object.keys(chainNamesForCGC);
+  for (let i = 0; i < chainNames.length; i++) {
+    if (chainNamesForCGC[chainNames[i]] === cgcChainName) return chainNames[i];
+  }
+  return null;
 };
 
 // TODO: Need to handle lower vs upper case and slightly different names (ex. ethereum vs Ethereum, BSC vs BinanceSmartChain, Binance vs BinanceSmartChain)
@@ -163,7 +174,75 @@ export const getProtocolAddressForChain = (
   protocol,
   chainId,
   key = "default"
-) => ProtocolAddresses[protocol][chainId][key] || null;
+) => {
+  if (ProtocolAddresses[protocol]) {
+    if (ProtocolAddresses[protocol][chainId]) {
+      return ProtocolAddresses[protocol][chainId][key] || null;
+    }
+  }
+  return null;
+};
+
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
+
+export const getProtocolAddresses = (protocol) => {
+  const key = protocol.toLowerCase();
+  const chains = Object.keys(ProtocolAddresses[key] || {});
+  const addresses = {};
+  chains.map((chain) => {
+    addresses[chain] = Object.values(ProtocolAddresses[key][chain]).filter(
+      onlyUnique
+    );
+  });
+  return addresses;
+};
+
+export const getProtocolEntities = (protocol) => {
+  let poolNames;
+  switch (protocol.toLowerCase()) {
+    case "curve":
+      poolNames = {
+        1: ["3pool", "steth", "fraxusdc", "tricrypto2", "fraxusdp"],
+      };
+      break;
+    case "dopex":
+      poolNames = {
+        42161: [
+          "arb-monthly-ssov",
+          "rpdx-monthly-ssov",
+          "dpx-monthly-ssov",
+          "steth-monthly-ssov",
+          "steth-weekly-ssov",
+        ],
+      };
+      break;
+    default:
+      poolNames = {};
+  }
+  const pools = {};
+  const poolChains = Object.keys(poolNames);
+  poolChains.map((chain) => {
+    poolNames[chain].map((poolName) => {
+      pools[chain] = pools[chain] || {};
+      pools[chain][poolName] =
+        ProtocolAddresses[protocol.toLowerCase()][chain][poolName];
+    });
+  });
+  return {
+    name: protocol,
+    addresses: getProtocolAddresses(protocol),
+    pools,
+  };
+};
+
+export const getChainEntities = async (chainName) => {
+  return {
+    name: chainName,
+    tokens: await getTokensForChain(getChainIdFromName(chainName)),
+  };
+};
 
 export const getABIForProtocol = (protocol, key) =>
   abis[`${protocol}${!key ? "" : `-${key}`}`];
@@ -241,18 +320,14 @@ export const getFunctionName = (protocol, action) => {
 
 // Helper function to get tokens on a chain
 export const getTokensForChain = async (chainId) => {
-  try {
-    const response = await axios.get(
-      `https://account.metafi.codefi.network/networks/${chainId}/tokens`,
-      {
-        headers: metamaskApiHeaders,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching tokens:", error);
-    throw new Error("Failed to fetch tokens for the given chainId.");
-  }
+  const Token = await tokenModel(sequelize, Sequelize);
+  const tokens = await Token.findAll({
+    where: {
+      chainId,
+    },
+    raw: true,
+  });
+  return tokens.map(({ name, symbol, address }) => ({ name, symbol, address }));
 };
 
 const getBalanceSlotForToken = (chainId, token) => {

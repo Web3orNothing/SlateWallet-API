@@ -27,7 +27,7 @@ export const getSwapData = async (
   accountAddress,
   protocolName,
   chainName,
-  poolName,
+  _poolName,
   inputToken,
   inputAmount,
   outputToken

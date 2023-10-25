@@ -21,7 +21,7 @@ const fetchTokens = async () => {
   const tokens = response?.data || [];
   const length = tokens.length;
 
-  for (let i = 64; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     const { id } = tokens[i];
     try {
       const {

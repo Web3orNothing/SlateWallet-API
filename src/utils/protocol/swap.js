@@ -1,7 +1,6 @@
 import { ethers } from "ethers";
 import {
   getChainIdFromName,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
   getFunctionData,
   getFunctionName,
   getRpcUrlForChain,
@@ -28,7 +27,7 @@ export const getSwapData = async (
   accountAddress,
   protocolName,
   chainName,
-  poolName,
+  _poolName,
   inputToken,
   inputAmount,
   outputToken
@@ -117,7 +116,6 @@ export const getSwapData = async (
           to: tx.to,
           value: tx.value,
           data: tx.data,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
         });
         return { transactions };
       } else {
@@ -172,7 +170,6 @@ export const getSwapData = async (
           to: tx.to,
           value: tx.value,
           data: tx.data,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
         });
         return { transactions };
       } else {

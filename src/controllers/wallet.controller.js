@@ -22,7 +22,7 @@ import {
   getUnlockTx,
   getVoteTx,
   getTransferTx,
-  simulateCalls,
+  simulateActions,
   getProtocolEntities,
   getChainEntities,
 } from "../utils/index.js";
@@ -31,8 +31,8 @@ import conditionModel from "../db/condition.model.js";
 import historyModel from "../db/history.model.js";
 
 const condition = async (req, res) => {
-  const { accountAddress, query } = req.body;
-  if (!query.conditions) {
+  const { accountAddress, query, conditions, connectedChainName } = req.body;
+  if (conditions.length === 0) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
@@ -41,23 +41,24 @@ const condition = async (req, res) => {
 
   try {
     let simstatus = 0;
-    for (let i = 0; i < query.conditions.length; i++) {
-      const { success } = await simulateCalls(
-        query.conditions[i].actions,
-        accountAddress
+    for (let i = 0; i < conditions.length; i++) {
+      const { success } = await simulateActions(
+        conditions[i].actions,
+        accountAddress,
+        connectedChainName
       );
       if (!success) {
         simstatus = 1;
+        break;
       }
     }
 
     const Conditions = await conditionModel(sequelize, Sequelize);
     const ids = [];
-    for (let i = 0; i < query.conditions.length; i++) {
+    for (let i = 0; i < conditions.length; i++) {
       const condition = new Conditions({
         useraddress: accountAddress.toLowerCase(),
-        conditions: query.conditions[i].conditions,
-        actions: query.conditions[i].actions,
+        ...conditions[i],
         query,
         status: "pending",
         simstatus,
@@ -162,7 +163,7 @@ const getConditions = async (req, res) => {
     const statuses =
       isActive === undefined
         ? ["ready", "pending", "executing", "completed"]
-        : !isActive
+        : Boolean(isActive)
         ? ["ready", "pending", "executing"]
         : ["completed"];
     const Conditions = await conditionModel(sequelize, Sequelize);
@@ -183,7 +184,7 @@ const getConditions = async (req, res) => {
 };
 
 const addHistory = async (req, res) => {
-  const { accountAddress, query } = req.body;
+  const { accountAddress, query, actions } = req.body;
   if (!query) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
@@ -195,6 +196,7 @@ const addHistory = async (req, res) => {
     const Histories = await historyModel(sequelize, Sequelize);
     const history = new Histories({
       useraddress: accountAddress.toLowerCase(),
+      actions,
       query,
     });
     const { id } = await history.save();
@@ -432,13 +434,13 @@ const getTokenBalance = async (req, res) => {
 
 const simulate = async (req, res) => {
   try {
-    const { calls, conditionId, accountAddress, connectedChainName } = req.body;
-    const {
-      success,
-      message,
-      transactionsList,
-      calls: updatedCalls,
-    } = await simulateCalls(calls, accountAddress, connectedChainName);
+    const { actions, conditionId, accountAddress, connectedChainName } =
+      req.body;
+    const { success, message, transactionsList } = await simulateActions(
+      actions,
+      accountAddress,
+      connectedChainName
+    );
     if (!isNaN(parseInt(conditionId))) {
       const Conditions = await conditionModel(sequelize, Sequelize);
       const condition = await Conditions.findOne({
@@ -464,7 +466,7 @@ const simulate = async (req, res) => {
       res.status(httpStatus.OK).json({
         status: "success",
         transactionsList,
-        calls: updatedCalls,
+        calls,
       });
     } else {
       res

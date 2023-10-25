@@ -26,12 +26,12 @@ export const checkTx = async () => {
   await syncConditionTx();
   const conditions = await findConditionTx();
   const retVal = {};
-  conditions.map(({ id, query, useraddress }) => {
+  conditions.map(({ id, actions, useraddress }) => {
     const address = useraddress.toLowerCase();
     if (!retVal[address]) {
-      retVal[address] = [{ ...query, id }];
+      retVal[address] = [{ actions, id }];
     } else {
-      retVal[address].push({ ...query, id });
+      retVal[address].push({ actions, id });
     }
   });
   const users = Object.keys(retVal);

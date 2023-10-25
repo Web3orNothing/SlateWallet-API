@@ -8,9 +8,6 @@ const routes = new Router();
 // Condition endpoint
 routes.post("/condition", walletController.condition);
 
-// Time endpoint
-routes.post("/time", walletController.time);
-
 // Update endpoint
 routes.post("/update-status", walletController.updateStatus);
 

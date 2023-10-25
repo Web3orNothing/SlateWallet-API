@@ -9,6 +9,14 @@ import ORACLE_ABI from "./abis/oracle.abi.js";
 // Maintain subscriptions
 const subscriptions = {};
 
+const comparatorMap = {
+  "less than": "lt",
+  "less than or equal": "lte",
+  "greater than": "gt",
+  "greater than or equal": "lte",
+  equal: "eq",
+};
+
 // Add subscription
 export const addSubscription = (userAddress, subscription) => {
   subscriptions[userAddress.toLowerCase()] = subscription;
@@ -37,9 +45,9 @@ const syncConditionTx = async () => {
   const conditions = await Conditions.findAll({
     where: {
       [Sequelize.Op.or]: [
-        { completed: "pending" },
+        { status: "pending" },
         {
-          completed: "completed",
+          status: "completed",
           type: "time",
           recurrence: { [Sequelize.Op.ne]: null },
         },
@@ -50,45 +58,56 @@ const syncConditionTx = async () => {
   const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
-    const { type, comparator, value, recurrence, completed } =
-      condition.dataValues;
-    let isReady;
-    if (type === "gas") {
-      if (comparator === "lt") {
-        isReady = gasPrice < parseFloat(value);
-      } else if (comparator === "lte") {
-        isReady = gasPrice <= parseFloat(value);
-      } else if (comparator === "gt") {
-        isReady = gasPrice > parseFloat(value);
-      } else if (comparator === "gte") {
-        isReady = gasPrice >= parseFloat(value);
-      } else if (comparator === "eq") {
-        isReady = gasPrice === parseFloat(value);
-      }
-    } else if (type === "time") {
-      const now = Math.floor(Date.now() / 1000);
-      const _value = parseInt(value);
-      isReady = now >= _value && now < _value + 60;
+    let ready = true;
+    const { status } = condition.dataValues;
 
-      if (now >= _value && !isReady && recurrence) {
-        const interval = getInterval(recurrence);
-        isReady = (now - _value) % interval < 60;
+    for (let j = 0; j < condition.dataValues.conditions[j].length; j++) {
+      let isReady;
+      const {
+        name,
+        args: { type, comparator: comp, value: val, start_time, recurrence },
+      } = condition.dataValues.conditions[j];
+      const comparator = name === "condition" ? comparatorMap[comp] : "eq";
+      const value = name === "condition" ? val : start_time;
+
+      if (type === "gas") {
+        if (comparator === "lt") {
+          isReady = gasPrice < parseFloat(value);
+        } else if (comparator === "lte") {
+          isReady = gasPrice <= parseFloat(value);
+        } else if (comparator === "gt") {
+          isReady = gasPrice > parseFloat(value);
+        } else if (comparator === "gte") {
+          isReady = gasPrice >= parseFloat(value);
+        } else if (comparator === "eq") {
+          isReady = gasPrice === parseFloat(value);
+        }
+      } else if (type === "time") {
+        const now = Math.floor(Date.now() / 1000);
+        const _value = parseInt(value);
+        isReady = now >= _value && now < _value + 60;
+
+        if (now >= _value && !isReady && recurrence) {
+          const interval = getInterval(recurrence);
+          isReady = (now - _value) % interval < 60;
+        }
+      } else if (type === "price") {
+        if (comparator === "lt") {
+          isReady = ethPrice < parseFloat(value);
+        } else if (comparator === "lte") {
+          isReady = ethPrice <= parseFloat(value);
+        } else if (comparator === "gt") {
+          isReady = ethPrice > parseFloat(value);
+        } else if (comparator === "gte") {
+          isReady = ethPrice >= parseFloat(value);
+        } else if (comparator === "eq") {
+          isReady = ethPrice === parseFloat(value);
+        }
       }
-    } else if (type === "price") {
-      if (comparator === "lt") {
-        isReady = ethPrice < parseFloat(value);
-      } else if (comparator === "lte") {
-        isReady = ethPrice <= parseFloat(value);
-      } else if (comparator === "gt") {
-        isReady = ethPrice > parseFloat(value);
-      } else if (comparator === "gte") {
-        isReady = ethPrice >= parseFloat(value);
-      } else if (comparator === "eq") {
-        isReady = ethPrice === parseFloat(value);
-      }
+      ready &= isReady;
     }
 
-    await condition.set("completed", isReady ? "ready" : completed);
+    await condition.set("status", ready ? "ready" : status);
     await condition.save();
   }
 };
@@ -119,7 +138,7 @@ const findConditionTx = async () => {
   await Conditions.sync();
   return await Conditions.findAll({
     attributes: ["query", "useraddress", "id"],
-    where: { completed: "ready" },
+    where: { status: "ready" },
   });
 };
 

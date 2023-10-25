@@ -28,17 +28,9 @@ import { sequelize } from "../db/index.js";
 import conditionModel from "../db/condition.model.js";
 import historyModel from "../db/history.model.js";
 
-const comparatorMap = {
-  "less than": "lt",
-  "less than or equal": "lte",
-  "greater than": "gt",
-  "greater than or equal": "lte",
-  equal: "eq",
-};
-
 const condition = async (req, res) => {
-  const { accountAddress, query, type, subject, comparator, value } = req.body;
-  if (!type || !subject || !comparator || !value) {
+  const { accountAddress, query } = req.body;
+  if (!query.conditions) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
@@ -47,65 +39,31 @@ const condition = async (req, res) => {
 
   try {
     let simstatus = 0;
-    const { success } = await simulateCalls(query.calls, accountAddress);
-    if (!success) {
-      simstatus = 1;
+    for (let i = 0; i < query.conditions.length; i++) {
+      const { success } = await simulateCalls(
+        query.conditions[i].actions,
+        accountAddress
+      );
+      if (!success) {
+        simstatus = 1;
+      }
     }
 
     const Conditions = await conditionModel(sequelize, Sequelize);
-    const condition = new Conditions({
-      useraddress: accountAddress.toLowerCase(),
-      type,
-      subject,
-      comparator: comparatorMap[comparator],
-      value,
-      recurrence: undefined,
-      query,
-      completed: "pending",
-      simstatus,
-    });
-    const { id } = await condition.save();
-    return res.status(httpStatus.CREATED).json({ status: "success", id });
-  } catch {
-    return res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Failed to store condition" });
-  }
-};
-
-const time = async (req, res) => {
-  const { accountAddress, query, start_time, recurrence } = req.body;
-  if (
-    !start_time ||
-    !["hourly", "daily", "weekly", "monthly"].includes(recurrence.type)
-  ) {
-    return res.status(httpStatus.BAD_REQUEST).json({
-      status: "error",
-      message: "Invalid Request Body",
-    });
-  }
-
-  try {
-    let simstatus = 0;
-    const { success } = await simulateCalls(query.calls, accountAddress);
-    if (!success) {
-      simstatus = 1;
+    const ids = [];
+    for (let i = 0; i < query.conditions.length; i++) {
+      const condition = new Conditions({
+        useraddress: accountAddress.toLowerCase(),
+        conditions: query.conditions[i],
+        actions: query.actions[i],
+        query,
+        status: "pending",
+        simstatus,
+      });
+      const { id } = await condition.save();
+      ids.push(id);
     }
-
-    const Conditions = await conditionModel(sequelize, Sequelize);
-    const condition = new Conditions({
-      useraddress: accountAddress.toLowerCase(),
-      type: "time",
-      subject: "time",
-      comparator: "eq",
-      value: start_time,
-      recurrence,
-      query,
-      completed: "pending",
-      simstatus,
-    });
-    const { id } = await condition.save();
-    return res.status(httpStatus.CREATED).json({ status: "success", id });
+    return res.status(httpStatus.CREATED).json({ status: "success", ids });
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
@@ -122,9 +80,7 @@ const updateStatus = async (req, res) => {
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),
-        completed: {
-          [Sequelize.Op.notIn]: ["completed", "canceled"],
-        },
+        status: { [Sequelize.Op.notIn]: ["completed", "canceled"] },
       },
     });
 
@@ -134,7 +90,7 @@ const updateStatus = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    await condition.set("completed", status);
+    await condition.set("status", status);
     await condition.save();
 
     return res.status(httpStatus.OK).json({ status: "success" });
@@ -176,7 +132,7 @@ const cancel = async (req, res) => {
       where: {
         id: parseInt(conditionId),
         useraddress: accountAddress.toLowerCase(),
-        completed: { [Sequelize.Op.in]: ["pending", "ready", "executing"] },
+        status: { [Sequelize.Op.in]: ["pending", "ready", "executing"] },
       },
     });
 
@@ -186,7 +142,7 @@ const cancel = async (req, res) => {
         .json({ status: "error", message: "Condition does not exist" });
     }
 
-    await condition.set("completed", "canceled");
+    await condition.set("status", "canceled");
     await condition.save();
 
     return res.status(httpStatus.OK).json({ status: "success" });
@@ -211,7 +167,7 @@ const getConditions = async (req, res) => {
     const conditions = await Conditions.findAll({
       where: {
         useraddress: accountAddress.toLowerCase(),
-        completed: { [Sequelize.Op.in]: statuses },
+        status: { [Sequelize.Op.in]: statuses },
       },
       raw: true,
     });
@@ -258,10 +214,7 @@ const getHistories = async (req, res) => {
       raw: true,
     });
 
-    return res.status(httpStatus.OK).json({
-      status: "success",
-      histories,
-    });
+    return res.status(httpStatus.OK).json({ status: "success", histories });
   } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
@@ -490,9 +443,7 @@ const simulate = async (req, res) => {
         where: {
           id: parseInt(conditionId),
           useraddress: accountAddress.toLowerCase(),
-          completed: {
-            [Sequelize.Op.notIn]: ["completed", "canceled"],
-          },
+          status: { [Sequelize.Op.notIn]: ["completed", "canceled"] },
         },
       });
 
@@ -527,7 +478,6 @@ const simulate = async (req, res) => {
 
 export default {
   condition,
-  time,
   updateStatus,
   cancel,
   getConditions,

@@ -556,19 +556,57 @@ export const getTokenAmount = async (address, provider, user, amount) => {
 };
 
 export const simulateCalls = async (calls, address, connectedChainName) => {
+  // Parse Calls
+  let prevChainName = connectedChainName;
+  for (let i = 0; i < calls.length; i++) {
+    const call = calls[i];
+    const chainName = (
+      call.args["chainName"] ||
+      call.args["sourceChainName"] ||
+      prevChainName
+    ).toLowerCase();
+    prevChainName = chainName;
+    const chainId = getChainIdFromName(chainName);
+
+    const token = (
+      call.args["token"] || call.args["inputToken"]
+    ).toLowerCase();
+    const amount = call.args["amount"] || call.args["inputAmount"];
+    if (amount === "all" || amount === "half") {
+      let newAmount;
+      const tokenInfo = await getTokenAddressForChain(token, chainName);
+      if (tokenInfo.address === NATIVE_TOKEN || tokenInfo.address === NATIVE_TOKEN2) {
+        let ethBalance = await getEthBalanceForUser(chainId, address);
+        const gasAmount = chainId === 1 ? "0.2" : "0.1";
+        ethBalance = ethBalance.sub(utils.parseEther(gasAmount));
+        newAmount = utils.formatEther(amount === "all" ? ethBalance : ethBalance.div(2));
+      } else {
+        const rpcUrl = getRpcUrlForChain(chainId);
+        const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+        const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
+        const tokenBalance = await contract.balanceOf(address);
+        const decimals = await contract.decimals();
+        newAmount = utils.formatUnits(amount === "all" ? tokenBalance : tokenBalance.div(2), decimals);
+      }
+      if (call.args["amount"]) call.args["amount"] = newAmount;
+      else call.args["inputAmount"] = newAmount;
+    }
+  }
+
+  const tempCalls = JSON.parse(JSON.stringify(calls));
   const transactionsList = [];
 
   // Check for gas
-  let prevCall = calls[0];
-  let prevChainName = (
+  let prevCall = tempCalls[0];
+  prevChainName = (
     prevCall.args["chainName"] ||
     prevCall.args["sourceChainName"] ||
     connectedChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;
-  while (i < calls.length) {
-    const curCall = calls[i];
+  while (i < tempCalls.length) {
+    const curCall = tempCalls[i];
     const curChainName = (
       curCall.args["chainName"] ||
       curCall.args["sourceChainName"] ||
@@ -593,11 +631,11 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         prevCall.args["destinationChainName"].toLowerCase() === curChainName &&
         prevCall.args["token"].toLowerCase() === "eth"
       ) {
-        calls[i - 1].args["amount"] = (
-          parseFloat(calls[i - 1].args["amount"]) + parseFloat(gasAmount)
+        tempCalls[i - 1].args["amount"] = (
+          parseFloat(tempCalls[i - 1].args["amount"]) + parseFloat(gasAmount)
         ).toString();
       } else {
-        calls.splice(i, 0, {
+        tempCalls.splice(i, 0, {
           name: "bridge",
           args: {
             accountAddress: address,
@@ -629,18 +667,18 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
           prevCall.args["token"].toLowerCase() === token
         ) {
           if (
-            parseFloat(calls[i - 1].args["amount"]) +
+            parseFloat(tempCalls[i - 1].args["amount"]) +
               parseFloat(utils.formatUnits(balance, decimals)) <
             parseFloat(amount)
           ) {
-            calls[i - 1].args["amount"] = Math.max(
-              parseFloat(calls[i - 1].args["amount"]),
+            tempCalls[i - 1].args["amount"] = Math.max(
+              parseFloat(tempCalls[i - 1].args["amount"]),
               parseFloat(amount) -
                 parseFloat(utils.formatUnits(balance, decimals))
             ).toString();
           }
         } else {
-          calls.splice(i, 0, {
+          tempCalls.splice(i, 0, {
             name: "bridge",
             args: {
               accountAddress: address,
@@ -667,8 +705,8 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     connectedChainName
   ).toLowerCase();
   const state_objects = {};
-  for (let i = 0; i < calls.length; i++) {
-    const call = calls[i];
+  for (let i = 0; i < tempCalls.length; i++) {
+    const call = tempCalls[i];
     let token;
     let chainName;
 
@@ -679,7 +717,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       prevChainName = sourceChainName;
       const chainId = getChainIdFromName(sourceChainName);
       if (call.name === "swap" || call.name === "bridge") {
-        if (i < calls.length - 1) {
+        if (i < tempCalls.length - 1) {
           token = call.args["outputToken"] || call.args["token"];
           chainName =
             call.args["destinationChainName"] || call.args["chainName"];
@@ -795,7 +833,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       _token = _token.address.toLowerCase();
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
-      const nextCall = calls[i + 1];
+      const nextCall = tempCalls[i + 1];
       if (!nextCall) continue;
       let amount;
       if (call.name === "swap") {
@@ -882,10 +920,10 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       }
 
       if (nextCall.name === "swap") {
-        calls[i + 1].args["inputAmount"] =
-          calls[i + 1].args["inputAmount"] || amount;
+        tempCalls[i + 1].args["inputAmount"] =
+          tempCalls[i + 1].args["inputAmount"] || amount;
       } else if (nextCall.name === "transfer" || nextCall.name === "bridge") {
-        calls[i + 1].args["amount"] = calls[i + 1].args["amount"] || amount;
+        tempCalls[i + 1].args["amount"] = tempCalls[i + 1].args["amount"] || amount;
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);

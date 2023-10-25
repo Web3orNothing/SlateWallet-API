@@ -1,5 +1,5 @@
 const conditionModel = async (sequelize, Sequelize) => {
-  const ConditionSchema = sequelize.define("conditions", {
+  const ConditionSchema = sequelize.define("conditionsv2", {
     useraddress: {
       type: Sequelize.STRING,
     },

@@ -56,8 +56,8 @@ const condition = async (req, res) => {
     for (let i = 0; i < query.conditions.length; i++) {
       const condition = new Conditions({
         useraddress: accountAddress.toLowerCase(),
-        conditions: query.conditions[i],
-        actions: query.actions[i],
+        conditions: query.conditions[i].conditions,
+        actions: query.conditions[i].actions,
         query,
         status: "pending",
         simstatus,
@@ -66,7 +66,8 @@ const condition = async (req, res) => {
       ids.push(id);
     }
     return res.status(httpStatus.CREATED).json({ status: "success", ids });
-  } catch {
+  } catch (err) {
+    console.log(err);
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to store condition" });

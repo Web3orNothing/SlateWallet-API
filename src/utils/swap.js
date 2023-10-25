@@ -123,7 +123,7 @@ export const getQuoteFromLiFi = async (
         data: transactionRequest.data,
       },
     };
-  } catch (err) {console.log("===>", err)}
+  } catch {}
 }
 
 export const getQuoteFromSynapse = async (
@@ -371,6 +371,7 @@ export const getQuoteFromKyber = async (
         to: _data.routerAddress,
         value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
         data: _data.data,
+        gasLimit: parseInt(_data.gas),
       },
       source: "kyber",
     };

@@ -66,8 +66,7 @@ const condition = async (req, res) => {
       ids.push(id);
     }
     return res.status(httpStatus.CREATED).json({ status: "success", ids });
-  } catch (err) {
-    console.log(err);
+  } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to store condition" });

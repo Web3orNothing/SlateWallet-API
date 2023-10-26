@@ -31,6 +31,16 @@ export const metamaskApiHeaders = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
 };
 
+export const getCMCSlugForSymbol = (symbol) => {
+  const slugMapping = {
+    btc: "bitcoin",
+    eth: "ethereum",
+    usdt: "tether",
+    usdc: "usd-coin",
+  };
+  return slugMapping[symbol.toLowerCase()] || symbol.toLowerCase();
+};
+
 export const getChainNameForCMC = (chainName) => {
   const chainNamesForCMC = {
     ethereum: "Ethereum",
@@ -1602,5 +1612,46 @@ export const getTransferTx = async (data, ignoreBalanceCheck = false) => {
   } catch (err) {
     console.log("Transfer error:", err);
     return { status: "error", message: "Bad request" };
+  }
+};
+
+export const getTokenBalance = async (address, chainName, tokenName) => {
+  try {
+    const chainId = getChainIdFromName(chainName);
+    if (!chainId) {
+      throw new Error("Invalid chain name: " + chainName);
+    }
+
+    const token = await getTokenAddressForChain(tokenName, chainName);
+    if (!token) return BigNumber.from("0");
+
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+
+    const { amount: balance } = await getTokenAmount(
+      token.address,
+      provider,
+      accountAddress
+    );
+    return balance;
+  } catch (err) {
+    console.log("Balance error:", err);
+    return BigNumber.from("0");
+  }
+};
+
+export const getCoinPrice = async (symbol) => {
+  const slug = getCMCSlugForSymbol(symbol);
+  try {
+    const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
+    const { data } = await axios.get(
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?slug=${slug}`,
+      { headers }
+    );
+    return Object.values(data.data).find((x) => x.slug === symbol.toLowerCase())
+      .quote.USD.price;
+  } catch (e) {
+    console.log("error fetching price:", e?.response?.data || e);
+    return 0;
   }
 };

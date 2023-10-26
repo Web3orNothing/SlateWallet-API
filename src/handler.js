@@ -4,18 +4,10 @@ import webpush from "web-push";
 
 import { sequelize } from "./db/index.js";
 import conditionModel from "./db/condition.model.js";
-import ORACLE_ABI from "./abis/oracle.abi.js";
+import { getCoinPrice, getTokenBalance } from "./utils/index.js";
 
 // Maintain subscriptions
 const subscriptions = {};
-
-const comparatorMap = {
-  "less than": "lt",
-  "less than or equal": "lte",
-  "greater than": "gt",
-  "greater than or equal": "lte",
-  equal: "eq",
-};
 
 // Add subscription
 export const addSubscription = (userAddress, subscription) => {
@@ -55,31 +47,29 @@ const syncConditionTx = async () => {
     },
   });
   const gasPrice = await getGasPrice();
-  const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
     let ready = true;
-    const { status } = condition.dataValues;
+    const { useraddress, status, actions } = condition.dataValues;
 
     for (let j = 0; j < condition.dataValues.conditions[j].length; j++) {
       let isReady;
       const {
         name,
-        args: { type, comparator: comp, value: val, start_time, recurrence },
+        args: { type, subject, comparator, value: val, start_time, recurrence },
       } = condition.dataValues.conditions[j];
-      const comparator = name === "condition" ? comparatorMap[comp] : "eq";
       const value = name === "condition" ? val : start_time;
 
       if (type === "gas") {
-        if (comparator === "lt") {
+        if (comparator === "<") {
           isReady = gasPrice < parseFloat(value);
-        } else if (comparator === "lte") {
+        } else if (comparator === "<=") {
           isReady = gasPrice <= parseFloat(value);
-        } else if (comparator === "gt") {
+        } else if (comparator === ">") {
           isReady = gasPrice > parseFloat(value);
-        } else if (comparator === "gte") {
+        } else if (comparator === ">=") {
           isReady = gasPrice >= parseFloat(value);
-        } else if (comparator === "eq") {
+        } else if (comparator === "==") {
           isReady = gasPrice === parseFloat(value);
         }
       } else if (type === "time") {
@@ -92,16 +82,40 @@ const syncConditionTx = async () => {
           isReady = (now - _value) % interval < 60;
         }
       } else if (type === "price") {
-        if (comparator === "lt") {
-          isReady = ethPrice < parseFloat(value);
-        } else if (comparator === "lte") {
-          isReady = ethPrice <= parseFloat(value);
-        } else if (comparator === "gt") {
-          isReady = ethPrice > parseFloat(value);
-        } else if (comparator === "gte") {
-          isReady = ethPrice >= parseFloat(value);
-        } else if (comparator === "eq") {
-          isReady = ethPrice === parseFloat(value);
+        const symbol = subject
+          .replace("price", "")
+          .replace(" ", "")
+          .replace("_", "");
+        const price = await getCoinPrice(symbol);
+        if (comparator === "<") {
+          isReady = price < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = price <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = price > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = price >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = price === parseFloat(value);
+        }
+      } else if (type === "balance") {
+        const token = subject
+          .replace("balance", "")
+          .replace(" ", "")
+          .replace("_", "");
+        const chain =
+          actions[0].body.chainName || actions[0].body.sourceChainName;
+        const balance = await getTokenBalance(useraddress, chain, token);
+        if (comparator === "<") {
+          isReady = balance < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = balance <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = balance > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = balance >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = balance === parseFloat(value);
         }
       }
       ready &= isReady;
@@ -154,15 +168,4 @@ const getGasPrice = async () => {
   const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL, 1);
   const gasPrice = await provider.getGasPrice();
   return parseFloat(ethers.utils.formatUnits(gasPrice, 9));
-};
-
-const getEthPrice = async () => {
-  const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL, 1);
-  const oracle = new ethers.Contract(
-    process.env.ETH_PRICE_ORACLE,
-    ORACLE_ABI,
-    provider
-  );
-  const answer = await oracle.latestAnswer();
-  return parseInt(answer.toString()) / 10 ** 8;
 };

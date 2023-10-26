@@ -3,6 +3,9 @@ const historyModel = async (sequelize, Sequelize) => {
     useraddress: {
       type: Sequelize.STRING,
     },
+    conditions: {
+      type: Sequelize.JSONB,
+    },
     actions: {
       type: Sequelize.JSONB,
     },

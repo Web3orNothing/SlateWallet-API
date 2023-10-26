@@ -184,8 +184,8 @@ const getConditions = async (req, res) => {
 };
 
 const addHistory = async (req, res) => {
-  const { accountAddress, query, actions } = req.body;
-  if (!query) {
+  const { accountAddress, query, conditions, actions } = req.body;
+  if (!query || (actions || []).length === 0) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
       message: "Invalid Request Body",
@@ -196,6 +196,7 @@ const addHistory = async (req, res) => {
     const Histories = await historyModel(sequelize, Sequelize);
     const history = new Histories({
       useraddress: accountAddress.toLowerCase(),
+      conditions,
       actions,
       query,
     });
@@ -385,44 +386,6 @@ const getTokenAddress = async (req, res) => {
     res.status(httpStatus.OK).json({
       status: "success",
       address: token.address,
-    });
-  } catch (err) {
-    console.log("Error:", err);
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ status: "error", message: "Bad request" });
-  }
-};
-
-const getTokenBalance = async (req, res) => {
-  try {
-    const { accountAddress, chainName, tokenName } = req.query;
-    const chainId = getChainIdFromName(chainName);
-    if (!chainId) {
-      throw new Error("Invalid chain name: " + chainName);
-    }
-
-    // Step 1: Fetch the token address for the given tokenName on the specified chain
-    const token = await getTokenAddressForChain(tokenName, chainName);
-    if (!token) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        status: "error",
-        message: "Token not found on the specified chain.",
-      });
-    }
-
-    const rpcUrl = getRpcUrlForChain(chainId);
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-
-    const { amount: balance } = await getTokenAmount(
-      token.address,
-      provider,
-      accountAddress
-    );
-
-    res.status(httpStatus.OK).json({
-      status: "success",
-      balance: balance.toString(),
     });
   } catch (err) {
     console.log("Error:", err);

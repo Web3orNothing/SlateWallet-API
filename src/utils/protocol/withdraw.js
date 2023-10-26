@@ -12,8 +12,6 @@ import {
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
 // import uniswapFactoryAbi from "../../abis/uniswap-factory.abi.js";
 
-import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../../constants.js";
-
 export const getWithdrawData = async (
   accountAddress,
   protocolName,
@@ -133,7 +131,11 @@ export const getWithdrawData = async (
       break;
     }
     case "hop": {
-      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
       abi = getABIForProtocol(_protocolName);
       params.push(_amount);
       break;

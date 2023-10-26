@@ -96,7 +96,7 @@ export const getSwapData = async (
         },
         _amount,
         gasPrice,
-        1,
+        5,
         dexList
       );
       if (data) {
@@ -151,7 +151,8 @@ export const getSwapData = async (
           symbol: outputToken,
         },
         _amount,
-        gasPrice
+        gasPrice,
+        5
       );
       if (data) {
         const { tx } = data;

@@ -14,7 +14,7 @@ export const getQuoteFromOpenOcean = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 1
+  slippage = 5
 ) => {
   const baseUrl = "https://open-api.openocean.finance/v3";
   try {
@@ -50,7 +50,7 @@ export const getQuoteFrom1inch = async (
   tokenOut,
   amount,
   _,
-  slippage = 1
+  slippage = 5
 ) => {
   const apiBaseUrl = "https://api.1inch.dev/swap/v5.2/" + chainId;
   const headers = {
@@ -92,7 +92,7 @@ export const getQuoteFromLiFi = async (
   tokenOut,
   amount,
   _,
-  slippage = 1
+  slippage = 5
 ) => {
   const {
     data: { chains },
@@ -113,6 +113,7 @@ export const getQuoteFromLiFi = async (
         toToken: tokenOut.symbol,
         fromAmount: amount.toString(),
         fromAddress: account,
+        slippage: slippage / 100,
       },
     });
     return {
@@ -133,7 +134,7 @@ export const getQuoteFromSynapse = async (
   tokenOut,
   amount,
   _,
-  slippage = 1
+  slippage = 5
 ) => {
   const apiBaseUrl = "https://synapse-rest-api-v2.herokuapp.com";
   const headers = {
@@ -177,7 +178,7 @@ export const getQuoteFromParaSwap = async (
   tokenOut,
   amount,
   _,
-  slippage = 1,
+  slippage = 5,
   includeDEXS = undefined
 ) => {
   const paraswapSdk = constructSimpleSDK({
@@ -230,7 +231,7 @@ export const getQuoteFrom0x = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 1
+  slippage = 5
 ) => {
   const apis = {
     1: "https://api.0x.org/",
@@ -317,7 +318,7 @@ export const getQuoteFromKyber = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 1
+  slippage = 5
 ) => {
   const supportedChains = {
     42161: "arbitrum",
@@ -358,7 +359,7 @@ export const getQuoteFromKyber = async (
       {
         routeSummary: data.routeSummary,
         deadline: 0,
-        slippageTolerance: 0,
+        slippageTolerance: slippage * 100,
         sender: account,
         recipient: account,
         source: "spice-finance",
@@ -395,7 +396,7 @@ export const getBestSwapRoute = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 1
+  slippage = 5
 ) => {
   let amountOut;
   let tx;

@@ -30,7 +30,8 @@ export const getSwapData = async (
   _poolName,
   inputToken,
   inputAmount,
-  outputToken
+  outputToken,
+  slippage
 ) => {
   const _protocolName = protocolName.toLowerCase();
 
@@ -96,7 +97,7 @@ export const getSwapData = async (
         },
         _amount,
         gasPrice,
-        5,
+        slippage,
         dexList
       );
       if (data) {
@@ -152,7 +153,7 @@ export const getSwapData = async (
         },
         _amount,
         gasPrice,
-        5
+        slippage
       );
       if (data) {
         const { tx } = data;
@@ -201,8 +202,8 @@ export const getSwapData = async (
       params.push({
         amountIn: queryRes.amounts[0],
         amountOut: queryRes.amounts[queryRes.amounts.length - 1]
-          .mul(99)
-          .div(100),
+          .mul(10000 - slippage * 100)
+          .div(10000),
         path: queryRes.path,
         adapters: queryRes.adapters,
       });

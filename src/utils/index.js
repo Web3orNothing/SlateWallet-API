@@ -555,7 +555,9 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   return { amount: _amount, decimals };
 };
 
-export const simulateCalls = async (calls, address, connectedChainName) => {
+export const simulateCalls = async (calls, address, connectedChainName, swapSlippage = 1) => {
+  const originCalls = JSON.parse(JSON.stringify(calls));
+
   // Parse Calls
   let prevChainName = connectedChainName;
   for (let i = 0; i < calls.length; i++) {
@@ -727,6 +729,9 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       let txs;
       switch (call.name) {
         case "swap": {
+          if (!body["slippage"]) {
+            body["slippage"] = swapSlippage;
+          }
           const { message, transactions } = await getSwapTx(body, true);
           if (message)
             return {
@@ -811,13 +816,18 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       );
       const length = res.simulation_results.length;
       for (let j = 0; j < length; j++) {
-        if (!res.simulation_results[j].transaction.status)
+        if (!res.simulation_results[j].transaction.status) {
+          if (call.name === "swap" && swapSlippage === 1) {
+            return await simulateCalls(originCalls, address, connectedChainName, 5);
+          }
+
           return {
             success: false,
             message: res.simulation_results[j].transaction.error_message,
             transactionsList: null,
             calls: null,
           };
+        }
       }
 
       if (!token) continue;
@@ -982,6 +992,7 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
       inputAmount,
       inputToken,
       outputToken,
+      slippage,
     } = data;
     if (protocolName) {
       const { transactions, error } = await getSwapData(
@@ -991,7 +1002,8 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
         poolName,
         inputToken,
         inputAmount,
-        outputToken
+        outputToken,
+        slippage
       );
       if (error) {
         return { status: "error", message: error };
@@ -1053,7 +1065,8 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
         symbol: outputToken,
       },
       _inputAmount,
-      gasPrice
+      gasPrice,
+      slippage
     );
 
     // Step 3: Parse the response and extract relevant information for the transaction

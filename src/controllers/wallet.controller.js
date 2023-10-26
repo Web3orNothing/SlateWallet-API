@@ -226,6 +226,7 @@ const getConditions = async (req, res) => {
 
 const addHistory = async (req, res) => {
   const { accountAddress, query } = req.body;
+
   if (!query) {
     return res.status(httpStatus.BAD_REQUEST).json({
       status: "error",
@@ -242,7 +243,8 @@ const addHistory = async (req, res) => {
     });
     const { id } = await history.save();
     return res.status(httpStatus.CREATED).json({ status: "success", id });
-  } catch {
+  } catch (error) {
+    console.log(error);
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to store history" });
@@ -263,7 +265,8 @@ const getHistories = async (req, res) => {
       status: "success",
       histories,
     });
-  } catch {
+  } catch (error) {
+    console.log(error);
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to get histories" });

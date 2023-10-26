@@ -238,6 +238,7 @@ const addHistory = async (req, res) => {
     const history = new Histories({
       useraddress: accountAddress.toLowerCase(),
       query,
+      timestamp: new Date().getTime(),
     });
     const { id } = await history.save();
     return res.status(httpStatus.CREATED).json({ status: "success", id });

@@ -164,6 +164,33 @@ export const getRpcUrlForChain = (chainId) => {
   return chainIdsToRpcUrls[chainId] || null;
 };
 
+export const getNativeTokenSymbolForChain = (chainId) => {
+  const chainIdsToNativeTokenSymbols = {
+    1: "ETH",
+    10: "ETH",
+    25: "CRO",
+    56: "BNB",
+    61: "ETH",
+    100: "xDAI",
+    137: "MATIC",
+    250: "FTM",
+    314: "FIL",
+    1284: "GLMR",
+    1285: "MOVR",
+    2222: "KAVA",
+    5000: "MNT",
+    7700: "CANTO",
+    8453: "ETH",
+    42161: "ETH",
+    42220: "CELO",
+    43114: "AVAX",
+    59144: "ETH",
+    // Add more chainId-rpcUrl mappings here as needed
+  };
+
+  return chainIdsToNativeTokenSymbols[chainId] || null;
+};
+
 export const getEthBalanceForUser = async (chainId, user) => {
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
@@ -437,8 +464,11 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
       "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?symbol=";
     const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
     let response;
+    let price;
     try {
       response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
+      const quoteResponse = await axios.get("https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" + symbolUp, { headers });
+      price = quoteResponse.data.data[symbolUp][0].quote["USD"].price;
     } catch (_) {}
 
     if (response && response.data.data[symbolUp].length > 0) {
@@ -449,11 +479,13 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
         data = {
           name: target.platform.name,
           address: target.contract_address,
+          price,
         };
       } else if (!response.data.data[symbolUp][0].platform) {
         data = {
           name: response.data.data[symbolUp][0].name,
           address: NATIVE_TOKEN,
+          price,
         };
       }
     }
@@ -533,8 +565,10 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   let token;
   let decimals = 18;
   let _amount;
-  if (address !== NATIVE_TOKEN)
+  if (address !== NATIVE_TOKEN) {
     token = new ethers.Contract(address, ERC20_ABI, provider);
+    decimals = await token.decimals();
+  }
 
   if (
     amount === undefined ||
@@ -548,14 +582,13 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   } else {
     if (address == NATIVE_TOKEN) _amount = utils.parseEther(amount);
     else {
-      decimals = await token.decimals();
       _amount = utils.parseUnits(amount, decimals);
     }
   }
   return { amount: _amount, decimals };
 };
 
-export const simulateCalls = async (calls, address, connectedChainName, swapSlippage = 1) => {
+export const simulateCalls = async (calls, address, connectedChainName) => {
   const originCalls = JSON.parse(JSON.stringify(calls));
 
   // Parse Calls
@@ -729,9 +762,6 @@ export const simulateCalls = async (calls, address, connectedChainName, swapSlip
       let txs;
       switch (call.name) {
         case "swap": {
-          if (!body["slippage"]) {
-            body["slippage"] = swapSlippage;
-          }
           const { message, transactions } = await getSwapTx(body, true);
           if (message)
             return {
@@ -817,10 +847,6 @@ export const simulateCalls = async (calls, address, connectedChainName, swapSlip
       const length = res.simulation_results.length;
       for (let j = 0; j < length; j++) {
         if (!res.simulation_results[j].transaction.status) {
-          if (call.name === "swap" && swapSlippage === 1) {
-            return await simulateCalls(originCalls, address, connectedChainName, 5);
-          }
-
           return {
             success: false,
             message: res.simulation_results[j].transaction.error_message,
@@ -1045,6 +1071,11 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
       accountAddress,
       inputAmount
     );
+    const { decimals: outDecimals } = await getTokenAmount(
+      _outputToken.address,
+      provider,
+      accountAddress
+    );
     if (!ignoreBalanceCheck && balance.lt(_inputAmount)) {
       throw new Error("Insufficient balance");
     }
@@ -1059,10 +1090,13 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
         address: _inputToken.address,
         symbol: inputToken,
         decimals,
+        price: _inputToken.price
       },
       {
         address: _outputToken.address,
         symbol: outputToken,
+        decimals: outDecimals,
+        price: _outputToken.price
       },
       _inputAmount,
       gasPrice,

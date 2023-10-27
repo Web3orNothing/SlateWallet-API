@@ -1,9 +1,10 @@
 import axios from "axios";
-import { BigNumber, utils } from "ethers";
+import { BigNumber, ethers, utils } from "ethers";
 import { constructSimpleSDK } from "@paraswap/sdk";
 import { config } from "dotenv";
 
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
+import { getChainNameFromId, getNativeTokenSymbolForChain, getTokenAddressForChain } from './index.js';
 
 config();
 
@@ -14,7 +15,7 @@ export const getQuoteFromOpenOcean = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 5
+  slippage = 1
 ) => {
   const baseUrl = "https://open-api.openocean.finance/v3";
   try {
@@ -31,8 +32,11 @@ export const getQuoteFromOpenOcean = async (
     const {
       data: { data },
     } = await axios.get(`${baseUrl}/${chainId}/swap_quote?${queryParams}`);
+    const gasCost = gasPrice.mul(data.estimatedGas);
+    const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
     return {
       amountOut: data.outAmount,
+      gasUsd: utils.formatEther(gasCost) * gasToken.price,
       tx: {
         to: data.to,
         value: data.value,
@@ -50,7 +54,7 @@ export const getQuoteFrom1inch = async (
   tokenOut,
   amount,
   _,
-  slippage = 5
+  slippage = 1
 ) => {
   const apiBaseUrl = "https://api.1inch.dev/swap/v5.2/" + chainId;
   const headers = {
@@ -92,7 +96,7 @@ export const getQuoteFromLiFi = async (
   tokenOut,
   amount,
   _,
-  slippage = 5
+  slippage = 1
 ) => {
   const {
     data: { chains },
@@ -118,6 +122,7 @@ export const getQuoteFromLiFi = async (
     });
     return {
       amountOut: estimate.toAmount,
+      gasUsd: estimate.gasCosts[0].amountUsd,
       tx: {
         to: transactionRequest.to,
         value: BigNumber.from(transactionRequest.value).toString(),
@@ -134,7 +139,7 @@ export const getQuoteFromSynapse = async (
   tokenOut,
   amount,
   _,
-  slippage = 5
+  slippage = 1
 ) => {
   const apiBaseUrl = "https://synapse-rest-api-v2.herokuapp.com";
   const headers = {
@@ -159,15 +164,17 @@ export const getQuoteFromSynapse = async (
       apiBaseUrl + "/swapTxInfo?" + new URLSearchParams(swapParams).toString(),
       headers
     );
-    return {
-      amountOut: BigNumber.from(quote.maxAmountOut).toString(),
-      tx: {
-        to,
-        value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
-        data,
-      },
-      source: "synapse",
-    };
+    if (quote && data) {
+      return {
+        amountOut: BigNumber.from(quote.maxAmountOut).toString(),
+        tx: {
+          to,
+          value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
+          data,
+        },
+        source: "synapse",
+      };
+    }
   } catch {}
 };
 
@@ -178,7 +185,7 @@ export const getQuoteFromParaSwap = async (
   tokenOut,
   amount,
   _,
-  slippage = 5,
+  slippage = 1,
   includeDEXS = undefined
 ) => {
   const paraswapSdk = constructSimpleSDK({
@@ -214,6 +221,7 @@ export const getQuoteFromParaSwap = async (
         .mul(100 - slippage)
         .div(100)
         .toString(),
+      gasUsd: parseFloat(priceRoute.gasCostUSD),
       tx: {
         to: data.to,
         value: data.value,
@@ -231,7 +239,7 @@ export const getQuoteFrom0x = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 5
+  slippage = 1
 ) => {
   const apis = {
     1: "https://api.0x.org/",
@@ -252,14 +260,17 @@ export const getQuoteFrom0x = async (
       sellToken: tokenIn.symbol,
       buyToken: tokenOut.symbol,
       sellAmount: amount.toString(),
-      slippagePercentage: slippage,
+      slippagePercentage: slippage / 100,
       gasPrice: gasPrice.toString(),
     }).toString();
     const { data } = await axios.get(`${baseURL}swap/v1/quote?${queryParams}`, {
       headers: { "0x-api-key": process.env.API_KEY_0X },
     });
+    const gasCost = gasPrice.mul(data.estimatedGas);
+    const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
     return {
       amountOut: data.grossBuyAmount,
+      gasUsd: utils.formatEther(gasCost) * gasToken.price,
       tx: {
         to: data.to,
         value: data.value,
@@ -267,9 +278,7 @@ export const getQuoteFrom0x = async (
       },
       source: "0x",
     };
-  } catch (err) {
-    console.log(err);
-  }
+  } catch {}
 };
 
 // export const getQuoteFromFirebird = async (
@@ -316,7 +325,7 @@ export const getQuoteFromKyber = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 5
+  slippage = 1
 ) => {
   const supportedChains = {
     42161: "arbitrum",
@@ -366,6 +375,7 @@ export const getQuoteFromKyber = async (
     );
     return {
       amountOut: _data.amountOut,
+      gasUsd: parseFloat(_data.gasUsd),
       tx: {
         to: _data.routerAddress,
         value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
@@ -380,6 +390,7 @@ export const getQuoteFromKyber = async (
 const swapRoutes = [
   getQuoteFromOpenOcean,
   getQuoteFrom1inch,
+  getQuoteFromLiFi,
   getQuoteFromParaSwap,
   getQuoteFrom0x,
   // getQuoteFromFirebird,
@@ -394,9 +405,9 @@ export const getBestSwapRoute = async (
   tokenOut,
   amount,
   gasPrice,
-  slippage = 5
+  slippage = 1
 ) => {
-  let amountOut;
+  let amountOutUsd;
   let tx;
   let source;
   const datas = await Promise.all(
@@ -417,8 +428,31 @@ export const getBestSwapRoute = async (
     const data = datas[i];
     if (data) {
       const newAmountOut = BigNumber.from(data.amountOut);
-      if (!amountOut || amountOut.lt(newAmountOut)) {
-        amountOut = newAmountOut;
+      let newAmountOutUsd = parseFloat(utils.formatUnits(newAmountOut, tokenOut.decimals)) * tokenOut.price;
+      if (data.gasUsd) {
+        newAmountOutUsd -= data.gasUsd;
+      } else {
+        const { data: res } = await axios.post(
+          `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate`,
+          {
+              network_id: chainId,
+              save: true,
+              save_if_fails: true,
+              simulation_type: "full",
+              from: account,
+              to: data.tx.to,
+              value: data.tx.value,
+              input: data.tx.data,
+          },
+          { headers: { "X-Access-Key": process.env.TENDERLY_ACCESS_KEY } }
+        );
+        const gasCost = gasPrice.mul(res.transaction.gas_used);
+        const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
+        const gasUsd = utils.formatEther(gasCost) * gasToken.price;
+        newAmountOutUsd -= gasUsd;
+      }
+      if (!amountOutUsd || amountOutUsd < newAmountOutUsd) {
+        amountOutUsd = newAmountOutUsd;
         tx = data.tx;
         source = data.source;
       }

@@ -1,10 +1,7 @@
 import Sequelize from "sequelize";
 import httpStatus from "http-status";
-import { ethers, utils } from "ethers";
+import { utils } from "ethers";
 import {
-  getChainIdFromName,
-  getRpcUrlForChain,
-  getTokenAmount,
   getTokenAddressForChain,
   getSwapTx,
   getBridgeTx,
@@ -199,10 +196,12 @@ const addHistory = async (req, res) => {
       conditions,
       actions,
       query,
+      timestamp: new Date().getTime(),
     });
     const { id } = await history.save();
     return res.status(httpStatus.CREATED).json({ status: "success", id });
-  } catch {
+  } catch (error) {
+    console.log(error);
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to store history" });

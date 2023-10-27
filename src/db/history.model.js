@@ -12,6 +12,9 @@ const historyModel = async (sequelize, Sequelize) => {
     query: {
       type: Sequelize.JSONB,
     },
+    timestamp: {
+      type: Sequelize.BIGINT,
+    },
   });
 
   await HistorySchema.sync();

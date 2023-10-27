@@ -1099,11 +1099,7 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
     }
 
     // Step 5: Return the transaction details to the client
-    transactions.push({
-      to: tx.to,
-      value: tx.value,
-      data: tx.data,
-    });
+    transactions.push(tx);
     return { status: "success", transactions };
   } catch (err) {
     console.log("Swap error:", err);

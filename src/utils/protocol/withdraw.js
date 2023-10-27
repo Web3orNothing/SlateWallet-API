@@ -131,7 +131,11 @@ export const getWithdrawData = async (
       break;
     }
     case "hop": {
-      address = getProtocolAddressForChain(_protocolName, chainId, token.toLowerCase());
+      address = getProtocolAddressForChain(
+        _protocolName,
+        chainId,
+        token.toLowerCase()
+      );
       abi = getABIForProtocol(_protocolName);
       params.push(_amount);
       break;

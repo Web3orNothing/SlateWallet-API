@@ -56,9 +56,17 @@ const syncConditionTx = async () => {
       let isReady;
       const {
         name,
-        args: { type, subject, comparator, value: val, start_time, recurrence },
+        args: {
+          type,
+          subject,
+          comparator,
+          value: val,
+          value_token,
+          start_time,
+          recurrence,
+        },
       } = condition.dataValues.conditions[j];
-      const value = name === "condition" ? val : start_time;
+      let value = name === "condition" ? val : start_time;
 
       if (type === "gas") {
         if (comparator === "<") {
@@ -86,8 +94,18 @@ const syncConditionTx = async () => {
           .replace("price", "")
           .replace(" ", "")
           .replace("_", "");
-        const { price } = await getCoinData(symbol);
-        if (comparator === "<") {
+        let price;
+        if (symbol.includes("/")) {
+          const token0 = await getCoinData(symbol.split("/")[0]);
+          const token1 = await getCoinData(symbol.split("/")[1]);
+          if (token0 && token1) price = token0.price / token1.price;
+        } else {
+          const token = await getCoinData(symbol);
+          price = token.price;
+        }
+        if (!price) {
+          isReady = false;
+        } else if (comparator === "<") {
           isReady = price < parseFloat(value);
         } else if (comparator === "<=") {
           isReady = price <= parseFloat(value);
@@ -98,13 +116,11 @@ const syncConditionTx = async () => {
         } else if (comparator === "==") {
           isReady = price === parseFloat(value);
         }
-      } else if (type === "marketcap") {
-        const symbol = subject
-          .replace("marketcap", "")
-          .replace(" ", "")
-          .replace("_", "");
-        const { market_cap } = await getCoinData(symbol);
-        if (comparator === "<") {
+      } else if (type === "market cap") {
+        const { market_cap } = await getCoinData(subject);
+        if (!market_cap) {
+          isReady = false;
+        } else if (comparator === "<") {
           isReady = market_cap < parseFloat(value);
         } else if (comparator === "<=") {
           isReady = market_cap <= parseFloat(value);
@@ -120,6 +136,10 @@ const syncConditionTx = async () => {
           .replace("balance", "")
           .replace(" ", "")
           .replace("_", "");
+        if (value_token) {
+          const { price } = await getCoinData(value_token);
+          if (price) value = (parseFloat(value) * price).toString();
+        }
         const chain =
           actions[0].body.chainName || actions[0].body.sourceChainName;
         const balance = await getTokenBalance(useraddress, chain, token);

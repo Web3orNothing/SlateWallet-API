@@ -1652,6 +1652,6 @@ export const getCoinData = async (symbol) => {
       .quote.USD;
   } catch (e) {
     console.log("error fetching price:", e?.response?.data || e);
-    return 0;
+    return {};
   }
 };

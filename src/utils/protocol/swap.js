@@ -123,6 +123,7 @@ export const getSwapData = async (
         return { error: "No swap route found" };
       }
     }
+    case "0x":
     case "matcha":
     case "synapse":
     case "1inch":
@@ -132,7 +133,7 @@ export const getSwapData = async (
     case "jumper":
     case "openocean": {
       let swapFunc;
-      if (_protocolName === "matcha") swapFunc = getQuoteFrom0x;
+      if (_protocolName === "matcha" || _protocolName === "0x") swapFunc = getQuoteFrom0x;
       else if (_protocolName === "synapse") swapFunc = getQuoteFromSynapse;
       else if (_protocolName === "1inch") swapFunc = getQuoteFrom1inch;
       else if (_protocolName === "paraswap") swapFunc = getQuoteFromParaSwap;

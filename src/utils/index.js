@@ -832,6 +832,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         {
           simulations: txs.map(({ to, value, data }) => ({
             network_id: chainId,
+            block_number: -1,
             save: true,
             save_if_fails: true,
             simulation_type: "full",

@@ -277,10 +277,10 @@ export const getQuoteFromAxelar = async (
 
 const bridgeRoutes = [
   getQuoteFromBungee,
-  // getQuoteFromHop,
-  // getQuoteFromLiFi,
-  // getQuoteFromSynapse,
-  // getQuoteFromAxelar,
+  getQuoteFromHop,
+  getQuoteFromLiFi,
+  getQuoteFromSynapse,
+  getQuoteFromAxelar,
 ];
 
 export const getBestBridgeRoute = async (

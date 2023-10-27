@@ -1,9 +1,6 @@
 import { ethers } from "ethers";
 import {
   getChainIdFromName,
-  getFeeDataWithDynamicMaxPriorityFeePerGas,
-  getFunctionData,
-  getFunctionName,
   getRpcUrlForChain,
   getTokenAddressForChain,
   getApproveData,
@@ -114,7 +111,6 @@ export const getBridgeData = async (
       to: tx.to,
       value: tx.value,
       data: tx.data,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
     return { transactions };
   } else {

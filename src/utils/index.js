@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BigNumber, Contract, ethers, utils } from "ethers";
+import Sequelize from "sequelize";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
@@ -21,6 +22,8 @@ import { getLockData } from "./protocol/lock.js";
 import { getUnlockData } from "./protocol/unlock.js";
 import { getVoteData } from "./protocol/vote.js";
 import { abis } from "../abis/index.js";
+import { sequelize } from "../db/index.js";
+import tokenModel from "../db/token.model.js";
 
 export const metamaskApiHeaders = {
   Referrer: "https://portfolio.metamask.io/",
@@ -52,39 +55,47 @@ export const getChainNameForCMC = (chainName) => {
   return chainNamesForCMC[chainName.toLowerCase()] || null;
 };
 
-export const getChainNameForCGC = (chainName) => {
-  const chainNamesForCGC = {
-    ethereum: "ethereum",
-    optimism: "optimistic-ethereum",
-    cronos: "cronos",
-    binancesmartchain: "binance-smart-chain",
-    gnosis: "gnosis",
-    polygon: "polygon-pos",
-    fantom: "fantom",
-    filecoin: "filecoin",
-    moonbeam: "moonbeam",
-    moonriver: "Moonriver",
-    kava: "kava",
-    base: "base",
-    arbitrum: "arbitrum-one",
-    avalanche: "avalanche",
-    harmony: "harmony-shard-0",
-    aurora: "aurora",
-    metis: "metis-andromeda",
-    sora: "sora",
-    syscoin: "syscoin",
-    cardano: "milkomeda-cardano",
-    energi: "energi",
-    cosmos: "cosmos",
-    astar: "astar",
-    velas: "velas",
-    hydra: "hydra",
-    near: "near-protocol",
-    zksync: "zksync",
-    // Add more chainName-platform on CGC mappings here as needed
-  };
+const chainNamesForCGC = {
+  ethereum: "ethereum",
+  optimism: "optimistic-ethereum",
+  cronos: "cronos",
+  binancesmartchain: "binance-smart-chain",
+  gnosis: "gnosis",
+  polygon: "polygon-pos",
+  fantom: "fantom",
+  filecoin: "filecoin",
+  moonbeam: "moonbeam",
+  moonriver: "Moonriver",
+  kava: "kava",
+  base: "base",
+  arbitrum: "arbitrum-one",
+  avalanche: "avalanche",
+  harmony: "harmony-shard-0",
+  aurora: "aurora",
+  metis: "metis-andromeda",
+  sora: "sora",
+  syscoin: "syscoin",
+  cardano: "milkomeda-cardano",
+  energi: "energi",
+  cosmos: "cosmos",
+  astar: "astar",
+  velas: "velas",
+  hydra: "hydra",
+  near: "near-protocol",
+  zksync: "zksync",
+  // Add more chainName-platform on CGC mappings here as needed
+};
 
+export const getChainNameForCGC = (chainName) => {
   return chainNamesForCGC[chainName.toLowerCase()] || null;
+};
+
+export const getChainNameFromCGC = (cgcChainName) => {
+  const chainNames = Object.keys(chainNamesForCGC);
+  for (let i = 0; i < chainNames.length; i++) {
+    if (chainNamesForCGC[chainNames[i]] === cgcChainName) return chainNames[i];
+  }
+  return null;
 };
 
 // TODO: Need to handle lower vs upper case and slightly different names (ex. ethereum vs Ethereum, BSC vs BinanceSmartChain, Binance vs BinanceSmartChain)
@@ -129,23 +140,23 @@ export const getChainNameFromId = (chainId) => {
 export const getRpcUrlForChain = (chainId) => {
   const chainIdsToRpcUrls = {
     1: "https://rpc.mevblocker.io",
-    10: "https://optimism.publicnode.com",
+    10: "https://optimism.llamarpc.com",
     25: "https://cronos-evm.publicnode.com",
-    56: "https://bsc-rpc.gateway.pokt.network",
+    56: "https://binance.llamarpc.com",
     61: "https://etc.rivet.link",
-    100: "https://rpc.gnosischain.com",
-    137: "https://polygon-rpc.com",
-    250: "https://rpc.fantom.network",
+    100: "https://gnosis.publicnode.com",
+    137: "https://polygon.llamarpc.com",
+    250: "https://fantom.publicnode.com",
     314: "https://rpc.ankr.com/filecoin",
     1284: "https://rpc.api.moonbeam.network",
-    1285: "https://rpc.api.moonriver.moonbeam.network",
+    1285: "https://moonriver.publicnode.com",
     2222: "https://kava-evm.publicnode.com",
     5000: "https://rpc.mantle.xyz",
     7700: "https://canto.slingshot.finance",
-    8453: "https://mainnet.base.org",
+    8453: "https://base.llamarpc.com",
     42161: "https://arbitrum.llamarpc.com",
     42220: "https://1rpc.io/celo",
-    43114: "https://api.avax.network/ext/bc/C/rpc",
+    43114: "https://avalanche-c-chain.publicnode.com",
     59144: "https://rpc.linea.build",
     // Add more chainId-rpcUrl mappings here as needed
   };
@@ -163,7 +174,75 @@ export const getProtocolAddressForChain = (
   protocol,
   chainId,
   key = "default"
-) => ProtocolAddresses[protocol][chainId][key] || null;
+) => {
+  if (ProtocolAddresses[protocol]) {
+    if (ProtocolAddresses[protocol][chainId]) {
+      return ProtocolAddresses[protocol][chainId][key] || null;
+    }
+  }
+  return null;
+};
+
+function onlyUnique(value, index, array) {
+  return array.indexOf(value) === index;
+}
+
+export const getProtocolAddresses = (protocol) => {
+  const key = protocol.toLowerCase();
+  const chains = Object.keys(ProtocolAddresses[key] || {});
+  const addresses = {};
+  chains.map((chain) => {
+    addresses[chain] = Object.values(ProtocolAddresses[key][chain]).filter(
+      onlyUnique
+    );
+  });
+  return addresses;
+};
+
+export const getProtocolEntities = (protocol) => {
+  let poolNames;
+  switch (protocol.toLowerCase()) {
+    case "curve":
+      poolNames = {
+        1: ["3pool", "steth", "fraxusdc", "tricrypto2", "fraxusdp"],
+      };
+      break;
+    case "dopex":
+      poolNames = {
+        42161: [
+          "arb-monthly-ssov",
+          "rpdx-monthly-ssov",
+          "dpx-monthly-ssov",
+          "steth-monthly-ssov",
+          "steth-weekly-ssov",
+        ],
+      };
+      break;
+    default:
+      poolNames = {};
+  }
+  const pools = {};
+  const poolChains = Object.keys(poolNames);
+  poolChains.map((chain) => {
+    poolNames[chain].map((poolName) => {
+      pools[chain] = pools[chain] || {};
+      pools[chain][poolName] =
+        ProtocolAddresses[protocol.toLowerCase()][chain][poolName];
+    });
+  });
+  return {
+    name: protocol,
+    addresses: getProtocolAddresses(protocol),
+    pools,
+  };
+};
+
+export const getChainEntities = async (chainName) => {
+  return {
+    name: chainName,
+    tokens: await getTokensForChain(getChainIdFromName(chainName)),
+  };
+};
 
 export const getABIForProtocol = (protocol, key) =>
   abis[`${protocol}${!key ? "" : `-${key}`}`];
@@ -239,47 +318,16 @@ export const getFunctionName = (protocol, action) => {
   }
 };
 
-export const getFeeDataWithDynamicMaxPriorityFeePerGas = async (provider) => {
-  let maxFeePerGas = null;
-  let maxPriorityFeePerGas = null;
-  let gasPrice = await provider.getGasPrice();
-
-  const [block, eth_maxPriorityFeePerGas] = await Promise.all([
-    await provider.getBlock("latest"),
-    await provider.send("eth_maxPriorityFeePerGas", []),
-  ]);
-
-  if (block && block.baseFeePerGas) {
-    maxPriorityFeePerGas = BigNumber.from(eth_maxPriorityFeePerGas);
-    if (maxPriorityFeePerGas) {
-      maxFeePerGas = block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas);
-    }
-  }
-  maxFeePerGas = parseInt(maxFeePerGas.toString());
-  maxPriorityFeePerGas = parseInt(maxPriorityFeePerGas.toString());
-  gasPrice = parseInt(gasPrice.toString());
-
-  return {
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-    gasPrice: Math.floor(gasPrice * 1.05),
-  };
-};
-
 // Helper function to get tokens on a chain
 export const getTokensForChain = async (chainId) => {
-  try {
-    const response = await axios.get(
-      `https://account.metafi.codefi.network/networks/${chainId}/tokens`,
-      {
-        headers: metamaskApiHeaders,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching tokens:", error);
-    throw new Error("Failed to fetch tokens for the given chainId.");
-  }
+  const Token = await tokenModel(sequelize, Sequelize);
+  const tokens = await Token.findAll({
+    where: {
+      chainId,
+    },
+    raw: true,
+  });
+  return tokens.map(({ name, symbol, address }) => ({ name, symbol, address }));
 };
 
 const getBalanceSlotForToken = (chainId, token) => {
@@ -348,7 +396,6 @@ export const getApproveData = async (
           to: tokenAddress,
           value: "0",
           data,
-          ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
         });
       }
       const data = token.interface.encodeFunctionData("approve", [
@@ -359,7 +406,6 @@ export const getApproveData = async (
         to: tokenAddress,
         value: "0",
         data,
-        ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
       });
     }
     return txs;
@@ -510,19 +556,57 @@ export const getTokenAmount = async (address, provider, user, amount) => {
 };
 
 export const simulateCalls = async (calls, address, connectedChainName) => {
+  // Parse Calls
+  let prevChainName = connectedChainName;
+  for (let i = 0; i < calls.length; i++) {
+    const call = calls[i];
+    const chainName = (
+      call.args["chainName"] ||
+      call.args["sourceChainName"] ||
+      prevChainName
+    ).toLowerCase();
+    prevChainName = chainName;
+    const chainId = getChainIdFromName(chainName);
+
+    const token = (
+      call.args["token"] || call.args["inputToken"]
+    ).toLowerCase();
+    const amount = call.args["amount"] || call.args["inputAmount"];
+    if (amount === "all" || amount === "half") {
+      let newAmount;
+      const tokenInfo = await getTokenAddressForChain(token, chainName);
+      if (tokenInfo.address === NATIVE_TOKEN || tokenInfo.address === NATIVE_TOKEN2) {
+        let ethBalance = await getEthBalanceForUser(chainId, address);
+        const gasAmount = chainId === 1 ? "0.2" : "0.1";
+        ethBalance = ethBalance.sub(utils.parseEther(gasAmount));
+        newAmount = utils.formatEther(amount === "all" ? ethBalance : ethBalance.div(2));
+      } else {
+        const rpcUrl = getRpcUrlForChain(chainId);
+        const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+        const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
+        const tokenBalance = await contract.balanceOf(address);
+        const decimals = await contract.decimals();
+        newAmount = utils.formatUnits(amount === "all" ? tokenBalance : tokenBalance.div(2), decimals);
+      }
+      if (call.args["amount"]) call.args["amount"] = newAmount;
+      else call.args["inputAmount"] = newAmount;
+    }
+  }
+
+  const tempCalls = JSON.parse(JSON.stringify(calls));
   const transactionsList = [];
 
   // Check for gas
-  let prevCall = calls[0];
-  let prevChainName = (
+  let prevCall = tempCalls[0];
+  prevChainName = (
     prevCall.args["chainName"] ||
     prevCall.args["sourceChainName"] ||
     connectedChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;
-  while (i < calls.length) {
-    const curCall = calls[i];
+  while (i < tempCalls.length) {
+    const curCall = tempCalls[i];
     const curChainName = (
       curCall.args["chainName"] ||
       curCall.args["sourceChainName"] ||
@@ -547,11 +631,11 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         prevCall.args["destinationChainName"].toLowerCase() === curChainName &&
         prevCall.args["token"].toLowerCase() === "eth"
       ) {
-        calls[i - 1].args["amount"] = (
-          parseFloat(calls[i - 1].args["amount"]) + parseFloat(gasAmount)
+        tempCalls[i - 1].args["amount"] = (
+          parseFloat(tempCalls[i - 1].args["amount"]) + parseFloat(gasAmount)
         ).toString();
       } else {
-        calls.splice(i, 0, {
+        tempCalls.splice(i, 0, {
           name: "bridge",
           args: {
             accountAddress: address,
@@ -583,18 +667,18 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
           prevCall.args["token"].toLowerCase() === token
         ) {
           if (
-            parseFloat(calls[i - 1].args["amount"]) +
+            parseFloat(tempCalls[i - 1].args["amount"]) +
               parseFloat(utils.formatUnits(balance, decimals)) <
             parseFloat(amount)
           ) {
-            calls[i - 1].args["amount"] = Math.max(
-              parseFloat(calls[i - 1].args["amount"]),
+            tempCalls[i - 1].args["amount"] = Math.max(
+              parseFloat(tempCalls[i - 1].args["amount"]),
               parseFloat(amount) -
                 parseFloat(utils.formatUnits(balance, decimals))
             ).toString();
           }
         } else {
-          calls.splice(i, 0, {
+          tempCalls.splice(i, 0, {
             name: "bridge",
             args: {
               accountAddress: address,
@@ -621,8 +705,8 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     connectedChainName
   ).toLowerCase();
   const state_objects = {};
-  for (let i = 0; i < calls.length; i++) {
-    const call = calls[i];
+  for (let i = 0; i < tempCalls.length; i++) {
+    const call = tempCalls[i];
     let token;
     let chainName;
 
@@ -633,7 +717,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       prevChainName = sourceChainName;
       const chainId = getChainIdFromName(sourceChainName);
       if (call.name === "swap" || call.name === "bridge") {
-        if (i < calls.length - 1) {
+        if (i < tempCalls.length - 1) {
           token = call.args["outputToken"] || call.args["token"];
           chainName =
             call.args["destinationChainName"] || call.args["chainName"];
@@ -749,7 +833,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       _token = _token.address.toLowerCase();
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
-      const nextCall = calls[i + 1];
+      const nextCall = tempCalls[i + 1];
       if (!nextCall) continue;
       let amount;
       if (call.name === "swap") {
@@ -836,10 +920,10 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       }
 
       if (nextCall.name === "swap") {
-        calls[i + 1].args["inputAmount"] =
-          calls[i + 1].args["inputAmount"] || amount;
+        tempCalls[i + 1].args["inputAmount"] =
+          tempCalls[i + 1].args["inputAmount"] || amount;
       } else if (nextCall.name === "transfer" || nextCall.name === "bridge") {
-        calls[i + 1].args["amount"] = calls[i + 1].args["amount"] || amount;
+        tempCalls[i + 1].args["amount"] = tempCalls[i + 1].args["amount"] || amount;
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);
@@ -954,6 +1038,7 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
     }
 
     // Step 2: Get best swap route
+    // might need to mutiply gasPrice by 1.1 or something to avoid failure due to gas spike later
     const gasPrice = await provider.getGasPrice();
     const { tx, source } = await getBestSwapRoute(
       chainId,
@@ -993,12 +1078,7 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
     }
 
     // Step 5: Return the transaction details to the client
-    transactions.push({
-      to: tx.to,
-      value: tx.value,
-      data: tx.data,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
-    });
+    transactions.push(tx);
     return { status: "success", transactions };
   } catch (err) {
     console.log("Swap error:", err);
@@ -1120,7 +1200,6 @@ export const getBridgeTx = async (data, ignoreBalanceCheck = false) => {
       to: result.to,
       value: result.value,
       data: result.data,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     });
 
     return { status: "success", transactions };
@@ -1502,7 +1581,6 @@ export const getTransferTx = async (data, ignoreBalanceCheck = false) => {
       to,
       value: value.toString(),
       data: txData,
-      ...(await getFeeDataWithDynamicMaxPriorityFeePerGas(provider)),
     };
 
     return { status: "success", transactions: [transactionDetails] };

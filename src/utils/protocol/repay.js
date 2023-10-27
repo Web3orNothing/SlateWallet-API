@@ -17,7 +17,7 @@ export const getRepayData = async (
   accountAddress,
   protocolName,
   chainName,
-  poolName,
+  _poolName,
   token,
   amount
 ) => {

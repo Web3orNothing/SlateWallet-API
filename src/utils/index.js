@@ -1640,7 +1640,7 @@ export const getTokenBalance = async (address, chainName, tokenName) => {
   }
 };
 
-export const getCoinPrice = async (symbol) => {
+export const getCoinData = async (symbol) => {
   const slug = getCMCSlugForSymbol(symbol);
   try {
     const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
@@ -1649,7 +1649,7 @@ export const getCoinPrice = async (symbol) => {
       { headers }
     );
     return Object.values(data.data).find((x) => x.slug === symbol.toLowerCase())
-      .quote.USD.price;
+      .quote.USD;
   } catch (e) {
     console.log("error fetching price:", e?.response?.data || e);
     return 0;

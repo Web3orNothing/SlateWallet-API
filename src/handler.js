@@ -4,7 +4,7 @@ import webpush from "web-push";
 
 import { sequelize } from "./db/index.js";
 import conditionModel from "./db/condition.model.js";
-import { getCoinPrice, getTokenBalance } from "./utils/index.js";
+import { getCoinData, getTokenBalance } from "./utils/index.js";
 
 // Maintain subscriptions
 const subscriptions = {};
@@ -86,7 +86,7 @@ const syncConditionTx = async () => {
           .replace("price", "")
           .replace(" ", "")
           .replace("_", "");
-        const price = await getCoinPrice(symbol);
+        const { price } = await getCoinData(symbol);
         if (comparator === "<") {
           isReady = price < parseFloat(value);
         } else if (comparator === "<=") {
@@ -97,6 +97,23 @@ const syncConditionTx = async () => {
           isReady = price >= parseFloat(value);
         } else if (comparator === "==") {
           isReady = price === parseFloat(value);
+        }
+      } else if (type === "marketcap") {
+        const symbol = subject
+          .replace("marketcap", "")
+          .replace(" ", "")
+          .replace("_", "");
+        const { market_cap } = await getCoinData(symbol);
+        if (comparator === "<") {
+          isReady = market_cap < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = market_cap <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = market_cap > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = market_cap >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = market_cap === parseFloat(value);
         }
       } else if (type === "balance") {
         const token = subject

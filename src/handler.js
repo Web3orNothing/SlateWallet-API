@@ -35,16 +35,7 @@ export const checkTx = async () => {
 const syncConditionTx = async () => {
   const Conditions = await conditionModel(sequelize, Sequelize);
   const conditions = await Conditions.findAll({
-    where: {
-      [Sequelize.Op.or]: [
-        { status: "pending" },
-        {
-          status: "completed",
-          type: "time",
-          recurrence: { [Sequelize.Op.ne]: null },
-        },
-      ],
-    },
+    where: { status: { [Sequelize.Op.in]: ["pending", "completed"] } },
   });
   const gasPrice = await getGasPrice();
   for (let i = 0; i < conditions.length; i++) {
@@ -52,11 +43,11 @@ const syncConditionTx = async () => {
     let ready = true;
     const { useraddress, status, actions } = condition.dataValues;
 
-    for (let j = 0; j < condition.dataValues.conditions[j].length; j++) {
+    for (let j = 0; j < condition.dataValues.conditions.length; j++) {
       let isReady;
       const {
         name,
-        args: {
+        body: {
           type,
           subject,
           comparator,
@@ -98,7 +89,8 @@ const syncConditionTx = async () => {
         if (symbol.includes("/")) {
           const token0 = await getCoinData(symbol.split("/")[0]);
           const token1 = await getCoinData(symbol.split("/")[1]);
-          if (token0 && token1) price = token0.price / token1.price;
+          if (token0 && token1 && token1.price)
+            price = token0.price / token1.price;
         } else {
           const token = await getCoinData(symbol);
           price = token.price;

@@ -1648,7 +1648,7 @@ export const getCoinData = async (symbol) => {
       `https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?slug=${slug}`,
       { headers }
     );
-    return Object.values(data.data).find((x) => x.slug === symbol.toLowerCase())
+    return Object.values(data.data).find((x) => x.slug === slug.toLowerCase())
       .quote.USD;
   } catch (e) {
     console.log("error fetching price:", e?.response?.data || e);

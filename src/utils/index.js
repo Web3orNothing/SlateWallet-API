@@ -83,6 +83,10 @@ const chainNamesForCGC = {
   hydra: "hydra",
   near: "near-protocol",
   zksync: "zksync",
+  mantle: "mantle",
+  celo: "celo",
+  canto: "canto",
+  linea: "linea",
   // Add more chainName-platform on CGC mappings here as needed
 };
 
@@ -164,6 +168,33 @@ export const getRpcUrlForChain = (chainId) => {
   return chainIdsToRpcUrls[chainId] || null;
 };
 
+export const getNativeTokenSymbolForChain = (chainId) => {
+  const chainIdsToNativeTokenSymbols = {
+    1: "ETH",
+    10: "ETH",
+    25: "CRO",
+    56: "BNB",
+    61: "ETH",
+    100: "xDAI",
+    137: "MATIC",
+    250: "FTM",
+    314: "FIL",
+    1284: "GLMR",
+    1285: "MOVR",
+    2222: "KAVA",
+    5000: "MNT",
+    7700: "CANTO",
+    8453: "ETH",
+    42161: "ETH",
+    42220: "CELO",
+    43114: "AVAX",
+    59144: "ETH",
+    // Add more chainId-rpcUrl mappings here as needed
+  };
+
+  return chainIdsToNativeTokenSymbols[chainId] || null;
+};
+
 export const getEthBalanceForUser = async (chainId, user) => {
   const rpcUrl = getRpcUrlForChain(chainId);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
@@ -221,6 +252,110 @@ export const getProtocolEntities = (protocol) => {
     default:
       poolNames = {};
   }
+  let reference;
+  let addresses;
+  switch (protocol.toLowerCase()) {
+    case "0x":
+    case "matcha":
+      addresses = {
+        1: ["0xDef1C0ded9bec7F1a1670819833240f027b25EfF"],
+        10: ["0xdef1abe32c034e558cdd535791643c58a13acc10"],
+        56: ["0xDef1C0ded9bec7F1a1670819833240f027b25EfF"],
+        137: ["0xDef1C0ded9bec7F1a1670819833240f027b25EfF"],
+        250: ["0xdef189deaef76e379df891899eb5a00a94cbc250"],
+        43114: ["0xDef1C0ded9bec7F1a1670819833240f027b25EfF"],
+        42220: ["0xDef1C0ded9bec7F1a1670819833240f027b25EfF"],
+        42161: ["0xDef1C0ded9bec7F1a1670819833240f027b25EfF"],
+      };
+      break;
+    case "1inch":
+      addresses = {
+        1: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        56: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        137: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        250: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        10: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        100: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        42161: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        43114: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+      };
+      break;
+    case "paraswap":
+      addresses = {
+        1: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+        56: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+        137: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+        250: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+        10: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+        42161: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+        43114: ["0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"],
+      };
+      break;
+    case "lifi":
+      addresses = {
+        1: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        10: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        25: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        56: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        100: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        137: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        250: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        42161: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+        43114: ["0x1231DEB6f5749EF6cE6943a275A1D3E7486F4EaE"],
+      };
+      break;
+    case "openocean":
+      addresses = {
+        1: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        10: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        25: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        56: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        100: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        137: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        250: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        42161: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+        43114: ["0x6352a56caadC4F1E25CD6c75970Fa768A3304e64"],
+      };
+      break;
+    case "kyberswap":
+      addresses = {
+        1: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        56: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        137: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        250: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        10: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        42161: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        43114: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+        25: ["0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"],
+      };
+      break;
+    case "bungee":
+      addresses = {
+        1: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        56: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        137: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        250: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        10: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        100: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        42161: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+        43114: ["0x3a23F943181408EAC424116Af7b7790c94Cb97a5"],
+      };
+      break;
+    case "balancer":
+    case "sushiswap":
+    case "uniswap":
+    case "llamazip":
+    case "curve":
+    case "camelot":
+      reference = "ParaSwap";
+      break;
+    case "matcha":
+      reference = "0x";
+      break;
+    case "jumper":
+      reference = "LiFi";
+      break;
+  }
   const pools = {};
   const poolChains = Object.keys(poolNames);
   poolChains.map((chain) => {
@@ -230,11 +365,15 @@ export const getProtocolEntities = (protocol) => {
         ProtocolAddresses[protocol.toLowerCase()][chain][poolName];
     });
   });
-  return {
+  const protocolEntities = {
     name: protocol,
-    addresses: getProtocolAddresses(protocol),
+    addresses: addresses || getProtocolAddresses(protocol),
     pools,
   };
+  if (reference) {
+    protocolEntities["reference"] = reference;
+  }
+  return protocolEntities;
 };
 
 export const getChainEntities = async (chainName) => {
@@ -437,8 +576,11 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
       "https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?symbol=";
     const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
     let response;
+    let price;
     try {
       response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
+      const quoteResponse = await axios.get("https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" + symbolUp, { headers });
+      price = quoteResponse.data.data[symbolUp][0].quote["USD"].price;
     } catch (_) {}
 
     if (response && response.data.data[symbolUp].length > 0) {
@@ -449,11 +591,13 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
         data = {
           name: target.platform.name,
           address: target.contract_address,
+          price,
         };
       } else if (!response.data.data[symbolUp][0].platform) {
         data = {
           name: response.data.data[symbolUp][0].name,
           address: NATIVE_TOKEN,
+          price,
         };
       }
     }
@@ -533,8 +677,10 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   let token;
   let decimals = 18;
   let _amount;
-  if (address !== NATIVE_TOKEN)
+  if (address !== NATIVE_TOKEN) {
     token = new ethers.Contract(address, ERC20_ABI, provider);
+    decimals = await token.decimals();
+  }
 
   if (
     amount === undefined ||
@@ -548,7 +694,6 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   } else {
     if (address == NATIVE_TOKEN) _amount = utils.parseEther(amount);
     else {
-      decimals = await token.decimals();
       _amount = utils.parseUnits(amount, decimals);
     }
   }
@@ -556,6 +701,8 @@ export const getTokenAmount = async (address, provider, user, amount) => {
 };
 
 export const simulateCalls = async (calls, address, connectedChainName) => {
+  const originCalls = JSON.parse(JSON.stringify(calls));
+
   // Parse Calls
   let prevChainName = connectedChainName;
   for (let i = 0; i < calls.length; i++) {
@@ -568,25 +715,35 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     prevChainName = chainName;
     const chainId = getChainIdFromName(chainName);
 
-    const token = (
-      call.args["token"] || call.args["inputToken"]
-    ).toLowerCase();
+    const token = (call.args["token"] || call.args["inputToken"]).toLowerCase();
     const amount = call.args["amount"] || call.args["inputAmount"];
     if (amount === "all" || amount === "half") {
       let newAmount;
       const tokenInfo = await getTokenAddressForChain(token, chainName);
-      if (tokenInfo.address === NATIVE_TOKEN || tokenInfo.address === NATIVE_TOKEN2) {
+      if (
+        tokenInfo.address === NATIVE_TOKEN ||
+        tokenInfo.address === NATIVE_TOKEN2
+      ) {
         let ethBalance = await getEthBalanceForUser(chainId, address);
         const gasAmount = chainId === 1 ? "0.2" : "0.1";
         ethBalance = ethBalance.sub(utils.parseEther(gasAmount));
-        newAmount = utils.formatEther(amount === "all" ? ethBalance : ethBalance.div(2));
+        newAmount = utils.formatEther(
+          amount === "all" ? ethBalance : ethBalance.div(2)
+        );
       } else {
         const rpcUrl = getRpcUrlForChain(chainId);
         const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-        const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
+        const contract = new ethers.Contract(
+          tokenInfo.address,
+          ERC20_ABI,
+          provider
+        );
         const tokenBalance = await contract.balanceOf(address);
         const decimals = await contract.decimals();
-        newAmount = utils.formatUnits(amount === "all" ? tokenBalance : tokenBalance.div(2), decimals);
+        newAmount = utils.formatUnits(
+          amount === "all" ? tokenBalance : tokenBalance.div(2),
+          decimals
+        );
       }
       if (call.args["amount"]) call.args["amount"] = newAmount;
       else call.args["inputAmount"] = newAmount;
@@ -797,6 +954,7 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         {
           simulations: txs.map(({ to, value, data }) => ({
             network_id: chainId,
+            block_number: -1,
             save: true,
             save_if_fails: true,
             simulation_type: "full",
@@ -811,13 +969,14 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
       );
       const length = res.simulation_results.length;
       for (let j = 0; j < length; j++) {
-        if (!res.simulation_results[j].transaction.status)
+        if (!res.simulation_results[j].transaction.status) {
           return {
             success: false,
             message: res.simulation_results[j].transaction.error_message,
             transactionsList: null,
             calls: null,
           };
+        }
       }
 
       if (!token) continue;
@@ -923,7 +1082,8 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         tempCalls[i + 1].args["inputAmount"] =
           tempCalls[i + 1].args["inputAmount"] || amount;
       } else if (nextCall.name === "transfer" || nextCall.name === "bridge") {
-        tempCalls[i + 1].args["amount"] = tempCalls[i + 1].args["amount"] || amount;
+        tempCalls[i + 1].args["amount"] =
+          tempCalls[i + 1].args["amount"] || amount;
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);
@@ -982,6 +1142,7 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
       inputAmount,
       inputToken,
       outputToken,
+      slippage,
     } = data;
     if (protocolName) {
       const { transactions, error } = await getSwapData(
@@ -991,7 +1152,8 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
         poolName,
         inputToken,
         inputAmount,
-        outputToken
+        outputToken,
+        slippage
       );
       if (error) {
         return { status: "error", message: error };
@@ -1033,6 +1195,11 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
       accountAddress,
       inputAmount
     );
+    const { decimals: outDecimals } = await getTokenAmount(
+      _outputToken.address,
+      provider,
+      accountAddress
+    );
     if (!ignoreBalanceCheck && balance.lt(_inputAmount)) {
       throw new Error("Insufficient balance");
     }
@@ -1047,13 +1214,17 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
         address: _inputToken.address,
         symbol: inputToken,
         decimals,
+        price: _inputToken.price
       },
       {
         address: _outputToken.address,
         symbol: outputToken,
+        decimals: outDecimals,
+        price: _outputToken.price
       },
       _inputAmount,
-      gasPrice
+      gasPrice,
+      slippage
     );
 
     // Step 3: Parse the response and extract relevant information for the transaction

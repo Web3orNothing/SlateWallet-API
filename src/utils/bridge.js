@@ -100,6 +100,7 @@ export const getQuoteFromHop = async (
       toChain: getChainNameFromId(destChainId),
       token: sourceToken.symbol,
       amount: amount.toString(),
+      slippage: 1,
     };
     const url = apiUrl + new URLSearchParams(bridgeParams).toString();
     const { data: quote } = await axios.get(url, headers);
@@ -277,10 +278,10 @@ export const getQuoteFromAxelar = async (
 
 const bridgeRoutes = [
   getQuoteFromBungee,
-  // getQuoteFromHop,
-  // getQuoteFromLiFi,
-  // getQuoteFromSynapse,
-  // getQuoteFromAxelar,
+  getQuoteFromHop,
+  getQuoteFromLiFi,
+  getQuoteFromSynapse,
+  getQuoteFromAxelar,
 ];
 
 export const getBestBridgeRoute = async (

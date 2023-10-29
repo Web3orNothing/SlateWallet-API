@@ -1,9 +1,10 @@
 import axios from "axios";
-import { BigNumber, utils } from "ethers";
+import { BigNumber, ethers, utils } from "ethers";
 import { constructSimpleSDK } from "@paraswap/sdk";
 import { config } from "dotenv";
 
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
+import { getChainNameFromId, getNativeTokenSymbolForChain, getTokenAddressForChain } from './index.js';
 
 config();
 
@@ -31,8 +32,11 @@ export const getQuoteFromOpenOcean = async (
     const {
       data: { data },
     } = await axios.get(`${baseUrl}/${chainId}/swap_quote?${queryParams}`);
+    const gasCost = gasPrice.mul(data.estimatedGas);
+    const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
     return {
       amountOut: data.outAmount,
+      gasUsd: utils.formatEther(gasCost) * gasToken.price,
       tx: {
         to: data.to,
         value: data.value,
@@ -113,10 +117,12 @@ export const getQuoteFromLiFi = async (
         toToken: tokenOut.symbol,
         fromAmount: amount.toString(),
         fromAddress: account,
+        slippage: slippage / 100,
       },
     });
     return {
       amountOut: estimate.toAmount,
+      gasUsd: estimate.gasCosts[0].amountUsd,
       tx: {
         to: transactionRequest.to,
         value: BigNumber.from(transactionRequest.value).toString(),
@@ -158,15 +164,17 @@ export const getQuoteFromSynapse = async (
       apiBaseUrl + "/swapTxInfo?" + new URLSearchParams(swapParams).toString(),
       headers
     );
-    return {
-      amountOut: BigNumber.from(quote.maxAmountOut).toString(),
-      tx: {
-        to,
-        value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
-        data,
-      },
-      source: "synapse",
-    };
+    if (quote && data) {
+      return {
+        amountOut: BigNumber.from(quote.maxAmountOut).toString(),
+        tx: {
+          to,
+          value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
+          data,
+        },
+        source: "synapse",
+      };
+    }
   } catch {}
 };
 
@@ -213,6 +221,7 @@ export const getQuoteFromParaSwap = async (
         .mul(100 - slippage)
         .div(100)
         .toString(),
+      gasUsd: parseFloat(priceRoute.gasCostUSD),
       tx: {
         to: data.to,
         value: data.value,
@@ -248,19 +257,20 @@ export const getQuoteFrom0x = async (
 
   try {
     const queryParams = new URLSearchParams({
-      sellToken:
-        tokenIn.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenIn.address,
-      buyToken:
-        tokenOut.address === NATIVE_TOKEN ? NATIVE_TOKEN2 : tokenOut.address,
+      sellToken: tokenIn.symbol,
+      buyToken: tokenOut.symbol,
       sellAmount: amount.toString(),
-      slippagePercentage: slippage,
+      slippagePercentage: slippage / 100,
       gasPrice: gasPrice.toString(),
     }).toString();
     const { data } = await axios.get(`${baseURL}swap/v1/quote?${queryParams}`, {
       headers: { "0x-api-key": process.env.API_KEY_0X },
     });
+    const gasCost = gasPrice.mul(data.estimatedGas);
+    const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
     return {
       amountOut: data.grossBuyAmount,
+      gasUsd: utils.formatEther(gasCost) * gasToken.price,
       tx: {
         to: data.to,
         value: data.value,
@@ -268,9 +278,7 @@ export const getQuoteFrom0x = async (
       },
       source: "0x",
     };
-  } catch (err) {
-    console.log(err);
-  }
+  } catch {}
 };
 
 // export const getQuoteFromFirebird = async (
@@ -358,7 +366,7 @@ export const getQuoteFromKyber = async (
       {
         routeSummary: data.routeSummary,
         deadline: 0,
-        slippageTolerance: 0,
+        slippageTolerance: slippage * 100,
         sender: account,
         recipient: account,
         source: "spice-finance",
@@ -367,6 +375,7 @@ export const getQuoteFromKyber = async (
     );
     return {
       amountOut: _data.amountOut,
+      gasUsd: parseFloat(_data.gasUsd),
       tx: {
         to: _data.routerAddress,
         value: tokenIn.address === NATIVE_TOKEN ? amount.toString() : "0",
@@ -381,6 +390,7 @@ export const getQuoteFromKyber = async (
 const swapRoutes = [
   getQuoteFromOpenOcean,
   getQuoteFrom1inch,
+  getQuoteFromLiFi,
   getQuoteFromParaSwap,
   getQuoteFrom0x,
   // getQuoteFromFirebird,
@@ -397,7 +407,7 @@ export const getBestSwapRoute = async (
   gasPrice,
   slippage = 1
 ) => {
-  let amountOut;
+  let amountOutUsd;
   let tx;
   let source;
   const datas = await Promise.all(
@@ -418,8 +428,31 @@ export const getBestSwapRoute = async (
     const data = datas[i];
     if (data) {
       const newAmountOut = BigNumber.from(data.amountOut);
-      if (!amountOut || amountOut.lt(newAmountOut)) {
-        amountOut = newAmountOut;
+      let newAmountOutUsd = parseFloat(utils.formatUnits(newAmountOut, tokenOut.decimals)) * tokenOut.price;
+      if (data.gasUsd) {
+        newAmountOutUsd -= data.gasUsd;
+      } else {
+        const { data: res } = await axios.post(
+          `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate`,
+          {
+              network_id: chainId,
+              save: true,
+              save_if_fails: true,
+              simulation_type: "full",
+              from: account,
+              to: data.tx.to,
+              value: data.tx.value,
+              input: data.tx.data,
+          },
+          { headers: { "X-Access-Key": process.env.TENDERLY_ACCESS_KEY } }
+        );
+        const gasCost = gasPrice.mul(res.transaction.gas_used);
+        const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
+        const gasUsd = utils.formatEther(gasCost) * gasToken.price;
+        newAmountOutUsd -= gasUsd;
+      }
+      if (!amountOutUsd || amountOutUsd < newAmountOutUsd) {
+        amountOutUsd = newAmountOutUsd;
         tx = data.tx;
         source = data.source;
       }

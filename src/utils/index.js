@@ -83,6 +83,10 @@ const chainNamesForCGC = {
   hydra: "hydra",
   near: "near-protocol",
   zksync: "zksync",
+  mantle: "mantle",
+  celo: "celo",
+  canto: "canto",
+  linea: "linea",
   // Add more chainName-platform on CGC mappings here as needed
 };
 
@@ -603,25 +607,35 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
     prevChainName = chainName;
     const chainId = getChainIdFromName(chainName);
 
-    const token = (
-      call.args["token"] || call.args["inputToken"]
-    ).toLowerCase();
+    const token = (call.args["token"] || call.args["inputToken"]).toLowerCase();
     const amount = call.args["amount"] || call.args["inputAmount"];
     if (amount === "all" || amount === "half") {
       let newAmount;
       const tokenInfo = await getTokenAddressForChain(token, chainName);
-      if (tokenInfo.address === NATIVE_TOKEN || tokenInfo.address === NATIVE_TOKEN2) {
+      if (
+        tokenInfo.address === NATIVE_TOKEN ||
+        tokenInfo.address === NATIVE_TOKEN2
+      ) {
         let ethBalance = await getEthBalanceForUser(chainId, address);
         const gasAmount = chainId === 1 ? "0.2" : "0.1";
         ethBalance = ethBalance.sub(utils.parseEther(gasAmount));
-        newAmount = utils.formatEther(amount === "all" ? ethBalance : ethBalance.div(2));
+        newAmount = utils.formatEther(
+          amount === "all" ? ethBalance : ethBalance.div(2)
+        );
       } else {
         const rpcUrl = getRpcUrlForChain(chainId);
         const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
-        const contract = new ethers.Contract(tokenInfo.address, ERC20_ABI, provider);
+        const contract = new ethers.Contract(
+          tokenInfo.address,
+          ERC20_ABI,
+          provider
+        );
         const tokenBalance = await contract.balanceOf(address);
         const decimals = await contract.decimals();
-        newAmount = utils.formatUnits(amount === "all" ? tokenBalance : tokenBalance.div(2), decimals);
+        newAmount = utils.formatUnits(
+          amount === "all" ? tokenBalance : tokenBalance.div(2),
+          decimals
+        );
       }
       if (call.args["amount"]) call.args["amount"] = newAmount;
       else call.args["inputAmount"] = newAmount;
@@ -960,7 +974,8 @@ export const simulateCalls = async (calls, address, connectedChainName) => {
         tempCalls[i + 1].args["inputAmount"] =
           tempCalls[i + 1].args["inputAmount"] || amount;
       } else if (nextCall.name === "transfer" || nextCall.name === "bridge") {
-        tempCalls[i + 1].args["amount"] = tempCalls[i + 1].args["amount"] || amount;
+        tempCalls[i + 1].args["amount"] =
+          tempCalls[i + 1].args["amount"] || amount;
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);

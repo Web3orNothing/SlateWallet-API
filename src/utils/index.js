@@ -33,16 +33,6 @@ export const metamaskApiHeaders = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
 };
 
-export const getCMCSlugForSymbol = (symbol) => {
-  const slugMapping = {
-    btc: "bitcoin",
-    eth: "ethereum",
-    usdt: "tether",
-    usdc: "usd-coin",
-  };
-  return slugMapping[symbol.toLowerCase()] || symbol.toLowerCase();
-};
-
 export const getChainNameForCMC = (chainName) => {
   const chainNamesForCMC = {
     ethereum: "Ethereum",
@@ -654,9 +644,8 @@ export const getUserOwnedTokens = async (chainId, account) => {
       }
     );
     ownedTokens.push(...data.map((token) => token.symbol));
-  } catch (err) {
+  } catch {
     console.log("Failed to get user's token list from Debank");
-    // console.log(err);
   }
   try {
     const headers = {
@@ -732,8 +721,8 @@ export const getUserOwnedTokens = async (chainId, account) => {
         ownedTokens.push(token);
       }
     });
-  } catch (err) {
-    console.log("Failed to get user's token list from Moralis", err);
+  } catch {
+    console.log("Failed to get user's token list from Moralis");
   }
 
   return ownedTokens;
@@ -805,12 +794,7 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
     let price;
     try {
       response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
-      const quoteResponse = await axios.get(
-        "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" +
-          symbolUp,
-        { headers }
-      );
-      price = quoteResponse.data.data[symbolUp][0].quote["USD"].price;
+      price = (await getCoinData(symbol)).price;
     } catch (_) {}
 
     if (response && response.data.data[symbolUp].length > 0) {
@@ -952,14 +936,8 @@ export const simulateActions = async (calls, address, connectedChainName) => {
         ...tokens.map((token) => ({
           ...call,
           args: call.args["token"]
-            ? {
-                ...call.args,
-                token,
-              }
-            : {
-                ...call.args,
-                inputToken: token,
-              },
+            ? { ...call.args, token }
+            : { ...call.args, inputToken: token },
         }))
       );
       i--;
@@ -1136,61 +1114,25 @@ export const simulateActions = async (calls, address, connectedChainName) => {
       switch (call.name) {
         case "swap": {
           const { message, transactions } = await getSwapTx(body, true);
-          if (message)
-            return {
-              success: false,
-              message,
-              transactionsList: null,
-              calls: null,
-            };
+          if (message) return { success: false, message };
           txs = transactions;
           break;
         }
         case "bridge": {
           const { message, transactions } = await getBridgeTx(body, true);
-          if (message)
-            return {
-              success: false,
-              message,
-              transactionsList: null,
-              calls: null,
-            };
+          if (message) return { success: false, message };
           txs = transactions;
           break;
         }
         case "protocol": {
           const { message, transactions } = await getProtocolTx(body);
-          if (message)
-            return {
-              success: false,
-              message,
-              transactionsList: null,
-              calls: null,
-            };
-          txs = transactions;
-          break;
-        }
-        case "yield": {
-          const { message, transactions } = await getYieldTx(body);
-          if (message)
-            return {
-              success: false,
-              message,
-              transactionsList: null,
-              calls: null,
-            };
+          if (message) return { success: false, message };
           txs = transactions;
           break;
         }
         case "transfer": {
           const { message, transactions } = await getTransferTx(body, true);
-          if (message)
-            return {
-              success: false,
-              message,
-              transactionsList: null,
-              calls: null,
-            };
+          if (message) return { success: false, message };
           txs = transactions;
           break;
         }
@@ -1224,8 +1166,6 @@ export const simulateActions = async (calls, address, connectedChainName) => {
           return {
             success: false,
             message: res.simulation_results[j].transaction.error_message,
-            transactionsList: null,
-            calls: null,
           };
         }
       }
@@ -1234,17 +1174,13 @@ export const simulateActions = async (calls, address, connectedChainName) => {
 
       let _token = await getTokenAddressForChain(token, chainName);
       if (!_token)
-        return {
-          success: false,
-          message: "Token not found on given chain",
-          transactionsList: null,
-          calls: null,
-        };
+        return { success: false, message: "Token not found on given chain" };
       _token = _token.address.toLowerCase();
       const tokenContract = new Contract(_token, ERC20_ABI, provider);
 
       const nextCall = tempCalls[i + 1];
       if (!nextCall) continue;
+
       let amount;
       if (call.name === "swap") {
         const { logs } =
@@ -1338,12 +1274,7 @@ export const simulateActions = async (calls, address, connectedChainName) => {
       }
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);
-      return {
-        success: false,
-        message: err.message,
-        transactionsList: null,
-        calls: null,
-      };
+      return { success: false, message: err.message };
     }
   }
   return { success: true, transactionsList, calls };
@@ -2038,15 +1969,14 @@ export const getTokenBalance = async (address, chainName, tokenName) => {
 };
 
 export const getCoinData = async (symbol) => {
-  const slug = getCMCSlugForSymbol(symbol);
+  const symbolUp = symbol.toUpperCase();
   try {
     const headers = { "X-CMC_PRO_API_KEY": process.env.CMC_API_KEY };
     const { data } = await axios.get(
-      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?slug=${slug}`,
+      `https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=${symbolUp}`,
       { headers }
     );
-    return Object.values(data.data).find((x) => x.slug === slug.toLowerCase())
-      .quote.USD;
+    return data.data[symbolUp][0].quote["USD"];
   } catch (e) {
     console.log("error fetching price:", e?.response?.data || e);
     return {};
@@ -2054,8 +1984,10 @@ export const getCoinData = async (symbol) => {
 };
 
 export const findIntersection = async (arr1, arr2) => {
-  const set1 = new Set(arr1.map(item => item.toLowerCase()));
-  const set2 = new Set(arr2.map(item => item.toLowerCase()));
-  const intersection = [...set1].filter(item => set2.has(item));
-  return intersection.map(item => arr1[arr1.findIndex(val => val.toLowerCase() === item)]);
-}
+  const set1 = new Set(arr1.map((item) => item.toLowerCase()));
+  const set2 = new Set(arr2.map((item) => item.toLowerCase()));
+  const intersection = [...set1].filter((item) => set2.has(item));
+  return intersection.map(
+    (item) => arr1[arr1.findIndex((val) => val.toLowerCase() === item)]
+  );
+};

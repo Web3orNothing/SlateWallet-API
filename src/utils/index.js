@@ -1,6 +1,8 @@
 import axios from "axios";
 import { BigNumber, Contract, ethers, utils } from "ethers";
 import Sequelize from "sequelize";
+import Moralis from "moralis";
+import { EvmChain } from "@moralisweb3/common-evm-utils";
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
 import ERC20_ABI from "../abis/erc20.abi.js";
 import ProtocolAddresses from "./address.js";
@@ -577,21 +579,48 @@ export const getZapperNetwork = (chainId) => {
   return chainIdsToZapperNetworks[chainId] || null;
 };
 
+export const getMorailsChainId = (chainId) => {
+  const chainIdsToMorailsChainId = {
+    1: EvmChain.ETHEREUM,
+    10: EvmChain.OPTIMISM,
+    25: EvmChain.CRONOS,
+    56: EvmChain.BSC,
+    // 61: "ETH",
+    // 100: "xdai",
+    137: EvmChain.POLYGON,
+    250: EvmChain.FANTOM,
+    // 314: "FIL",
+    // 1284: "mobm",
+    // 1285: "moonriver",
+    // 2222: "kava",
+    // 5000: "MNT",
+    // 7700: "canto",
+    // 8453: "ETH",
+    42161: EvmChain.ARBITRUM,
+    // 42220: "celo",
+    43114: EvmChain.AVALANCHE,
+    // 59144: "ETH",
+    // Add more chainId-rpcUrl mappings here as needed
+  };
+
+  return chainIdsToMorailsChainId[chainId] || null;
+};
+
 export const getUserOwnedTokens = async (chainId, account) => {
-  // try {
-  //   const queryParams = new URLSearchParams({
-  //     id: account,
-  //     chain_id: getDebankChainId(chainId),
-  //     is_all: false,
-  //   });
-  //   const { data } = await axios.get(`https://pro-openapi.debank.com/v1/user/token_list?${queryParams}`, {
-  //     headers: { "AccessKey": process.env.DEBANK_ACCESS_KEY },
-  //   });
-  //   return data.map(token => token.symbol);
-  // } catch (err) {
-  //   console.log("Failed to get user's token list from Debank");
-  //   return [];
-  // }
+  const ownedTokens = [];
+  try {
+    const queryParams = new URLSearchParams({
+      id: account,
+      chain_id: getDebankChainId(chainId),
+      is_all: false,
+    });
+    const { data } = await axios.get(`https://pro-openapi.debank.com/v1/user/token_list?${queryParams}`, {
+      headers: { "AccessKey": process.env.DEBANK_ACCESS_KEY },
+    });
+    ownedTokens.push(...data.map(token => token.symbol));
+  } catch {
+    console.log("Failed to get user's token list from Debank");
+  }
   try {
     const headers = {
       accept: "*/*",
@@ -606,11 +635,64 @@ export const getUserOwnedTokens = async (chainId, account) => {
     const { data } = await axios.get(`https://api.zapper.xyz/v2/balances/tokens?${queryParams}`, {
       headers,
     });
-    return (data[account.toLowerCase()] || []).map(({ token }) => token.symbol);
-  } catch (err) {
-    console.log("Failed to get user's token list from Zapper", err);
-    return [];
+    const newTokens = (data[account.toLowerCase()] || []).map(({ token }) => token.symbol);
+    newTokens.map(token => {
+      if (!ownedTokens.includes(token)) {
+        ownedTokens.push(token);
+      }
+    });
+  } catch {
+    console.log("Failed to get user's token list from Zapper");
   }
+  try {
+    const newTokens = [];
+    let page = 1;
+    while (true) {
+      try {
+        let queryParams = new URLSearchParams({
+          module: "account",
+          action: "addresstokenbalance",
+          address: account,
+          page,
+          offset: 500,
+          apikey: process.env.ETHERSCAN_API_KEY,
+        });
+        const { data } = await axios.get(`https://api.etherscan.io/api?${queryParams}`);
+        const tokens = data.result.map(({ TokenSymbol }) => TokenSymbol);
+        newTokens.push(...tokens);
+        page++;
+        if (tokens.length < 500) break;
+      } catch {
+        break;
+      }
+    }
+    newTokens.map(token => {
+      if (!ownedTokens.includes(token)) {
+        ownedTokens.push(token);
+      }
+    });
+  } catch {
+    console.log("Failed to get user's token list from Etherscan");
+  }
+  try {
+    await Moralis.start({
+      apiKey: process.env.MORAILS_API_KEY,
+    });
+    const response = await Moralis.EvmApi.token.getWalletTokenBalances({
+      address: account,
+      chain: getMorailsChainId(chainId),
+    });
+    const newTokens = response.toJSON().map(({ symbol }) => symbol);
+    newTokens.map(token => {
+      if (!ownedTokens.includes(token)) {
+        ownedTokens.push(token);
+      }
+    });
+  } catch {
+    console.log("Failed to get user's token list from Morails");
+  }
+
+  return ownedTokens;
 };
 
 export const getApproveData = async (

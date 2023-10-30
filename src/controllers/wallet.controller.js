@@ -428,7 +428,7 @@ const simulate = async (req, res) => {
       res.status(httpStatus.OK).json({
         status: "success",
         transactionsList,
-        calls,
+        actions,
       });
     } else {
       res

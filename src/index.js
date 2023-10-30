@@ -13,10 +13,10 @@ const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
 const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
 webpush.setVapidDetails(subject, publicVapidKey, privateVapidKey);
 
-if (process.argv[2] == 'checkTx') {
-    await checkTx();
+if (process.argv[2] == "checkTx") {
+  await checkTx();
 } else {
-    app.listen(port, () => {
-	console.log(`Server listening on port ${port}!`);
-    });
+  app.listen(port, () => {
+    console.log(`Server listening on port ${port}!`);
+  });
 }

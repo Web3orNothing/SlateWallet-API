@@ -1,29 +1,18 @@
 const conditionModel = async (sequelize, Sequelize) => {
-  const ConditionSchema = sequelize.define("conditions", {
+  const ConditionSchema = sequelize.define("conditionsv2", {
     useraddress: {
       type: Sequelize.STRING,
     },
-    type: {
-      type: Sequelize.ENUM,
-      values: ["gas", "time", "price", "balance", "market cap", "yield"],
+    conditions: {
+      type: Sequelize.JSONB,
     },
-    subject: {
-      type: Sequelize.STRING,
-    },
-    comparator: {
-      type: Sequelize.ENUM,
-      values: ["lt", "lte", "gt", "gte", "eq"],
-    },
-    value: {
-      type: Sequelize.STRING,
-    },
-    recurrence: {
+    actions: {
       type: Sequelize.JSONB,
     },
     query: {
       type: Sequelize.JSONB,
     },
-    completed: {
+    status: {
       type: Sequelize.ENUM,
       values: ["pending", "ready", "executing", "completed", "canceled"],
     },

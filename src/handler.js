@@ -4,7 +4,7 @@ import webpush from "web-push";
 
 import { sequelize } from "./db/index.js";
 import conditionModel from "./db/condition.model.js";
-import ORACLE_ABI from "./abis/oracle.abi.js";
+import { getCoinData, getTokenBalance } from "./utils/index.js";
 
 // Maintain subscriptions
 const subscriptions = {};
@@ -18,12 +18,12 @@ export const checkTx = async () => {
   await syncConditionTx();
   const conditions = await findConditionTx();
   const retVal = {};
-  conditions.map(({ id, query, useraddress }) => {
+  conditions.map(({ id, actions, useraddress }) => {
     const address = useraddress.toLowerCase();
     if (!retVal[address]) {
-      retVal[address] = [{ ...query, id }];
+      retVal[address] = [{ actions, id }];
     } else {
-      retVal[address].push({ ...query, id });
+      retVal[address].push({ actions, id });
     }
   });
   const users = Object.keys(retVal);
@@ -35,60 +35,123 @@ export const checkTx = async () => {
 const syncConditionTx = async () => {
   const Conditions = await conditionModel(sequelize, Sequelize);
   const conditions = await Conditions.findAll({
-    where: {
-      [Sequelize.Op.or]: [
-        { completed: "pending" },
-        {
-          completed: "completed",
-          type: "time",
-          recurrence: { [Sequelize.Op.ne]: null },
-        },
-      ],
-    },
+    where: { status: { [Sequelize.Op.in]: ["pending", "completed"] } },
   });
   const gasPrice = await getGasPrice();
-  const ethPrice = await getEthPrice();
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
-    const { type, comparator, value, recurrence, completed } =
-      condition.dataValues;
-    let isReady;
-    if (type === "gas") {
-      if (comparator === "lt") {
-        isReady = gasPrice < parseFloat(value);
-      } else if (comparator === "lte") {
-        isReady = gasPrice <= parseFloat(value);
-      } else if (comparator === "gt") {
-        isReady = gasPrice > parseFloat(value);
-      } else if (comparator === "gte") {
-        isReady = gasPrice >= parseFloat(value);
-      } else if (comparator === "eq") {
-        isReady = gasPrice === parseFloat(value);
-      }
-    } else if (type === "time") {
-      const now = Math.floor(Date.now() / 1000);
-      const _value = parseInt(value);
-      isReady = now >= _value && now < _value + 60;
+    let ready = true;
+    const { useraddress, status, actions } = condition.dataValues;
 
-      if (now >= _value && !isReady && recurrence) {
-        const interval = getInterval(recurrence);
-        isReady = (now - _value) % interval < 60;
+    for (let j = 0; j < condition.dataValues.conditions.length; j++) {
+      let isReady;
+      const {
+        name,
+        body: {
+          type,
+          subject,
+          comparator,
+          value: val,
+          value_token,
+          start_time,
+          recurrence,
+        },
+      } = condition.dataValues.conditions[j];
+      let value = name === "condition" ? val : start_time;
+
+      if (type === "gas") {
+        if (comparator === "<") {
+          isReady = gasPrice < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = gasPrice <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = gasPrice > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = gasPrice >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = gasPrice === parseFloat(value);
+        }
+      } else if (type === "time") {
+        const now = Math.floor(Date.now() / 1000);
+        const _value = parseInt(value);
+        isReady = now >= _value && now < _value + 60;
+
+        if (now >= _value && !isReady && recurrence) {
+          const interval = getInterval(recurrence);
+          isReady = (now - _value) % interval < 60;
+        }
+      } else if (type === "price") {
+        const symbol = subject
+          .replace("price", "")
+          .replace(" ", "")
+          .replace("_", "");
+        let price;
+        if (symbol.includes("/")) {
+          const token0 = await getCoinData(symbol.split("/")[0]);
+          const token1 = await getCoinData(symbol.split("/")[1]);
+          if (token0 && token1 && token1.price)
+            price = token0.price / token1.price;
+        } else {
+          const token = await getCoinData(symbol);
+          price = token.price;
+        }
+        if (!price) {
+          isReady = false;
+        } else if (comparator === "<") {
+          isReady = price < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = price <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = price > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = price >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = price === parseFloat(value);
+        }
+      } else if (type === "market cap") {
+        const tokenData = await getCoinData(subject);
+        if (!tokenData || !tokenData.market_cap) {
+          isReady = false;
+        } else if (comparator === "<") {
+          isReady = tokenData.market_cap < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = tokenData.market_cap <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = tokenData.market_cap > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = tokenData.market_cap >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = tokenData.market_cap === parseFloat(value);
+        }
+      } else if (type === "balance") {
+        const token = subject
+          .replace("balance", "")
+          .replace(" ", "")
+          .replace("_", "");
+        if (value_token) {
+          const tokenData = await getCoinData(value_token);
+          if (tokenData && tokenData.price)
+            value = (parseFloat(value) * tokenData.price).toString();
+        }
+        const chain =
+          actions[0].body.chainName || actions[0].body.sourceChainName;
+        const balance = await getTokenBalance(useraddress, chain, token);
+        if (comparator === "<") {
+          isReady = balance < parseFloat(value);
+        } else if (comparator === "<=") {
+          isReady = balance <= parseFloat(value);
+        } else if (comparator === ">") {
+          isReady = balance > parseFloat(value);
+        } else if (comparator === ">=") {
+          isReady = balance >= parseFloat(value);
+        } else if (comparator === "==") {
+          isReady = balance === parseFloat(value);
+        }
       }
-    } else if (type === "price") {
-      if (comparator === "lt") {
-        isReady = ethPrice < parseFloat(value);
-      } else if (comparator === "lte") {
-        isReady = ethPrice <= parseFloat(value);
-      } else if (comparator === "gt") {
-        isReady = ethPrice > parseFloat(value);
-      } else if (comparator === "gte") {
-        isReady = ethPrice >= parseFloat(value);
-      } else if (comparator === "eq") {
-        isReady = ethPrice === parseFloat(value);
-      }
+      ready &= isReady;
     }
 
-    await condition.set("completed", isReady ? "ready" : completed);
+    await condition.set("status", ready ? "ready" : status);
     await condition.save();
   }
 };
@@ -119,7 +182,7 @@ const findConditionTx = async () => {
   await Conditions.sync();
   return await Conditions.findAll({
     attributes: ["query", "useraddress", "id"],
-    where: { completed: "ready" },
+    where: { status: "ready" },
   });
 };
 
@@ -135,15 +198,4 @@ const getGasPrice = async () => {
   const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL, 1);
   const gasPrice = await provider.getGasPrice();
   return parseFloat(ethers.utils.formatUnits(gasPrice, 9));
-};
-
-const getEthPrice = async () => {
-  const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL, 1);
-  const oracle = new ethers.Contract(
-    process.env.ETH_PRICE_ORACLE,
-    ORACLE_ABI,
-    provider
-  );
-  const answer = await oracle.latestAnswer();
-  return parseInt(answer.toString()) / 10 ** 8;
 };

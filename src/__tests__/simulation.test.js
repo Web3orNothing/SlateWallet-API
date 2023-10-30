@@ -7,7 +7,7 @@ describe("Test Simulation", () => {
       .post("/simulate")
       .send({
         accountAddress: "0xD6216fC19DB775Df9774a6E33526131dA7D19a2c",
-        calls: [
+        actions: [
           {
             name: "bridge",
             args: {
@@ -32,6 +32,6 @@ describe("Test Simulation", () => {
     expect(res.body).toHaveProperty("status");
     expect(res.body["status"]).toEqual("success");
     expect(res.body).toHaveProperty("transactionsList");
-    expect(res.body).toHaveProperty("calls");
+    expect(res.body).toHaveProperty("actions");
   });
 });

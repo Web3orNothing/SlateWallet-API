@@ -523,6 +523,96 @@ const getBalanceSlotForToken = (chainId, token) => {
   return tokenToBalanceSlot[chainId][token.toLowerCase()] || null;
 };
 
+export const getDebankChainId = (chainId) => {
+  const chainIdsToDebankChainIds = {
+    1: "eth",
+    10: "op",
+    25: "cro",
+    56: "bsc",
+    // 61: "ETH",
+    100: "xdai",
+    137: "matic",
+    250: "ftm",
+    314: "FIL",
+    1284: "mobm",
+    1285: "movr",
+    2222: "kava",
+    // 5000: "MNT",
+    7700: "canto",
+    // 8453: "ETH",
+    42161: "arb",
+    42220: "celo",
+    43114: "avax",
+    // 59144: "ETH",
+    // Add more chainId-rpcUrl mappings here as needed
+  };
+
+  return chainIdsToDebankChainIds[chainId] || null;
+};
+
+export const getZapperNetwork = (chainId) => {
+  const chainIdsToZapperNetworks = {
+    1: "ethereum",
+    10: "optimism",
+    // 25: "cro",
+    56: "binance-smart-chain",
+    // 61: "ETH",
+    // 100: "xdai",
+    137: "polygon",
+    250: "fantom",
+    // 314: "FIL",
+    // 1284: "mobm",
+    1285: "moonriver",
+    // 2222: "kava",
+    // 5000: "MNT",
+    // 7700: "canto",
+    // 8453: "ETH",
+    42161: "arbitrum",
+    42220: "celo",
+    43114: "avalanche",
+    // 59144: "ETH",
+    // Add more chainId-rpcUrl mappings here as needed
+  };
+
+  return chainIdsToZapperNetworks[chainId] || null;
+};
+
+export const getUserOwnedTokens = async (chainId, account) => {
+  // try {
+  //   const queryParams = new URLSearchParams({
+  //     id: account,
+  //     chain_id: getDebankChainId(chainId),
+  //     is_all: false,
+  //   });
+  //   const { data } = await axios.get(`https://pro-openapi.debank.com/v1/user/token_list?${queryParams}`, {
+  //     headers: { "AccessKey": process.env.DEBANK_ACCESS_KEY },
+  //   });
+  //   return data.map(token => token.symbol);
+  // } catch (err) {
+  //   console.log("Failed to get user's token list from Debank");
+  //   return [];
+  // }
+  try {
+    const headers = {
+      accept: "*/*",
+      "Authorization": `Basic ${Buffer.from(`${process.env.ZAPPER_API_KEY}:`, "binary").toString(
+        "base64"
+      )}`
+    };
+    const queryParams = new URLSearchParams({
+      "addresses[]": [account],
+      network: getZapperNetwork(chainId),
+    });
+    const { data } = await axios.get(`https://api.zapper.xyz/v2/balances/tokens?${queryParams}`, {
+      headers,
+    });
+    return (data[account.toLowerCase()] || []).map(({ token }) => token.symbol);
+  } catch (err) {
+    console.log("Failed to get user's token list from Zapper", err);
+    return [];
+  }
+};
+
 export const getApproveData = async (
   provider,
   tokenAddress,
@@ -724,6 +814,21 @@ export const simulateActions = async (calls, address, connectedChainName) => {
     const chainId = getChainIdFromName(chainName);
 
     const token = (call.args["token"] || call.args["inputToken"]).toLowerCase();
+    if (token === "all") {
+      const tokens = await getUserOwnedTokens(chainId, address);
+      calls.splice(i, 1, ...tokens.map((token) => ({
+        ...call,
+        args: call.args["token"] ? {
+          ...call.args,
+          token,
+        } : {
+          ...call.args,
+          inputToken: token,
+        },
+      })));
+      i--;
+      continue;
+    }
     const amount = call.args["amount"] || call.args["inputAmount"];
     if (amount === "all" || amount === "half") {
       let newAmount;
@@ -806,7 +911,7 @@ export const simulateActions = async (calls, address, connectedChainName) => {
             accountAddress: address,
             sourceChainName: prevChainName,
             destinationChainName: curChainName,
-            token: "ETH",
+            token: getNativeTokenSymbolForChain(prevChainName),
             amount: gasAmount,
           },
         });
@@ -879,15 +984,15 @@ export const simulateActions = async (calls, address, connectedChainName) => {
       const body = fillBody(call.args, address, prevChainName);
       const sourceChainName =
         call.args["sourceChainName"] || call.args["chainName"] || prevChainName;
-      prevChainName = sourceChainName;
       const chainId = getChainIdFromName(sourceChainName);
       if (call.name === "swap" || call.name === "bridge") {
         if (i < tempCalls.length - 1) {
           token = call.args["outputToken"] || call.args["token"];
           chainName =
-            call.args["destinationChainName"] || call.args["chainName"];
+            call.args["destinationChainName"] || call.args["chainName"] || prevChainName;
         }
       }
+      prevChainName = sourceChainName;
 
       let txs;
       switch (call.name) {

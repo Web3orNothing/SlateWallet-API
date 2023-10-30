@@ -113,15 +113,15 @@ const syncConditionTx = async () => {
         if (!tokenData || !tokenData.market_cap) {
           isReady = false;
         } else if (comparator === "<") {
-          isReady = market_cap < parseFloat(value);
+          isReady = tokenData.market_cap < parseFloat(value);
         } else if (comparator === "<=") {
-          isReady = market_cap <= parseFloat(value);
+          isReady = tokenData.market_cap <= parseFloat(value);
         } else if (comparator === ">") {
-          isReady = market_cap > parseFloat(value);
+          isReady = tokenData.market_cap > parseFloat(value);
         } else if (comparator === ">=") {
-          isReady = market_cap >= parseFloat(value);
+          isReady = tokenData.market_cap >= parseFloat(value);
         } else if (comparator === "==") {
-          isReady = market_cap === parseFloat(value);
+          isReady = tokenData.market_cap === parseFloat(value);
         }
       } else if (type === "balance") {
         const token = subject

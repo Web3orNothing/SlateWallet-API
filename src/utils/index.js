@@ -816,13 +816,15 @@ export const simulateActions = async (calls, address, connectedChainName) => {
     const token = (call.args["token"] || call.args["inputToken"]).toLowerCase();
     if (token === "all") {
       const tokens = await getUserOwnedTokens(chainId, address);
-      console.log("===> tokens", tokens);
       calls.splice(i, 1, ...tokens.map((token) => ({
         ...call,
-        args: {
+        args: call.args["token"] ? {
           ...call.args,
           token,
-        }
+        } : {
+          ...call.args,
+          inputToken: token,
+        },
       })));
       i--;
       continue;
@@ -909,7 +911,7 @@ export const simulateActions = async (calls, address, connectedChainName) => {
             accountAddress: address,
             sourceChainName: prevChainName,
             destinationChainName: curChainName,
-            token: "ETH",
+            token: getNativeTokenSymbolForChain(prevChainName),
             amount: gasAmount,
           },
         });

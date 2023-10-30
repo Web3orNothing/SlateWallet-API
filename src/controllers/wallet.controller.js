@@ -398,7 +398,7 @@ const simulate = async (req, res) => {
   try {
     const { actions, conditionId, accountAddress, connectedChainName } =
       req.body;
-    const { success, message, transactionsList } = await simulateActions(
+    const { success, message, transactionsList, calls } = await simulateActions(
       actions,
       accountAddress,
       connectedChainName
@@ -428,7 +428,7 @@ const simulate = async (req, res) => {
       res.status(httpStatus.OK).json({
         status: "success",
         transactionsList,
-        actions,
+        actions: calls,
       });
     } else {
       res

@@ -18,7 +18,7 @@ if (process.argv[2] == "checkTx") {
   await checkTx();
 } else {
   await Moralis.start({
-    apiKey: process.env.MORAILS_API_KEY,
+    apiKey: process.env.MORALIS_API_KEY,
   });
 
   app.listen(port, () => {

@@ -25,6 +25,7 @@ import {
   getUserOwnedTokens,
   getChainIdFromName,
   getTokensForChain,
+  findIntersection,
 } from "../utils/index.js";
 import { sequelize } from "../db/index.js";
 import conditionModel from "../db/condition.model.js";
@@ -536,7 +537,10 @@ const verifiedEntities = async (req, res) => {
 const getUserTokenHoldings = async (req, res) => {
   try {
     const { accountAddress, chainId } = req.query;
-    const tokens = await getUserOwnedTokens(chainId, accountAddress);
+    const userTokens = await getUserOwnedTokens(chainId, accountAddress);
+    // const backendTokens = await getTokensForChain(chainId);
+    // const symbolList = backendTokens.map(token => token.symbol);
+    const tokens = userTokens.filter(item => (item.indexOf(' ') === -1 && item !== ""));
     res.status(httpStatus.OK).json({
       status: "success",
       tokens,

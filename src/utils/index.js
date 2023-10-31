@@ -654,8 +654,9 @@ export const getUserOwnedTokens = async (chainId, account) => {
       }
     );
     ownedTokens.push(...data.map((token) => token.symbol));
-  } catch {
+  } catch (err) {
     console.log("Failed to get user's token list from Debank");
+    console.log(err);
   }
   try {
     const headers = {
@@ -683,8 +684,9 @@ export const getUserOwnedTokens = async (chainId, account) => {
         ownedTokens.push(token);
       }
     });
-  } catch {
+  } catch (err) {
     console.log("Failed to get user's token list from Zapper");
+    console.log(err);
   }
   try {
     const newTokens = [];
@@ -715,8 +717,9 @@ export const getUserOwnedTokens = async (chainId, account) => {
         ownedTokens.push(token);
       }
     });
-  } catch {
+  } catch (err) {
     console.log("Failed to get user's token list from Etherscan");
+    console.log(err);
   }
   try {
     const response = await Moralis.EvmApi.token.getWalletTokenBalances({
@@ -2049,3 +2052,10 @@ export const getCoinData = async (symbol) => {
     return {};
   }
 };
+
+export const findIntersection = async (arr1, arr2) => {
+  const set1 = new Set(arr1.map(item => item.toLowerCase()));
+  const set2 = new Set(arr2.map(item => item.toLowerCase()));
+  const intersection = [...set1].filter(item => set2.has(item));
+  return intersection.map(item => arr1[arr1.findIndex(val => val.toLowerCase() === item)]);
+}

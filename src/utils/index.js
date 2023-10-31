@@ -917,6 +917,21 @@ export const getTokenAmount = async (address, provider, user, amount) => {
 export const simulateActions = async (calls, address, connectedChainName) => {
   // Parse Calls
   let prevChainName = connectedChainName;
+
+  // fill protocol name
+  const nonProtocolNames = ["swap", "bridge", "transfer"];
+  for (let i = 0; i < calls.length; i++) {
+    const call = calls[i];
+    if (nonProtocolNames.includes(call.name)) continue;
+
+    if ((call.args["protocolName"] || "") === "") {
+      if (i > 0)
+        calls[i].args["protocolName"] = calls[i - 1].args["protocolName"];
+      else calls[i].args["protocolName"] = "all";
+    }
+  }
+
+  // fill amount properly
   for (let i = 0; i < calls.length; i++) {
     const call = calls[i];
     const chainName = (
@@ -1124,14 +1139,86 @@ export const simulateActions = async (calls, address, connectedChainName) => {
           txs = transactions;
           break;
         }
-        case "protocol": {
-          const { message, transactions } = await getProtocolTx(body);
+        case "transfer": {
+          const { message, transactions } = await getTransferTx(body, true);
           if (message) return { success: false, message };
           txs = transactions;
           break;
         }
-        case "transfer": {
-          const { message, transactions } = await getTransferTx(body, true);
+        case "deposit": {
+          const { message, transactions } = await getDepositTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "withdraw": {
+          const { message, transactions } = await getWithdrawTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "claim": {
+          const { message, transactions } = await getClaimTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "borrow": {
+          const { message, transactions } = await getBorrowTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "lend": {
+          const { message, transactions } = await getLendTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "repay": {
+          const { message, transactions } = await getRepayTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "stake": {
+          const { message, transactions } = await getStakeTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "unstake": {
+          const { message, transactions } = await getUnstakeTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "long": {
+          const { message, transactions } = await getLongTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "short": {
+          const { message, transactions } = await getShortTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "lock": {
+          const { message, transactions } = await getLockTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "unlock": {
+          const { message, transactions } = await getUnlockTx(body);
+          if (message) return { success: false, message };
+          txs = transactions;
+          break;
+        }
+        case "vote": {
+          const { message, transactions } = await getVoteTx(body);
           if (message) return { success: false, message };
           txs = transactions;
           break;

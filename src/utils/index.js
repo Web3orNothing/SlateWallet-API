@@ -118,14 +118,22 @@ export const getChainNameFromCGC = (cgcChainName) => {
 // Mapping of chain names to their respective chain IDs
 const chainNamesToIds = {
   ethereum: 1,
+  mainnet: 1,
+  homestead: 1,
   optimism: 10,
   cronos: 25,
   binancesmartchain: 56,
+  bsc: 56,
+  bnb: 56,
+  binance: 56,
   ethclassic: 61,
+  classic: 61,
   gnosis: 100,
   polygon: 137,
+  matic: 137,
   fantom: 250,
   filecoin: 314,
+  "filecoin-mainnet": 314,
   moonbeam: 1284,
   moonriver: 1285,
   kava: 2222,
@@ -136,6 +144,7 @@ const chainNamesToIds = {
   celo: 42220,
   avalanche: 43114,
   linea: 59144,
+  "linea-mainnet": 59144,
   // Add more chainName-chainId mappings here as needed
 };
 

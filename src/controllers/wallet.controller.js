@@ -24,6 +24,7 @@ import {
   getChainEntities,
   getUserOwnedTokens,
   getChainIdFromName,
+  getTokensForChain,
 } from "../utils/index.js";
 import { sequelize } from "../db/index.js";
 import conditionModel from "../db/condition.model.js";
@@ -377,17 +378,24 @@ const getTokenAddress = async (req, res) => {
     const { chainName, tokenName } = req.query;
 
     const token = await getTokenAddressForChain(tokenName, chainName);
-    if (!token) {
+    const backendTokens = await getTokensForChain(getChainIdFromName(chainName.toLowerCase()));
+    const backendToken = backendTokens.find(token => token.symbol.toLowerCase() === tokenName.toLowerCase());
+    if (token) {
+      res.status(httpStatus.OK).json({
+        status: "success",
+        address: token.address,
+      });
+    } else if (backendToken) {
+      res.status(httpStatus.OK).json({
+        status: "success",
+        address: backendToken.address,
+      });
+    } else {
       return res.status(httpStatus.BAD_REQUEST).json({
         status: "error",
         message: "Token not found on the specified chain.",
       });
     }
-
-    res.status(httpStatus.OK).json({
-      status: "success",
-      address: token.address,
-    });
   } catch (err) {
     console.log("Error:", err);
     res

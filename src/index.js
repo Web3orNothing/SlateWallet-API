@@ -1,5 +1,6 @@
 import dotEnv from "dotenv";
 import webpush from "web-push";
+import Moralis from "moralis";
 
 import { checkTx } from "./handler.js";
 import app from "./app.js";
@@ -16,6 +17,10 @@ webpush.setVapidDetails(subject, publicVapidKey, privateVapidKey);
 if (process.argv[2] == "checkTx") {
   await checkTx();
 } else {
+  await Moralis.start({
+    apiKey: process.env.MORALIS_API_KEY,
+  });
+
   app.listen(port, () => {
     console.log(`Server listening on port ${port}!`);
   });

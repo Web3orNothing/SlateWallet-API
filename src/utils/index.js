@@ -282,14 +282,38 @@ export const getProtocolEntities = (protocol) => {
       break;
     case "1inch":
       addresses = {
-        1: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        56: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        137: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        250: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        10: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        100: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        42161: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
-        43114: ["0x1111111254EEB25477B68fb85Ed929f73A960582", "0x1111111254fb6c44bAC0beD2854e76F90643097d"],
+        1: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        56: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        137: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        250: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        10: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        100: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        42161: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
+        43114: [
+          "0x1111111254EEB25477B68fb85Ed929f73A960582",
+          "0x1111111254fb6c44bAC0beD2854e76F90643097d",
+        ],
       };
       break;
     case "paraswap":
@@ -579,8 +603,8 @@ export const getZapperNetwork = (chainId) => {
   return chainIdsToZapperNetworks[chainId] || null;
 };
 
-export const getMorailsChainId = (chainId) => {
-  const chainIdsToMorailsChainId = {
+export const getMoralisChainId = (chainId) => {
+  const chainIdsToMoralisChainId = {
     1: EvmChain.ETHEREUM,
     10: EvmChain.OPTIMISM,
     25: EvmChain.CRONOS,
@@ -603,7 +627,7 @@ export const getMorailsChainId = (chainId) => {
     // Add more chainId-rpcUrl mappings here as needed
   };
 
-  return chainIdsToMorailsChainId[chainId] || null;
+  return chainIdsToMoralisChainId[chainId] || null;
 };
 
 export const getUserOwnedTokens = async (chainId, account) => {
@@ -614,29 +638,38 @@ export const getUserOwnedTokens = async (chainId, account) => {
       chain_id: getDebankChainId(chainId),
       is_all: false,
     });
-    const { data } = await axios.get(`https://pro-openapi.debank.com/v1/user/token_list?${queryParams}`, {
-      headers: { "AccessKey": process.env.DEBANK_ACCESS_KEY },
-    });
-    ownedTokens.push(...data.map(token => token.symbol));
+    const { data } = await axios.get(
+      `https://pro-openapi.debank.com/v1/user/token_list?${queryParams}`,
+      {
+        headers: { AccessKey: process.env.DEBANK_ACCESS_KEY },
+      }
+    );
+    ownedTokens.push(...data.map((token) => token.symbol));
   } catch {
     console.log("Failed to get user's token list from Debank");
   }
   try {
     const headers = {
       accept: "*/*",
-      "Authorization": `Basic ${Buffer.from(`${process.env.ZAPPER_API_KEY}:`, "binary").toString(
-        "base64"
-      )}`
+      Authorization: `Basic ${Buffer.from(
+        `${process.env.ZAPPER_API_KEY}:`,
+        "binary"
+      ).toString("base64")}`,
     };
     const queryParams = new URLSearchParams({
       "addresses[]": [account],
       network: getZapperNetwork(chainId),
     });
-    const { data } = await axios.get(`https://api.zapper.xyz/v2/balances/tokens?${queryParams}`, {
-      headers,
-    });
-    const newTokens = (data[account.toLowerCase()] || []).map(({ token }) => token.symbol);
-    newTokens.map(token => {
+    const { data } = await axios.get(
+      `https://api.zapper.xyz/v2/balances/tokens?${queryParams}`,
+      {
+        headers,
+      }
+    );
+    const newTokens = (data[account.toLowerCase()] || []).map(
+      ({ token }) => token.symbol
+    );
+    newTokens.map((token) => {
       if (!ownedTokens.includes(token)) {
         ownedTokens.push(token);
       }
@@ -657,7 +690,9 @@ export const getUserOwnedTokens = async (chainId, account) => {
           offset: 500,
           apikey: process.env.ETHERSCAN_API_KEY,
         });
-        const { data } = await axios.get(`https://api.etherscan.io/api?${queryParams}`);
+        const { data } = await axios.get(
+          `https://api.etherscan.io/api?${queryParams}`
+        );
         const tokens = data.result.map(({ TokenSymbol }) => TokenSymbol);
         newTokens.push(...tokens);
         page++;
@@ -666,7 +701,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
         break;
       }
     }
-    newTokens.map(token => {
+    newTokens.map((token) => {
       if (!ownedTokens.includes(token)) {
         ownedTokens.push(token);
       }
@@ -675,21 +710,18 @@ export const getUserOwnedTokens = async (chainId, account) => {
     console.log("Failed to get user's token list from Etherscan");
   }
   try {
-    await Moralis.start({
-      apiKey: process.env.MORAILS_API_KEY,
-    });
     const response = await Moralis.EvmApi.token.getWalletTokenBalances({
       address: account,
-      chain: getMorailsChainId(chainId),
+      chain: getMoralisChainId(chainId),
     });
     const newTokens = response.toJSON().map(({ symbol }) => symbol);
-    newTokens.map(token => {
+    newTokens.map((token) => {
       if (!ownedTokens.includes(token)) {
         ownedTokens.push(token);
       }
     });
-  } catch {
-    console.log("Failed to get user's token list from Morails");
+  } catch (err) {
+    console.log("Failed to get user's token list from Moralis", err);
   }
 
   return ownedTokens;
@@ -761,7 +793,11 @@ export const getTokenAddressForChain = async (symbol, chainName) => {
     let price;
     try {
       response = await axios.get(CMC_API_ENDPOINT + symbolUp, { headers });
-      const quoteResponse = await axios.get("https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" + symbolUp, { headers });
+      const quoteResponse = await axios.get(
+        "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" +
+          symbolUp,
+        { headers }
+      );
       price = quoteResponse.data.data[symbolUp][0].quote["USD"].price;
     } catch (_) {}
 
@@ -898,16 +934,22 @@ export const simulateActions = async (calls, address, connectedChainName) => {
     const token = (call.args["token"] || call.args["inputToken"]).toLowerCase();
     if (token === "all") {
       const tokens = await getUserOwnedTokens(chainId, address);
-      calls.splice(i, 1, ...tokens.map((token) => ({
-        ...call,
-        args: call.args["token"] ? {
-          ...call.args,
-          token,
-        } : {
-          ...call.args,
-          inputToken: token,
-        },
-      })));
+      calls.splice(
+        i,
+        1,
+        ...tokens.map((token) => ({
+          ...call,
+          args: call.args["token"]
+            ? {
+                ...call.args,
+                token,
+              }
+            : {
+                ...call.args,
+                inputToken: token,
+              },
+        }))
+      );
       i--;
       continue;
     }
@@ -920,7 +962,7 @@ export const simulateActions = async (calls, address, connectedChainName) => {
         tokenInfo.address === NATIVE_TOKEN2
       ) {
         let ethBalance = await getEthBalanceForUser(chainId, address);
-        const gasAmount = chainId === 1 ? "0.2" : "0.1";
+        const gasAmount = chainId === 1 ? "0.01" : "0.005";
         ethBalance = ethBalance.sub(utils.parseEther(gasAmount));
         newAmount = utils.formatEther(
           amount === "all" ? ethBalance : ethBalance.div(2)
@@ -1071,7 +1113,9 @@ export const simulateActions = async (calls, address, connectedChainName) => {
         if (i < tempCalls.length - 1) {
           token = call.args["outputToken"] || call.args["token"];
           chainName =
-            call.args["destinationChainName"] || call.args["chainName"] || prevChainName;
+            call.args["destinationChainName"] ||
+            call.args["chainName"] ||
+            prevChainName;
         }
       }
       prevChainName = sourceChainName;
@@ -1409,13 +1453,13 @@ export const getSwapTx = async (data, ignoreBalanceCheck = false) => {
         address: _inputToken.address,
         symbol: inputToken,
         decimals,
-        price: _inputToken.price
+        price: _inputToken.price,
       },
       {
         address: _outputToken.address,
         symbol: outputToken,
         decimals: outDecimals,
-        price: _outputToken.price
+        price: _outputToken.price,
       },
       _inputAmount,
       gasPrice,

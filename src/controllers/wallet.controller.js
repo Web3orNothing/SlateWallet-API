@@ -22,6 +22,8 @@ import {
   simulateActions,
   getProtocolEntities,
   getChainEntities,
+  getUserOwnedTokens,
+  getChainIdFromName,
 } from "../utils/index.js";
 import { sequelize } from "../db/index.js";
 import conditionModel from "../db/condition.model.js";
@@ -523,6 +525,21 @@ const verifiedEntities = async (req, res) => {
   });
 };
 
+const getUserTokenHoldings = async (req, res) => {
+  try {
+    const { accountAddress, chainId } = req.query;
+    const tokens = await getUserOwnedTokens(chainId, accountAddress);
+    res.status(httpStatus.OK).json({
+      status: "success",
+      tokens,
+    });
+  } catch {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ status: "error", message: "Bad request" });
+  }
+};
+
 export default {
   condition,
   updateStatus,
@@ -549,4 +566,5 @@ export default {
   getTokenAddress,
   simulate,
   verifiedEntities,
+  getUserTokenHoldings,
 };

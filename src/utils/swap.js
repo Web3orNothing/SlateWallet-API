@@ -4,7 +4,11 @@ import { constructSimpleSDK } from "@paraswap/sdk";
 import { config } from "dotenv";
 
 import { NATIVE_TOKEN, NATIVE_TOKEN2 } from "../constants.js";
-import { getChainNameFromId, getNativeTokenSymbolForChain, getTokenAddressForChain } from './index.js';
+import {
+  getChainNameFromId,
+  getNativeTokenSymbolForChain,
+  getTokenAddressForChain,
+} from "./index.js";
 
 config();
 
@@ -33,7 +37,10 @@ export const getQuoteFromOpenOcean = async (
       data: { data },
     } = await axios.get(`${baseUrl}/${chainId}/swap_quote?${queryParams}`);
     const gasCost = gasPrice.mul(data.estimatedGas);
-    const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
+    const gasToken = await getTokenAddressForChain(
+      getNativeTokenSymbolForChain(chainId),
+      getChainNameFromId(chainId)
+    );
     return {
       amountOut: data.outAmount,
       gasUsd: utils.formatEther(gasCost) * gasToken.price,
@@ -130,7 +137,7 @@ export const getQuoteFromLiFi = async (
       },
     };
   } catch {}
-}
+};
 
 export const getQuoteFromSynapse = async (
   chainId,
@@ -267,7 +274,10 @@ export const getQuoteFrom0x = async (
       headers: { "0x-api-key": process.env.API_KEY_0X },
     });
     const gasCost = gasPrice.mul(data.estimatedGas);
-    const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
+    const gasToken = await getTokenAddressForChain(
+      getNativeTokenSymbolForChain(chainId),
+      getChainNameFromId(chainId)
+    );
     return {
       amountOut: data.grossBuyAmount,
       gasUsd: utils.formatEther(gasCost) * gasToken.price,
@@ -314,7 +324,7 @@ export const getQuoteFrom0x = async (
 //       },
 //     };
 //   } catch (err) {
-//     console.log(err);
+//     console.log(err.response.data.message);
 //   }
 // };
 
@@ -428,26 +438,31 @@ export const getBestSwapRoute = async (
     const data = datas[i];
     if (data) {
       const newAmountOut = BigNumber.from(data.amountOut);
-      let newAmountOutUsd = parseFloat(utils.formatUnits(newAmountOut, tokenOut.decimals)) * tokenOut.price;
+      let newAmountOutUsd =
+        parseFloat(utils.formatUnits(newAmountOut, tokenOut.decimals)) *
+        tokenOut.price;
       if (data.gasUsd) {
         newAmountOutUsd -= data.gasUsd;
       } else {
         const { data: res } = await axios.post(
           `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_USER}/project/${process.env.TENDERLY_PROJECT}/simulate`,
           {
-              network_id: chainId,
-              save: true,
-              save_if_fails: true,
-              simulation_type: "full",
-              from: account,
-              to: data.tx.to,
-              value: data.tx.value,
-              input: data.tx.data,
+            network_id: chainId,
+            save: true,
+            save_if_fails: true,
+            simulation_type: "full",
+            from: account,
+            to: data.tx.to,
+            value: data.tx.value,
+            input: data.tx.data,
           },
           { headers: { "X-Access-Key": process.env.TENDERLY_ACCESS_KEY } }
         );
         const gasCost = gasPrice.mul(res.transaction.gas_used);
-        const gasToken = await getTokenAddressForChain(getNativeTokenSymbolForChain(chainId), getChainNameFromId(chainId));
+        const gasToken = await getTokenAddressForChain(
+          getNativeTokenSymbolForChain(chainId),
+          getChainNameFromId(chainId)
+        );
         const gasUsd = utils.formatEther(gasCost) * gasToken.price;
         newAmountOutUsd -= gasUsd;
       }

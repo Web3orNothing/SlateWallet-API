@@ -27,6 +27,7 @@ describe("Test Simulation", () => {
             },
           },
         ],
+        conditions: [],
       });
     expect(res.statusCode).toEqual(200);
     expect(res.body).toHaveProperty("status");

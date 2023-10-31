@@ -906,15 +906,18 @@ export const getTokenAmount = async (address, provider, user, amount) => {
       if (amount !== undefined) _amount = _amount.sub(utils.parseEther("0.02"));
     } else _amount = await token.balanceOf(user);
   } else {
-    if (address == NATIVE_TOKEN) _amount = utils.parseEther(amount);
-    else {
-      _amount = utils.parseUnits(amount, decimals);
-    }
+    if (address === NATIVE_TOKEN) _amount = utils.parseEther(amount);
+    else _amount = utils.parseUnits(amount, decimals);
   }
   return { amount: _amount, decimals };
 };
 
-export const simulateActions = async (actions, address, connectedChainName) => {
+export const simulateActions = async (
+  actions,
+  conditions,
+  address,
+  connectedChainName
+) => {
   let prevChainName = connectedChainName;
 
   // fill protocol name
@@ -941,24 +944,62 @@ export const simulateActions = async (actions, address, connectedChainName) => {
     prevChainName = chainName;
     const chainId = getChainIdFromName(chainName);
 
-    const token = (
+    let token = (
       action.args["token"] || action.args["inputToken"]
     ).toLowerCase();
-    if (token === "all") {
+    if (((token || "") === "" && i === 0) || token === "all") {
       const tokens = await getUserOwnedTokens(chainId, address);
       actions.splice(
         i,
         1,
         ...tokens.map((token) => ({
           ...action,
-          args: action.args["token"]
-            ? { ...action.args, token }
-            : { ...action.args, inputToken: token },
+          args: { ...action.args, token, inputToken: token },
         }))
       );
       i--;
       continue;
     }
+    if (token === "LP") {
+      const outputToken = i > 0 && actions[i - 1].args["outputToken"];
+      if (outputToken) {
+        actions.splice(i, 1, {
+          ...action,
+          args: {
+            ...action.args,
+            token: outputToken,
+            inputToken: outputToken,
+          },
+        });
+        i--;
+        continue;
+      }
+      token = "";
+    }
+    if ((token || "") === "" || token === "outputToken") {
+      if (action.args["poolName"]) {
+        token = action.args["poolName"].split("-")[0];
+      } else {
+        if (conditions[i - 1] && conditions[i - 1].name === "condition")
+          token = conditions[i - 1].body.subject
+            .replace("price", "")
+            .replace("market", "")
+            .replace("cap", "")
+            .replace("balance", "")
+            .replace(" ", "")
+            .replace("_", "");
+        else
+          token =
+            actions[i - 1].args["token"] || actions[i - 1].args["outputToken"];
+      }
+      actions.splice(i, 1, {
+        ...action,
+        args: { ...action.args, token, inputToken: token },
+      });
+      i--;
+      continue;
+    }
+
     const amount = action.args["amount"] || action.args["inputAmount"];
     if (
       ((amount === "" || !amount) && i === 0) ||
@@ -2075,7 +2116,7 @@ export const getCoinData = async (symbol) => {
     );
     return data.data[symbolUp][0].quote["USD"];
   } catch (e) {
-    console.log("error fetching price:", e?.response?.data || e);
+    console.log("Error fetching price:", e?.response?.data || e);
     return {};
   }
 };

@@ -14,7 +14,7 @@ const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
 const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
 webpush.setVapidDetails(subject, publicVapidKey, privateVapidKey);
 
-if (process.argv[2] == "checkTx") {
+if (process.argv[2] === "checkTx") {
   await checkTx();
 } else {
   await Moralis.start({

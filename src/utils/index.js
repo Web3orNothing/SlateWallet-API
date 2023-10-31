@@ -656,7 +656,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
     ownedTokens.push(...data.map((token) => token.symbol));
   } catch (err) {
     console.log("Failed to get user's token list from Debank");
-    console.log(err);
+    // console.log(err);
   }
   try {
     const headers = {

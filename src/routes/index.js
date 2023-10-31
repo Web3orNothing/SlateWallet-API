@@ -80,6 +80,8 @@ routes.post("/simulate", walletController.simulate);
 // Verified Entities endpoint
 routes.get("/verified-entities", walletController.verifiedEntities);
 
+routes.get("/token-holdings", walletController.getUserTokenHoldings);
+
 // status check route
 routes.get("/status", (_req, res) => {
   res.status(httpStatus.OK).json({ status: "success" });

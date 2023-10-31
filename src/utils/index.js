@@ -960,7 +960,11 @@ export const simulateActions = async (actions, address, connectedChainName) => {
       continue;
     }
     const amount = action.args["amount"] || action.args["inputAmount"];
-    if (amount === "all" || amount === "half") {
+    if (
+      ((amount === "" || !amount) && i === 0) ||
+      amount === "all" ||
+      amount === "half"
+    ) {
       let newAmount;
       const tokenInfo = await getTokenAddressForChain(token, chainName);
       if (
@@ -971,7 +975,7 @@ export const simulateActions = async (actions, address, connectedChainName) => {
         const gasAmount = chainId === 1 ? "0.01" : "0.005";
         ethBalance = ethBalance.sub(utils.parseEther(gasAmount));
         newAmount = utils.formatEther(
-          amount === "all" ? ethBalance : ethBalance.div(2)
+          amount === "half" ? ethBalance.div(2) : ethBalance
         );
       } else {
         const rpcUrl = getRpcUrlForChain(chainId);
@@ -984,7 +988,7 @@ export const simulateActions = async (actions, address, connectedChainName) => {
         const tokenBalance = await contract.balanceOf(address);
         const decimals = await contract.decimals();
         newAmount = utils.formatUnits(
-          amount === "all" ? tokenBalance : tokenBalance.div(2),
+          amount === "half" ? tokenBalance.div(2) : tokenBalance,
           decimals
         );
       }

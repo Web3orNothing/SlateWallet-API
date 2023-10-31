@@ -985,7 +985,7 @@ export const simulateActions = async (calls, address, connectedChainName) => {
   prevChainName = (
     prevCall.args["chainName"] ||
     prevCall.args["sourceChainName"] ||
-    connectedChainName
+    prevChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;

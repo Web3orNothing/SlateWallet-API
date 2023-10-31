@@ -409,11 +409,12 @@ const simulate = async (req, res) => {
   try {
     const { actions, conditionId, accountAddress, connectedChainName } =
       req.body;
-    const { success, message, transactionsList, calls } = await simulateActions(
-      actions,
-      accountAddress,
-      connectedChainName
-    );
+    const {
+      success,
+      message,
+      transactionsList,
+      actions: updatedActions,
+    } = await simulateActions(actions, accountAddress, connectedChainName);
     if (!isNaN(parseInt(conditionId))) {
       const Conditions = await conditionModel(sequelize, Sequelize);
       const condition = await Conditions.findOne({
@@ -439,7 +440,7 @@ const simulate = async (req, res) => {
       res.status(httpStatus.OK).json({
         status: "success",
         transactionsList,
-        actions: calls,
+        actions: updatedActions,
       });
     } else {
       res

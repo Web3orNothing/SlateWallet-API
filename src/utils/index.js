@@ -914,51 +914,52 @@ export const getTokenAmount = async (address, provider, user, amount) => {
   return { amount: _amount, decimals };
 };
 
-export const simulateActions = async (calls, address, connectedChainName) => {
-  // Parse Calls
+export const simulateActions = async (actions, address, connectedChainName) => {
   let prevChainName = connectedChainName;
 
   // fill protocol name
   const nonProtocolNames = ["swap", "bridge", "transfer"];
-  for (let i = 0; i < calls.length; i++) {
-    const call = calls[i];
-    if (nonProtocolNames.includes(call.name)) continue;
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i];
+    if (nonProtocolNames.includes(action.name)) continue;
 
-    if ((call.args["protocolName"] || "") === "") {
+    if ((action.args["protocolName"] || "") === "") {
       if (i > 0)
-        calls[i].args["protocolName"] = calls[i - 1].args["protocolName"];
-      else calls[i].args["protocolName"] = "all";
+        actions[i].args["protocolName"] = actions[i - 1].args["protocolName"];
+      else actions[i].args["protocolName"] = "all";
     }
   }
 
   // fill amount properly
-  for (let i = 0; i < calls.length; i++) {
-    const call = calls[i];
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i];
     const chainName = (
-      call.args["chainName"] ||
-      call.args["sourceChainName"] ||
+      action.args["chainName"] ||
+      action.args["sourceChainName"] ||
       prevChainName
     ).toLowerCase();
     prevChainName = chainName;
     const chainId = getChainIdFromName(chainName);
 
-    const token = (call.args["token"] || call.args["inputToken"]).toLowerCase();
+    const token = (
+      action.args["token"] || action.args["inputToken"]
+    ).toLowerCase();
     if (token === "all") {
       const tokens = await getUserOwnedTokens(chainId, address);
-      calls.splice(
+      actions.splice(
         i,
         1,
         ...tokens.map((token) => ({
-          ...call,
-          args: call.args["token"]
-            ? { ...call.args, token }
-            : { ...call.args, inputToken: token },
+          ...action,
+          args: action.args["token"]
+            ? { ...action.args, token }
+            : { ...action.args, inputToken: token },
         }))
       );
       i--;
       continue;
     }
-    const amount = call.args["amount"] || call.args["inputAmount"];
+    const amount = action.args["amount"] || action.args["inputAmount"];
     if (amount === "all" || amount === "half") {
       let newAmount;
       const tokenInfo = await getTokenAddressForChain(token, chainName);
@@ -987,54 +988,55 @@ export const simulateActions = async (calls, address, connectedChainName) => {
           decimals
         );
       }
-      if (call.args["amount"]) call.args["amount"] = newAmount;
-      else call.args["inputAmount"] = newAmount;
+      if (action.args["amount"]) action.args["amount"] = newAmount;
+      else action.args["inputAmount"] = newAmount;
     }
   }
 
-  const tempCalls = JSON.parse(JSON.stringify(calls));
+  const tempActions = JSON.parse(JSON.stringify(actions));
   const transactionsList = [];
 
   // Check for gas
-  let prevCall = tempCalls[0];
+  let prevAction = tempActions[0];
   prevChainName = (
-    prevCall.args["chainName"] ||
-    prevCall.args["sourceChainName"] ||
+    prevAction.args["chainName"] ||
+    prevAction.args["sourceChainName"] ||
     prevChainName
   ).toLowerCase();
   let prevChainId = getChainIdFromName(prevChainName);
   let i = 1;
-  while (i < tempCalls.length) {
-    const curCall = tempCalls[i];
+  while (i < tempActions.length) {
+    const curAction = tempActions[i];
     const curChainName = (
-      curCall.args["chainName"] ||
-      curCall.args["sourceChainName"] ||
+      curAction.args["chainName"] ||
+      curAction.args["sourceChainName"] ||
       prevChainName
     ).toLowerCase();
     const curChainId = getChainIdFromName(curChainName);
     if (prevChainId === curChainId) {
-      prevCall = curCall;
+      prevAction = curAction;
       i++;
       continue;
     }
 
     const token = (
-      curCall.args["token"] || curCall.args["inputToken"]
+      curAction.args["token"] || curAction.args["inputToken"]
     ).toLowerCase();
-    const amount = curCall.args["amount"] || curCall.args["inputAmount"];
+    const amount = curAction.args["amount"] || curAction.args["inputAmount"];
     const ethBalance = await getEthBalanceForUser(curChainId, address);
     if (ethBalance.eq(0)) {
       let gasAmount = curChainId === 1 ? "0.2" : "0.1";
       if (
-        prevCall.name === "bridge" &&
-        prevCall.args["destinationChainName"].toLowerCase() === curChainName &&
-        prevCall.args["token"].toLowerCase() === "eth"
+        prevAction.name === "bridge" &&
+        prevAction.args["destinationChainName"].toLowerCase() ===
+          curChainName &&
+        prevAction.args["token"].toLowerCase() === "eth"
       ) {
-        tempCalls[i - 1].args["amount"] = (
-          parseFloat(tempCalls[i - 1].args["amount"]) + parseFloat(gasAmount)
+        tempActions[i - 1].args["amount"] = (
+          parseFloat(tempActions[i - 1].args["amount"]) + parseFloat(gasAmount)
         ).toString();
       } else {
-        tempCalls.splice(i, 0, {
+        tempActions.splice(i, 0, {
           name: "bridge",
           args: {
             accountAddress: address,
@@ -1060,24 +1062,24 @@ export const simulateActions = async (calls, address, connectedChainName) => {
       const balance = await contract.balanceOf(address);
       if (amount && balance.lt(utils.parseUnits(amount, decimals))) {
         if (
-          prevCall.name === "bridge" &&
-          prevCall.args["destinationChainName"].toLowerCase() ===
+          prevAction.name === "bridge" &&
+          prevAction.args["destinationChainName"].toLowerCase() ===
             curChainName &&
-          prevCall.args["token"].toLowerCase() === token
+          prevAction.args["token"].toLowerCase() === token
         ) {
           if (
-            parseFloat(tempCalls[i - 1].args["amount"]) +
+            parseFloat(tempActions[i - 1].args["amount"]) +
               parseFloat(utils.formatUnits(balance, decimals)) <
             parseFloat(amount)
           ) {
-            tempCalls[i - 1].args["amount"] = Math.max(
-              parseFloat(tempCalls[i - 1].args["amount"]),
+            tempActions[i - 1].args["amount"] = Math.max(
+              parseFloat(tempActions[i - 1].args["amount"]),
               parseFloat(amount) -
                 parseFloat(utils.formatUnits(balance, decimals))
             ).toString();
           }
         } else {
-          tempCalls.splice(i, 0, {
+          tempActions.splice(i, 0, {
             name: "bridge",
             args: {
               accountAddress: address,
@@ -1092,41 +1094,43 @@ export const simulateActions = async (calls, address, connectedChainName) => {
       }
     }
 
-    prevCall = curCall;
+    prevAction = curAction;
     prevChainName = curChainName;
     prevChainId = curChainId;
     i++;
   }
 
   prevChainName = (
-    prevCall.args["chainName"] ||
-    prevCall.args["sourceChainName"] ||
+    prevAction.args["chainName"] ||
+    prevAction.args["sourceChainName"] ||
     connectedChainName
   ).toLowerCase();
   const state_objects = {};
-  for (let i = 0; i < tempCalls.length; i++) {
-    const call = tempCalls[i];
+  for (let i = 0; i < tempActions.length; i++) {
+    const action = tempActions[i];
     let token;
     let chainName;
 
     try {
-      const body = fillBody(call.args, address, prevChainName);
+      const body = fillBody(action.args, address, prevChainName);
       const sourceChainName =
-        call.args["sourceChainName"] || call.args["chainName"] || prevChainName;
+        action.args["sourceChainName"] ||
+        action.args["chainName"] ||
+        prevChainName;
       const chainId = getChainIdFromName(sourceChainName);
-      if (call.name === "swap" || call.name === "bridge") {
-        if (i < tempCalls.length - 1) {
-          token = call.args["outputToken"] || call.args["token"];
+      if (action.name === "swap" || action.name === "bridge") {
+        if (i < tempActions.length - 1) {
+          token = action.args["outputToken"] || action.args["token"];
           chainName =
-            call.args["destinationChainName"] ||
-            call.args["chainName"] ||
+            action.args["destinationChainName"] ||
+            action.args["chainName"] ||
             prevChainName;
         }
       }
       prevChainName = sourceChainName;
 
       let txs;
-      switch (call.name) {
+      switch (action.name) {
         case "swap": {
           const { message, transactions } = await getSwapTx(body, true);
           if (message) return { success: false, message };
@@ -1259,112 +1263,114 @@ export const simulateActions = async (calls, address, connectedChainName) => {
 
       if (!token) continue;
 
-      let _token = await getTokenAddressForChain(token, chainName);
-      if (!_token)
-        return { success: false, message: "Token not found on given chain" };
-      _token = _token.address.toLowerCase();
-      const tokenContract = new Contract(_token, ERC20_ABI, provider);
-
-      const nextCall = tempCalls[i + 1];
-      if (!nextCall) continue;
-
       let amount;
-      if (call.name === "swap") {
-        const { logs } =
-          res.simulation_results[length - 1].transaction.transaction_info;
-        for (let k = 0; k < logs.length; k++) {
-          const { raw: log } = logs[k];
-          if (
-            log.topics[0] ===
-              "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" &&
-            log.address.toLowerCase() === _token
-          ) {
-            const [to] = utils.defaultAbiCoder.decode(
-              ["address"],
-              log.topics[2]
-            );
-            if (to.toLowerCase() === address?.toLowerCase()) {
-              const [value] = utils.defaultAbiCoder.decode(
-                ["uint256"],
-                log.data
+      if (token && chainName) {
+        let _token = await getTokenAddressForChain(token, chainName);
+        if (!_token)
+          return { success: false, message: "Token not found on given chain" };
+        _token = _token.address.toLowerCase();
+        const tokenContract = new Contract(_token, ERC20_ABI, provider);
+
+        const nextAction = tempActions[i + 1];
+        if (!nextAction) continue;
+
+        if (action.name === "swap") {
+          const { logs } =
+            res.simulation_results[length - 1].transaction.transaction_info;
+          for (let k = 0; k < logs.length; k++) {
+            const { raw: log } = logs[k];
+            if (
+              log.topics[0] ===
+                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef" &&
+              log.address.toLowerCase() === _token
+            ) {
+              const [to] = utils.defaultAbiCoder.decode(
+                ["address"],
+                log.topics[2]
               );
-              const decimals = await tokenContract.decimals();
-              const amt = utils.formatUnits(value, decimals);
-              amount = amt.toString();
-              break;
+              if (to.toLowerCase() === address?.toLowerCase()) {
+                const [value] = utils.defaultAbiCoder.decode(
+                  ["uint256"],
+                  log.data
+                );
+                const decimals = await tokenContract.decimals();
+                const amt = utils.formatUnits(value, decimals);
+                amount = amt.toString();
+                break;
+              }
             }
           }
+        } else if (
+          action.name === "bridge" &&
+          (
+            nextAction.args["sourceChainName"] || nextAction.args["chainName"]
+          ).toLowerCase() === chainName.toLowerCase() &&
+          (action.args["token"].toLowerCase() ===
+            nextAction.args["token"].toLowerCase() ||
+            action.args["token"].toLowerCase() ===
+              nextAction.args["inputToken"].toLowerCase())
+        ) {
+          amount = body["amount"];
         }
-      } else if (
-        call.name === "bridge" &&
-        (
-          nextCall.args["sourceChainName"] || nextCall.args["chainName"]
-        ).toLowerCase() === chainName.toLowerCase() &&
-        (call.args["token"].toLowerCase() ===
-          nextCall.args["token"].toLowerCase() ||
-          call.args["token"].toLowerCase() ===
-            nextCall.args["inputToken"].toLowerCase())
-      ) {
-        amount = body["amount"];
-      }
 
-      if (call.name === "bridge") {
-        const destChainId = getChainIdFromName(
-          call.args["destinationChainName"]
-        );
+        if (action.name === "bridge") {
+          const destChainId = getChainIdFromName(
+            action.args["destinationChainName"]
+          );
 
-        const destToken = await getTokenAddressForChain(
-          call.args["token"],
-          call.args["destinationChainName"]
-        );
-        const destRpcUrl = getRpcUrlForChain(destChainId);
-        const destProvider = new ethers.providers.JsonRpcProvider(
-          destRpcUrl,
-          destChainId
-        );
-        const destTokenContract = new Contract(
-          destToken.address,
-          ERC20_ABI,
-          destProvider
-        );
-        const curBalance = await destTokenContract.balanceOf(address);
-        const decimals = await destTokenContract.decimals();
-        const newBalance = curBalance.add(utils.parseUnits(amount, decimals));
-        const balanceSlot = getBalanceSlotForToken(
-          destChainId,
-          destToken.address
-        );
-        const slot = utils.keccak256(
-          utils.concat([
-            utils.hexZeroPad(address, 32),
-            utils.hexZeroPad(BigNumber.from(balanceSlot).toHexString(), 32),
-          ])
-        );
-        if (!state_objects[destChainId]) {
-          state_objects[destChainId] = {};
+          const destToken = await getTokenAddressForChain(
+            action.args["token"],
+            action.args["destinationChainName"]
+          );
+          const destRpcUrl = getRpcUrlForChain(destChainId);
+          const destProvider = new ethers.providers.JsonRpcProvider(
+            destRpcUrl,
+            destChainId
+          );
+          const destTokenContract = new Contract(
+            destToken.address,
+            ERC20_ABI,
+            destProvider
+          );
+          const curBalance = await destTokenContract.balanceOf(address);
+          const decimals = await destTokenContract.decimals();
+          const newBalance = curBalance.add(utils.parseUnits(amount, decimals));
+          const balanceSlot = getBalanceSlotForToken(
+            destChainId,
+            destToken.address
+          );
+          const slot = utils.keccak256(
+            utils.concat([
+              utils.hexZeroPad(address, 32),
+              utils.hexZeroPad(BigNumber.from(balanceSlot).toHexString(), 32),
+            ])
+          );
+          if (!state_objects[destChainId]) {
+            state_objects[destChainId] = {};
+          }
+          state_objects[destChainId] = Object.assign(
+            state_objects[destChainId],
+            {
+              [destToken.address.toLowerCase()]: {
+                storage: {
+                  [slot]: utils.hexZeroPad(newBalance.toHexString(), 32),
+                },
+              },
+            }
+          );
         }
-        state_objects[destChainId] = Object.assign(state_objects[destChainId], {
-          [destToken.address.toLowerCase()]: {
-            storage: {
-              [slot]: utils.hexZeroPad(newBalance.toHexString(), 32),
-            },
-          },
-        });
       }
 
-      if (nextCall.name === "swap") {
-        tempCalls[i + 1].args["inputAmount"] =
-          tempCalls[i + 1].args["inputAmount"] || amount;
-      } else if (nextCall.name === "transfer" || nextCall.name === "bridge") {
-        tempCalls[i + 1].args["amount"] =
-          tempCalls[i + 1].args["amount"] || amount;
-      }
+      if (isNaN(parseFloat(nextAction.args["inputAmount"] || "")))
+        tempActions[i + 1].args["inputAmount"] = amount;
+      if (isNaN(parseFloat(nextAction.args["amount"] || "")))
+        tempActions[i + 1].args["amount"] = amount;
     } catch (err) {
       console.log("Simulate error:", err.message, err.response.data);
       return { success: false, message: err.message };
     }
   }
-  return { success: true, transactionsList, calls };
+  return { success: true, transactionsList, actions };
 };
 
 export const fillBody = (body, address, chainName = "Ethereum") => {

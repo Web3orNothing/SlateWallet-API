@@ -647,6 +647,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
   } catch {
     console.log("Failed to get user's token list from Debank");
   }
+
   try {
     const headers = {
       accept: "*/*",
@@ -661,9 +662,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
     });
     const { data } = await axios.get(
       `https://api.zapper.xyz/v2/balances/tokens?${queryParams}`,
-      {
-        headers,
-      }
+      { headers }
     );
     const newTokens = (data[account.toLowerCase()] || []).map(
       ({ token }) => token.symbol
@@ -677,52 +676,70 @@ export const getUserOwnedTokens = async (chainId, account) => {
     console.log("Failed to get user's token list from Zapper");
     console.log(err);
   }
-  try {
-    const newTokens = [];
-    let page = 1;
-    while (true) {
-      try {
-        let queryParams = new URLSearchParams({
-          module: "account",
-          action: "addresstokenbalance",
-          address: account,
-          page,
-          offset: 500,
-          apikey: process.env.ETHERSCAN_API_KEY,
-        });
-        const { data } = await axios.get(
-          `https://api.etherscan.io/api?${queryParams}`
-        );
-        const tokens = data.result.map(({ TokenSymbol }) => TokenSymbol);
-        newTokens.push(...tokens);
-        page++;
-        if (tokens.length < 500) break;
-      } catch {
-        break;
+
+  if (chainId === 1) {
+    try {
+      const newTokens = [];
+      let page = 1;
+      while (true) {
+        try {
+          let queryParams = new URLSearchParams({
+            module: "account",
+            action: "addresstokenbalance",
+            address: account,
+            page,
+            offset: 500,
+            apikey: process.env.ETHERSCAN_API_KEY,
+          });
+          const { data } = await axios.get(
+            `https://api.etherscan.io/api?${queryParams}`
+          );
+          const tokens = data.result.map(({ TokenSymbol }) => TokenSymbol);
+          newTokens.push(...tokens);
+          page++;
+          if (tokens.length < 500) break;
+        } catch {
+          break;
+        }
       }
+      newTokens.map((token) => {
+        if (!ownedTokens.includes(token)) {
+          ownedTokens.push(token);
+        }
+      });
+    } catch (err) {
+      console.log("Failed to get user's token list from Etherscan");
+      console.log(err);
     }
-    newTokens.map((token) => {
-      if (!ownedTokens.includes(token)) {
-        ownedTokens.push(token);
-      }
-    });
+  }
+
+  try {
+    const moralisChainId = getMoralisChainId(chainId);
+    if (moralisChainId) {
+      const response = await Moralis.EvmApi.token.getWalletTokenBalances({
+        address: account,
+        chain: getMoralisChainId(chainId),
+      });
+      const newTokens = response.toJSON().map(({ symbol }) => symbol);
+      newTokens.map((token) => {
+        if (!ownedTokens.includes(token)) {
+          ownedTokens.push(token);
+        }
+      });
+    }
   } catch (err) {
-    console.log("Failed to get user's token list from Etherscan");
+    console.log("Failed to get user's token list from Moralis");
     console.log(err);
   }
-  try {
-    const response = await Moralis.EvmApi.token.getWalletTokenBalances({
-      address: account,
-      chain: getMoralisChainId(chainId),
-    });
-    const newTokens = response.toJSON().map(({ symbol }) => symbol);
-    newTokens.map((token) => {
-      if (!ownedTokens.includes(token)) {
-        ownedTokens.push(token);
-      }
-    });
-  } catch {
-    console.log("Failed to get user's token list from Moralis");
+
+  const nativeTokenSymbol = getNativeTokenSymbolForChain(chainId);
+  if (!ownedTokens.includes(nativeTokenSymbol)) {
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+    const balance = await provider.getBalance(account);
+    if (balance.gt(0)) {
+      ownedTokens.push(nativeTokenSymbol);
+    }
   }
 
   return ownedTokens;
@@ -944,9 +961,7 @@ export const simulateActions = async (
     prevChainName = chainName;
     const chainId = getChainIdFromName(chainName);
 
-    let token = (
-      action.args["token"] || action.args["inputToken"]
-    ).toLowerCase();
+    let token = action.args["token"] || action.args["inputToken"];
     if (((token || "") === "" && i === 0) || token === "all") {
       const tokens = await getUserOwnedTokens(chainId, address);
       actions.splice(

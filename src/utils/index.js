@@ -662,9 +662,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
     });
     const { data } = await axios.get(
       `https://api.zapper.xyz/v2/balances/tokens?${queryParams}`,
-      {
-        headers,
-      }
+      { headers }
     );
     const newTokens = (data[account.toLowerCase()] || []).map(
       ({ token }) => token.symbol
@@ -676,6 +674,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
     });
   } catch (err) {
     console.log("Failed to get user's token list from Zapper");
+    console.log(err);
   }
 
   if (chainId === 1) {
@@ -710,6 +709,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
       });
     } catch (err) {
       console.log("Failed to get user's token list from Etherscan");
+      console.log(err);
     }
   }
 
@@ -727,8 +727,19 @@ export const getUserOwnedTokens = async (chainId, account) => {
         }
       });
     }
-  } catch {
+  } catch (err) {
     console.log("Failed to get user's token list from Moralis");
+    console.log(err);
+  }
+
+  const nativeTokenSymbol = getNativeTokenSymbolForChain(chainId);
+  if (!ownedTokens.includes(nativeTokenSymbol)) {
+    const rpcUrl = getRpcUrlForChain(chainId);
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl, chainId);
+    const balance = await provider.getBalance(account);
+    if (balance.gt(0)) {
+      ownedTokens.push(nativeTokenSymbol);
+    }
   }
 
   return ownedTokens;
@@ -959,15 +970,7 @@ export const simulateActions = async (
         ...tokens.map((token) => ({
           ...action,
           args: { ...action.args, token, inputToken: token },
-        })),
-        {
-          ...action,
-          args: {
-            ...action.args,
-            token: nativeTokenSymbol,
-            inputToken: nativeTokenSymbol,
-          },
-        }
+        }))
       );
       i--;
       continue;

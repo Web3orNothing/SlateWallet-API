@@ -944,9 +944,7 @@ export const simulateActions = async (
     prevChainName = chainName;
     const chainId = getChainIdFromName(chainName);
 
-    let token = (
-      action.args["token"] || action.args["inputToken"]
-    ).toLowerCase();
+    let token = action.args["token"] || action.args["inputToken"];
     if (((token || "") === "" && i === 0) || token === "all") {
       const tokens = await getUserOwnedTokens(chainId, address);
       actions.splice(
@@ -955,7 +953,15 @@ export const simulateActions = async (
         ...tokens.map((token) => ({
           ...action,
           args: { ...action.args, token, inputToken: token },
-        }))
+        })),
+        {
+          ...action,
+          args: {
+            ...action.args,
+            token: nativeTokenSymbol,
+            inputToken: nativeTokenSymbol,
+          },
+        }
       );
       i--;
       continue;

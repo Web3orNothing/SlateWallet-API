@@ -45,6 +45,7 @@ const condition = async (req, res) => {
     for (let i = 0; i < conditions.length; i++) {
       const { success } = await simulateActions(
         conditions[i].actions,
+        conditions[i].conditions,
         accountAddress,
         connectedChainName
       );
@@ -204,8 +205,7 @@ const addHistory = async (req, res) => {
     });
     const { id } = await history.save();
     return res.status(httpStatus.CREATED).json({ status: "success", id });
-  } catch (error) {
-    console.log(error);
+  } catch {
     return res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Failed to store history" });
@@ -379,8 +379,12 @@ const getTokenAddress = async (req, res) => {
     const { chainName, tokenName } = req.query;
 
     const token = await getTokenAddressForChain(tokenName, chainName);
-    const backendTokens = await getTokensForChain(getChainIdFromName(chainName.toLowerCase()));
-    const backendToken = backendTokens.find(token => token.symbol.toLowerCase() === tokenName.toLowerCase());
+    const backendTokens = await getTokensForChain(
+      getChainIdFromName(chainName.toLowerCase())
+    );
+    const backendToken = backendTokens.find(
+      (token) => token.symbol.toLowerCase() === tokenName.toLowerCase()
+    );
     if (token) {
       res.status(httpStatus.OK).json({
         status: "success",
@@ -397,8 +401,7 @@ const getTokenAddress = async (req, res) => {
         message: "Token not found on the specified chain.",
       });
     }
-  } catch (err) {
-    console.log("Error:", err);
+  } catch {
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ status: "error", message: "Bad request" });
@@ -407,10 +410,21 @@ const getTokenAddress = async (req, res) => {
 
 const simulate = async (req, res) => {
   try {
-    const { actions, conditionId, accountAddress, connectedChainName } =
-      req.body;
-    const { success, message, transactionsList, calls } = await simulateActions(
+    const {
       actions,
+      conditions,
+      conditionId,
+      accountAddress,
+      connectedChainName,
+    } = req.body;
+    const {
+      success,
+      message,
+      transactionsList,
+      actions: updatedActions,
+    } = await simulateActions(
+      actions,
+      conditions,
       accountAddress,
       connectedChainName
     );
@@ -439,7 +453,7 @@ const simulate = async (req, res) => {
       res.status(httpStatus.OK).json({
         status: "success",
         transactionsList,
-        actions: calls,
+        actions: updatedActions,
       });
     } else {
       res
@@ -540,7 +554,9 @@ const getUserTokenHoldings = async (req, res) => {
     const userTokens = await getUserOwnedTokens(chainId, accountAddress);
     // const backendTokens = await getTokensForChain(chainId);
     // const symbolList = backendTokens.map(token => token.symbol);
-    const tokens = userTokens.filter(item => (item.indexOf(' ') === -1 && item !== ""));
+    const tokens = userTokens.filter(
+      (item) => item.indexOf(" ") === -1 && item !== ""
+    );
     res.status(httpStatus.OK).json({
       status: "success",
       tokens,

@@ -109,7 +109,12 @@ const syncConditionTx = async () => {
           isReady = price === parseFloat(value);
         }
       } else if (type === "market cap") {
-        const tokenData = await getCoinData(subject);
+        const symbol = subject
+          .replace("market", "")
+          .replace("cap", "")
+          .replace(" ", "")
+          .replace("_", "");
+        const tokenData = await getCoinData(symbol);
         if (!tokenData || !tokenData.market_cap) {
           isReady = false;
         } else if (comparator === "<") {
@@ -134,7 +139,7 @@ const syncConditionTx = async () => {
             value = (parseFloat(value) * tokenData.price).toString();
         }
         const chain =
-          actions[0].body.chainName || actions[0].body.sourceChainName;
+          actions[0].body["chainName"] || actions[0].body["sourceChainName"];
         const balance = await getTokenBalance(useraddress, chain, token);
         if (comparator === "<") {
           isReady = balance < parseFloat(value);

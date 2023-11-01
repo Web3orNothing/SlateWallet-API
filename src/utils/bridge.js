@@ -49,9 +49,7 @@ export const getQuoteFromBungee = async (
     const { data } = await axios.post(
       "https://api.socket.tech/v2/build-tx?",
       { route: bestRoute },
-      {
-        headers: { "API-KEY": process.env.API_KEY_BUNGEE },
-      }
+      { headers: { "API-KEY": process.env.API_KEY_BUNGEE } }
     );
     if (!data.success) return;
     return {
@@ -63,7 +61,7 @@ export const getQuoteFromBungee = async (
       },
     };
   } catch (err) {
-    console.log(err);
+    console.log(err.response.data.message);
   }
 };
 
@@ -272,7 +270,7 @@ export const getQuoteFromAxelar = async (
       },
     };
   } catch (err) {
-    console.log(err);
+    console.log(err.response.data.message);
   }
 };
 

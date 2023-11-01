@@ -647,6 +647,7 @@ export const getUserOwnedTokens = async (chainId, account) => {
   } catch {
     console.log("Failed to get user's token list from Debank");
   }
+
   try {
     const headers = {
       accept: "*/*",
@@ -675,41 +676,43 @@ export const getUserOwnedTokens = async (chainId, account) => {
     });
   } catch (err) {
     console.log("Failed to get user's token list from Zapper");
-    console.log(err);
   }
-  try {
-    const newTokens = [];
-    let page = 1;
-    while (true) {
-      try {
-        let queryParams = new URLSearchParams({
-          module: "account",
-          action: "addresstokenbalance",
-          address: account,
-          page,
-          offset: 500,
-          apikey: process.env.ETHERSCAN_API_KEY,
-        });
-        const { data } = await axios.get(
-          `https://api.etherscan.io/api?${queryParams}`
-        );
-        const tokens = data.result.map(({ TokenSymbol }) => TokenSymbol);
-        newTokens.push(...tokens);
-        page++;
-        if (tokens.length < 500) break;
-      } catch {
-        break;
+
+  if (chainId === 1) {
+    try {
+      const newTokens = [];
+      let page = 1;
+      while (true) {
+        try {
+          let queryParams = new URLSearchParams({
+            module: "account",
+            action: "addresstokenbalance",
+            address: account,
+            page,
+            offset: 500,
+            apikey: process.env.ETHERSCAN_API_KEY,
+          });
+          const { data } = await axios.get(
+            `https://api.etherscan.io/api?${queryParams}`
+          );
+          const tokens = data.result.map(({ TokenSymbol }) => TokenSymbol);
+          newTokens.push(...tokens);
+          page++;
+          if (tokens.length < 500) break;
+        } catch {
+          break;
+        }
       }
+      newTokens.map((token) => {
+        if (!ownedTokens.includes(token)) {
+          ownedTokens.push(token);
+        }
+      });
+    } catch (err) {
+      console.log("Failed to get user's token list from Etherscan");
     }
-    newTokens.map((token) => {
-      if (!ownedTokens.includes(token)) {
-        ownedTokens.push(token);
-      }
-    });
-  } catch (err) {
-    console.log("Failed to get user's token list from Etherscan");
-    console.log(err);
   }
+
   try {
     const response = await Moralis.EvmApi.token.getWalletTokenBalances({
       address: account,

@@ -714,16 +714,19 @@ export const getUserOwnedTokens = async (chainId, account) => {
   }
 
   try {
-    const response = await Moralis.EvmApi.token.getWalletTokenBalances({
-      address: account,
-      chain: getMoralisChainId(chainId),
-    });
-    const newTokens = response.toJSON().map(({ symbol }) => symbol);
-    newTokens.map((token) => {
-      if (!ownedTokens.includes(token)) {
-        ownedTokens.push(token);
-      }
-    });
+    const moralisChainId = getMoralisChainId(chainId);
+    if (moralisChainId) {
+      const response = await Moralis.EvmApi.token.getWalletTokenBalances({
+        address: account,
+        chain: getMoralisChainId(chainId),
+      });
+      const newTokens = response.toJSON().map(({ symbol }) => symbol);
+      newTokens.map((token) => {
+        if (!ownedTokens.includes(token)) {
+          ownedTokens.push(token);
+        }
+      });
+    }
   } catch {
     console.log("Failed to get user's token list from Moralis");
   }
